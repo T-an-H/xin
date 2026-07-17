@@ -74,6 +74,56 @@ export interface DashboardStats {
   recentEnrollments: number;
 }
 
+export interface GradeWeightConfig {
+  courseId: string;
+  regularWeight: number;
+  midtermWeight: number;
+  finalWeight: number;
+  selfEvalWeight: number;
+  peerReviewWeight: number;
+  interGroupEvalWeight: number;
+  teacherScoreWeight: number;
+  mentorScoreWeight: number;
+  midtermExamWeight: number;
+  midtermProjectWeight: number;
+  finalExamWeight: number;
+  finalProjectWeight: number;
+}
+
+export function getDefaultGradeConfig(courseId: string): GradeWeightConfig {
+  return {
+    courseId,
+    regularWeight: 40,
+    midtermWeight: 0,
+    finalWeight: 60,
+    selfEvalWeight: 10,
+    peerReviewWeight: 20,
+    interGroupEvalWeight: 10,
+    teacherScoreWeight: 30,
+    mentorScoreWeight: 30,
+    midtermExamWeight: 50,
+    midtermProjectWeight: 50,
+    finalExamWeight: 50,
+    finalProjectWeight: 50,
+  };
+}
+
+export interface DetailedGrade {
+  id: string;
+  studentId: string;
+  courseId: string;
+  selfEvalScore?: number;
+  peerReviewScore?: number;
+  interGroupScore?: number;
+  teacherScore?: number;
+  mentorScore?: number;
+  midtermExamScore?: number;
+  midtermProjectScore?: number;
+  finalExamScore?: number;
+  finalProjectScore?: number;
+  gradedAt: string;
+}
+
 export interface CloudFile {
   id: string;
   name: string;

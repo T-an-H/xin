@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { Course, Category, Student, Schedule, Enrollment, Teacher, Grade, CloudFile, TodoItem, OnlineDoc, Note } from '@/types';
+import type { Course, Category, Student, Schedule, Enrollment, Teacher, Grade, CloudFile, TodoItem, OnlineDoc, Note, GradeWeightConfig, DetailedGrade } from '@/types';
+import { getDefaultGradeConfig } from '@/types';
 import { courses as mockCourses, categories as mockCategories, students as mockStudents, schedules as mockSchedules, enrollments as mockEnrollments, teachers as mockTeachers, grades as mockGrades } from '@/data/mockData';
 
 interface AppState {
@@ -14,6 +15,8 @@ interface AppState {
   todos: TodoItem[];
   onlineDocs: OnlineDoc[];
   notes: Note[];
+  gradeConfigs: Record<string, GradeWeightConfig>;
+  detailedGrades: DetailedGrade[];
   isLoggedIn: boolean;
   currentUser: string | null;
   currentRole: UserRole;
@@ -51,6 +54,13 @@ interface AppState {
   addNote: (note: Note) => void;
   updateNote: (id: string, data: Partial<Note>) => void;
   deleteNote: (id: string) => void;
+
+  saveGradeConfig: (config: GradeWeightConfig) => void;
+  getGradeConfig: (courseId: string) => GradeWeightConfig;
+  addDetailedGrade: (dg: DetailedGrade) => void;
+  updateDetailedGrade: (id: string, data: Partial<DetailedGrade>) => void;
+  getDetailedGrades: (courseId: string) => DetailedGrade[];
+  calcTotalScore: (courseId: string, dg: DetailedGrade) => number;
 }
 
 type UserRole = 'admin' | 'teacher' | 'student' | null;
@@ -80,6 +90,8 @@ export const useStore = create<AppState>((set, get) => ({
   todos: loadFromStorage<TodoItem[]>('todos', []),
   onlineDocs: loadFromStorage<OnlineDoc[]>('onlineDocs', []),
   notes: loadFromStorage<Note[]>('notes', []),
+  gradeConfigs: loadFromStorage<Record<string, GradeWeightConfig>>('gradeConfigs', {}),
+  detailedGrades: loadFromStorage<DetailedGrade[]>('detailedGrades', []),
   isLoggedIn: loadFromStorage<boolean>('isLoggedIn', false),
   currentUser: loadFromStorage<string | null>('currentUser', null),
   currentRole: loadFromStorage<UserRole>('currentRole', null),
@@ -218,5 +230,39 @@ export const useStore = create<AppState>((set, get) => ({
     const notes = get().notes.filter((n) => n.id !== id);
     saveToStorage('notes', notes);
     set({ notes });
+  },
+
+  saveGradeConfig: (config) => {
+    const gradeConfigs = { ...get().gradeConfigs, [config.courseId]: config };
+    saveToStorage('gradeConfigs', gradeConfigs);
+    set({ gradeConfigs });
+  },
+  getGradeConfig: (courseId) => {
+    return get().gradeConfigs[courseId] || getDefaultGradeConfig(courseId);
+  },
+  addDetailedGrade: (dg) => {
+    const detailedGrades = [...get().detailedGrades, dg];
+    saveToStorage('detailedGrades', detailedGrades);
+    set({ detailedGrades });
+  },
+  updateDetailedGrade: (id, data) => {
+    const detailedGrades = get().detailedGrades.map((d) => (d.id === id ? { ...d, ...data } : d));
+    saveToStorage('detailedGrades', detailedGrades);
+    set({ detailedGrades });
+  },
+  getDetailedGrades: (courseId) => {
+    return get().detailedGrades.filter((d) => d.courseId === courseId);
+  },
+  calcTotalScore: (courseId, dg) => {
+    const cfg = get().gradeConfigs[courseId] || getDefaultGradeConfig(courseId);
+    const sumW = (a: number | undefined, b: number) => (a ?? 0) * b / 100;
+    const regular = (dg.selfEvalScore ?? 0) * cfg.selfEvalWeight / 100
+      + (dg.peerReviewScore ?? 0) * cfg.peerReviewWeight / 100
+      + (dg.interGroupScore ?? 0) * cfg.interGroupEvalWeight / 100
+      + (dg.teacherScore ?? 0) * cfg.teacherScoreWeight / 100
+      + (dg.mentorScore ?? 0) * cfg.mentorScoreWeight / 100;
+    const midterm = ((dg.midtermExamScore ?? 0) * cfg.midtermExamWeight + (dg.midtermProjectScore ?? 0) * cfg.midtermProjectWeight) / 100;
+    const final = ((dg.finalExamScore ?? 0) * cfg.finalExamWeight + (dg.finalProjectScore ?? 0) * cfg.finalProjectWeight) / 100;
+    return Math.round(regular * cfg.regularWeight / 100 + midterm * cfg.midtermWeight / 100 + final * cfg.finalWeight / 100);
   },
 }));
