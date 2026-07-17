@@ -1,10 +1,26 @@
 import { useState } from 'react';
 import { useStore } from '@/store';
-import { Award, Filter } from 'lucide-react';
+import { Award, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import ScoreDetail from '@/components/ScoreDetail';
+
+const scoreFieldMeta: { key: string; label: string; group: string }[] = [
+  { key: 'selfEvalScore', label: '自评', group: '平时成绩' },
+  { key: 'peerReviewScore', label: '组内互评', group: '平时成绩' },
+  { key: 'interGroupScore', label: '组间互评', group: '平时成绩' },
+  { key: 'teacherScore', label: '教师评价', group: '平时成绩' },
+  { key: 'mentorScore', label: '企业导师评价', group: '平时成绩' },
+  { key: 'midtermExamScore', label: '期中考试', group: '期中成绩' },
+  { key: 'midtermProjectScore', label: '项目成绩(期中)', group: '期中成绩' },
+  { key: 'finalExamScore', label: '期末测试', group: '期末成绩' },
+  { key: 'finalProjectScore', label: '项目成绩(期末)', group: '期末成绩' },
+];
 
 export default function StudentGrades() {
-  const { students, enrollments, courses, grades, currentUser } = useStore();
+  const { students, enrollments, courses, detailedGrades, grades, currentUser, getGradeConfig } = useStore();
   const [semester, setSemester] = useState('all');
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [detailTarget, setDetailTarget] = useState<{ courseId: string } | null>(null);
+
   const student = students.find((s) => s.name === currentUser);
   const myEnrollments = student ? enrollments.filter((e) => e.studentId === student.id) : [];
   const myGrades = student ? grades.filter((g) => g.studentId === student.id) : [];
@@ -15,7 +31,6 @@ export default function StudentGrades() {
     if (!date) return '2026-夏季';
     const parsed = new Date(date);
     if (Number.isNaN(parsed.getTime())) return '2026-夏季';
-
     const month = parsed.getMonth() + 1;
     if (month >= 2 && month <= 5) return '2026-春季';
     if (month >= 6 && month <= 8) return '2026-夏季';
@@ -24,11 +39,12 @@ export default function StudentGrades() {
 
   const filtered = semester === 'all'
     ? myEnrollments
-    : myEnrollments.filter((enr) => getSemester(getGrade(enr.courseId)?.gradedAt || enr.enrollDate) === semester);
+    : myEnrollments.filter((enr) => getSemester(myGrades.find((g) => g.courseId === enr.courseId)?.gradedAt || enr.enrollDate) === semester);
 
   const getCourseTitle = (id: string) => courses.find((c) => c.id === id)?.title || '未知';
   const getCourseCredit = (id: string) => courses.find((c) => c.id === id)?.credits || 0;
   const getGrade = (courseId: string) => myGrades.find((g) => g.courseId === courseId);
+  const getDetailed = (courseId: string) => detailedGrades.find((d) => d.studentId === student?.id && d.courseId === courseId);
   const getGradePoint = (score: number) => {
     if (score >= 90) return 4.0;
     if (score >= 85) return 3.7;
@@ -58,7 +74,7 @@ export default function StudentGrades() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">成绩管理</h1>
-        <p className="text-gray-500 mt-1">查看各课程成绩与学分统计</p>
+        <p className="text-gray-500 mt-1">查看各课程分项成绩与总分</p>
       </div>
 
       {/* 成绩概览 */}
@@ -88,51 +104,99 @@ export default function StudentGrades() {
       </div>
 
       {/* 成绩列表 */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">课程</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">学分</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">成绩</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">绩点</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">评语</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-500">录入时间</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filtered.map((enr) => {
-                const grade = getGrade(enr.courseId);
-                const credit = getCourseCredit(enr.courseId);
-                const gp = grade ? getGradePoint(grade.score) : 0;
-                return (
-                  <tr key={enr.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <span className="font-medium text-gray-900">{getCourseTitle(enr.courseId)}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{credit}</td>
-                    <td className="px-6 py-4">
-                      {grade ? (
-                        <span className={`font-semibold ${
-                          grade.score >= 90 ? 'text-emerald-600' :
-                          grade.score >= 80 ? 'text-blue-600' :
-                          grade.score >= 70 ? 'text-amber-600' :
-                          grade.score >= 60 ? 'text-orange-600' : 'text-red-600'
-                        }`}>{grade.score}</span>
-                      ) : <span className="text-gray-400">未录入</span>}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{grade ? gp.toFixed(1) : '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{grade?.comment || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-400">{grade?.gradedAt || '-'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <div className="space-y-4">
+        {filtered.map((enr) => {
+          const grade = getGrade(enr.courseId);
+          const detail = getDetailed(enr.courseId);
+          const cfg = getGradeConfig(enr.courseId);
+          const credit = getCourseCredit(enr.courseId);
+          const gp = grade ? getGradePoint(grade.score) : 0;
+          const isExpanded = expanded === enr.courseId;
+
+          return (
+            <div key={enr.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              {/* 课程行 */}
+              <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => setExpanded(isExpanded ? null : enr.courseId)}>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{getCourseTitle(enr.courseId)}</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">{credit} 学分</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  {grade ? (
+                    <button
+                      onClick={() => setDetailTarget({ courseId: enr.courseId })}
+                      className={`text-lg font-bold px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors ${
+                        grade.score >= 90 ? 'text-emerald-600' :
+                        grade.score >= 80 ? 'text-blue-600' :
+                        grade.score >= 70 ? 'text-amber-600' :
+                        grade.score >= 60 ? 'text-orange-600' : 'text-red-600'
+                      }`}
+                    >{grade.score} 分</button>
+                  ) : <span className="text-gray-400 text-sm">未录入</span>}
+                  {grade && <span className="text-sm text-gray-400">GPA {gp.toFixed(1)}</span>}
+                  {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-300" /> : <ChevronDown className="w-5 h-5 text-gray-300" />}
+                </div>
+              </div>
+
+              {/* 展开明细 */}
+              {isExpanded && detail && (
+                <div className="border-t border-gray-50 px-4 py-4 bg-gray-50/50 space-y-4">
+                  {/* 权重信息 */}
+                  <div className="text-xs text-gray-500 space-y-0.5">
+                    <p>权重配置：平时 {cfg.regularWeight}% + 期中 {cfg.midtermWeight}% + 期末 {cfg.finalWeight}%</p>
+                    <p>平时构成：自评 {cfg.selfEvalWeight}% · 组内互评 {cfg.peerReviewWeight}% · 组间互评 {cfg.interGroupEvalWeight}% · 教师 {cfg.teacherScoreWeight}% · 企业导师 {cfg.mentorScoreWeight}%</p>
+                  </div>
+
+                  {/* 分项成绩 */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {scoreFieldMeta.map((meta) => {
+                      const val = detail[meta.key as keyof typeof detail] as number | undefined;
+                      if (val == null) return null;
+                      return (
+                        <div key={meta.key} className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                          <p className="text-xs text-gray-400 mb-1">{meta.group}</p>
+                          <p className="text-sm font-semibold text-gray-900">{val}</p>
+                          <p className="text-xs text-gray-500">{meta.label}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* 评语 */}
+                  {grade?.comment && (
+                    <div className="text-sm text-gray-600 bg-white rounded-lg p-3 border border-gray-100">
+                      <span className="text-gray-400">评语：</span>{grade.comment}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 展开但无明细 */}
+              {isExpanded && !detail && (
+                <div className="border-t border-gray-50 px-4 py-6 text-center text-sm text-gray-400">
+                  {grade ? '暂无分项成绩明细' : '成绩尚未录入'}
+                </div>
+              )}
+            </div>
+          );
+        })}
         {filtered.length === 0 && <div className="text-center py-8 text-gray-400">暂无成绩数据</div>}
       </div>
+
+      {detailTarget && (
+        <ScoreDetail
+          open={!!detailTarget}
+          onClose={() => setDetailTarget(null)}
+          studentName={currentUser || ''}
+          courseTitle={getCourseTitle(detailTarget.courseId)}
+          detail={getDetailed(detailTarget.courseId)}
+          cfg={getGradeConfig(detailTarget.courseId)}
+          totalScore={getGrade(detailTarget.courseId)?.score ?? 0}
+        />
+      )}
     </div>
   );
 }
