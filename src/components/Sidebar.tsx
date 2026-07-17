@@ -23,7 +23,7 @@ const teacherNavItems = [
   { to: '/teacher/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/teacher/courses', icon: BookOpen, label: '我的课程' },
   { to: '/teacher/students', icon: Users, label: '学员进度' },
-  { to: '/teacher/grades', icon: ClipboardCheck, label: '成绩录入' },
+  { to: '/teacher/grades', icon: ClipboardCheck, label: '成绩管理' },
   { to: '/teacher/extra', icon: Lightbulb, label: '额外功能' },
 ];
 

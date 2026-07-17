@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '@/store';
-import { Search, BookOpen, ChevronDown, ChevronUp, ExternalLink, BarChart3 } from 'lucide-react';
+import { Search, BookOpen, ChevronDown, ChevronUp, ExternalLink, BarChart3, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import StudentEvaluation from '@/components/StudentEvaluation';
 
 const academicYears = ['2024-2025', '2025-2026', '2026-2027'];
 
@@ -85,7 +86,7 @@ export default function StudentCourses() {
   const getCourseTitle = (id: string) => courses.find((c) => c.id === id)?.title || '未知';
   const getCourseTeacher = (id: string) => courses.find((c) => c.id === id)?.teacher || '未知';
   const getCourseDesc = (id: string) => courses.find((c) => c.id === id)?.description || '';
-  const getCourseCredit = (id: string) => Math.round((courses.find((c) => c.id === id)?.duration || 0) / 8);
+  const getCourseCredit = (id: string) => courses.find((c) => c.id === id)?.credits || 0;
   const getGrade = (courseId: string) => grades.find((g) => g.studentId === student?.id && g.courseId === courseId);
   const getGraph = (courseId: string): { nodes: { id: string; label: string; category: string; level: number }[]; edges: { source: string; target: string; relation: string }[] } =>
   knowledgeGraphs[courseId] || defaultGraph;
@@ -234,6 +235,23 @@ export default function StudentCourses() {
                   </div>
                 )}
               </div>
+
+              {/* 综合评价 */}
+              {student && (
+                <div className="border-t border-gray-50">
+                  <button onClick={() => setExpandedInfo(expandedInfo === `eval-${course.id}` ? null : `eval-${course.id}`)}
+                    className="w-full flex items-center justify-between px-5 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    <span className="flex items-center gap-2">
+                      <ClipboardList className="w-4 h-4 text-purple-500" />
+                      综合评价
+                    </span>
+                    {expandedInfo === `eval-${course.id}` ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  {expandedInfo === `eval-${course.id}` && (
+                    <StudentEvaluation courseId={course.id} studentId={student.id} studentName={student.name} />
+                  )}
+                </div>
+              )}
             </div>
           );
         })}

@@ -11,7 +11,7 @@ export interface Course {
   description: string;
   categoryId: string;
   cover: string;
-  price: number;
+  credits: number;
   duration: number;
   status: 'active' | 'inactive' | 'draft';
   createdAt: string;
@@ -36,6 +36,15 @@ export interface Grade {
   gradedAt: string;
 }
 
+/** 学习层级 */
+export type LearningTier = 'basic' | 'advanced' | 'excellent';
+
+export const TierLabels: Record<LearningTier, string> = {
+  basic: '基础层',
+  advanced: '进阶层',
+  excellent: '卓越层',
+};
+
 export interface Student {
   id: string;
   name: string;
@@ -44,6 +53,8 @@ export interface Student {
   avatar: string;
   joinDate: string;
   status: 'active' | 'inactive';
+  /** 高考成绩或入学成绩（用于无上学期成绩时判定层级） */
+  enrollmentScore?: number;
 }
 
 export interface Schedule {
@@ -90,6 +101,7 @@ export interface TodoItem {
   completed: boolean;
   createdAt: string;
   dueDate?: string;
+  createdBy: string;
 }
 
 export interface OnlineDoc {
@@ -108,4 +120,136 @@ export interface Note {
   content: string;
   createdAt: string;
   updatedAt: string;
+  createdBy: string;
+}
+
+// ========== 评价系统 ==========
+
+/** 评价类型 */
+export type EvalType = 'self' | 'intra_group' | 'inter_group' | 'teacher' | 'mentor';
+
+export const EvalTypeLabels: Record<EvalType, string> = {
+  self: '自评',
+  intra_group: '组内互评',
+  inter_group: '组间互评',
+  teacher: '教师评价',
+  mentor: '企业导师评价',
+};
+
+export const EvalTypeColors: Record<EvalType, string> = {
+  self: 'text-blue-600 bg-blue-50 border-blue-200',
+  intra_group: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+  inter_group: 'text-purple-600 bg-purple-50 border-purple-200',
+  teacher: 'text-amber-600 bg-amber-50 border-amber-200',
+  mentor: 'text-rose-600 bg-rose-50 border-rose-200',
+};
+
+/** 评价方案模板 */
+export type EvalTemplate = 'all' | 'standard' | 'simple' | 'project';
+
+export const EvalTemplateLabels: Record<EvalTemplate, string> = {
+  all: '全评价',
+  standard: '标准评价',
+  simple: '简易评价',
+  project: '项目制评价',
+};
+
+export const EvalTemplateDescs: Record<EvalTemplate, string> = {
+  all: '5种评价全部启用：自评+组内互评+组间互评+教师评价+企业导师评价',
+  standard: '自评+教师评价+组间互评',
+  simple: '仅教师评价+自评',
+  project: '增加企业导师+组间互评',
+};
+
+/** 模板→评价类型映射 */
+export const TEMPLATE_EVAL_TYPES: Record<EvalTemplate, EvalType[]> = {
+  all: ['self', 'intra_group', 'inter_group', 'teacher', 'mentor'],
+  standard: ['self', 'teacher', 'inter_group'],
+  simple: ['self', 'teacher'],
+  project: ['self', 'intra_group', 'teacher', 'mentor', 'inter_group'],
+};
+
+/** 评价频率 */
+export type EvalFrequency = 'biweekly' | 'per_unit' | 'project_milestone' | 'custom';
+
+export const EvalFrequencyLabels: Record<EvalFrequency, string> = {
+  biweekly: '每2周一次',
+  per_unit: '每个知识单元',
+  project_milestone: '仅项目节点',
+  custom: '自定义次数',
+};
+
+export const EvalFrequencyDescs: Record<EvalFrequency, string> = {
+  biweekly: '约每2周进行一次评价',
+  per_unit: '每个知识单元学习完成后进行评价',
+  project_milestone: '仅在项目关键节点进行评价',
+  custom: '手动设置评价总次数',
+};
+
+/** 逾期处理规则 */
+export type OverdueRule = 'average' | 'none';
+
+export const OverdueRuleLabels: Record<OverdueRule, string> = {
+  average: '取历史平均分',
+  none: '不做处理',
+};
+
+/** 课程评价配置 */
+export interface EvaluationConfig {
+  courseId: string;
+  template: EvalTemplate;
+  frequency: EvalFrequency;
+  /** 自定义评价次数（仅 custom 时有效） */
+  customSessions?: number;
+  /** 是否有企业导师参与 */
+  hasMentor: boolean;
+  /** 逾期处理规则 */
+  overdueRule: OverdueRule;
+}
+
+/** 评价记录 */
+export interface Evaluation {
+  id: string;
+  courseId: string;
+  studentId: string;
+  sessionNumber: number;   // 第N次评价
+  type: EvalType;
+  score: number;
+  evaluatorId: string;
+  evaluatorName: string;
+  comment?: string;
+  createdAt: string;
+}
+
+/** 评价待办提醒 */
+export interface EvalReminder {
+  id: string;
+  courseId: string;
+  courseTitle: string;
+  studentId: string;
+  sessionNumber: number;
+  deadline: string;
+  status: 'pending' | 'completed' | 'overdue';
+}
+
+/** 学生分组 */
+export interface StudentGroup {
+  id: string;
+  courseId: string;
+  name: string;
+  memberIds: string[];
+}
+
+/** 异常预警记录 */
+export interface EvalAnomaly {
+  id: string;
+  courseId: string;
+  studentId: string;
+  studentName: string;
+  sessionNumber: number;
+  type: EvalType;
+  selfScore: number;
+  avgScore: number;
+  diff: number;
+  warning: string;
 }

@@ -1,17 +1,43 @@
+import { useState, useMemo } from 'react';
 import { useStore } from '@/store';
 import { User, Mail, Phone, Calendar, BookOpen, Award, TrendingUp, BarChart3 } from 'lucide-react';
 
+const SEMESTERS = [
+  { label: '2026年春季', start: '2026-02-01', end: '2026-06-30' },
+  { label: '2026年秋季(当前)', start: '2026-09-01', end: '2027-01-31' },
+  { label: '全部学期', start: '', end: '' },
+];
+
 export default function StudentProfile() {
   const { students, enrollments, courses, grades, currentUser } = useStore();
+  const [selectedSemester, setSelectedSemester] = useState('全部学期');
   const student = students.find((s) => s.name === currentUser);
   const myEnrollments = student ? enrollments.filter((e) => e.studentId === student.id) : [];
   const myGrades = student ? grades.filter((g) => g.studentId === student.id) : [];
-  const completed = myEnrollments.filter((e) => e.status === 'completed').length;
-  const inProgress = myEnrollments.filter((e) => e.status === 'in_progress').length;
-  const avgScore = myGrades.length > 0 ? Math.round(myGrades.reduce((s, g) => s + g.score, 0) / myGrades.length) : 0;
-  const totalCredits = myEnrollments.reduce((sum, e) => {
+
+  const filteredEnrollments = useMemo(() => {
+    if (selectedSemester === '全部学期') return myEnrollments;
+    const semester = SEMESTERS.find((s) => s.label === selectedSemester);
+    if (!semester || !semester.start) return myEnrollments;
+    const start = new Date(semester.start);
+    const end = new Date(semester.end);
+    return myEnrollments.filter((enr) => {
+      const date = new Date(enr.enrollDate);
+      return date >= start && date <= end;
+    });
+  }, [myEnrollments, selectedSemester]);
+
+  const filteredGrades = useMemo(() => {
+    const courseIds = new Set(filteredEnrollments.map((e) => e.courseId));
+    return myGrades.filter((g) => courseIds.has(g.courseId));
+  }, [myGrades, filteredEnrollments]);
+
+  const completed = filteredEnrollments.filter((e) => e.status === 'completed').length;
+  const inProgress = filteredEnrollments.filter((e) => e.status === 'in_progress').length;
+  const avgScore = filteredGrades.length > 0 ? Math.round(filteredGrades.reduce((s, g) => s + g.score, 0) / filteredGrades.length) : 0;
+  const totalCredits = filteredEnrollments.reduce((sum, e) => {
     const course = courses.find((c) => c.id === e.courseId);
-    return sum + (course ? Math.round(course.duration / 8) : 0);
+    return sum + (course ? course.credits : 0);
   }, 0);
 
   const radarData = [
@@ -47,7 +73,7 @@ export default function StudentProfile() {
           </div>
           <div className="flex gap-6">
             <div className="text-center px-4 py-3 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">{myEnrollments.length}</p>
+              <p className="text-2xl font-bold text-blue-600">{filteredEnrollments.length}</p>
               <p className="text-xs text-gray-500 mt-1">已报名</p>
             </div>
             <div className="text-center px-4 py-3 bg-emerald-50 rounded-lg">
@@ -114,6 +140,22 @@ export default function StudentProfile() {
           </div>
         </div>
 
+        {/* 学期筛选 */}
+        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <label className="text-sm font-medium text-gray-700">学期筛选：</label>
+            <select
+              value={selectedSemester}
+              onChange={(e) => setSelectedSemester(e.target.value)}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {SEMESTERS.map((s) => (
+                <option key={s.label} value={s.label}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* 学习统计 */}
         <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -139,7 +181,7 @@ export default function StudentProfile() {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-600">平均进度</span>
               <span className="font-semibold text-gray-900">
-                {myEnrollments.length > 0 ? Math.round(myEnrollments.reduce((s, e) => s + e.progress, 0) / myEnrollments.length) : 0}%
+                {filteredEnrollments.length > 0 ? Math.round(filteredEnrollments.reduce((s, e) => s + e.progress, 0) / filteredEnrollments.length) : 0}%
               </span>
             </div>
           </div>
@@ -152,11 +194,11 @@ export default function StudentProfile() {
           <BookOpen className="w-5 h-5 text-purple-500" /> 学习轨迹
         </h3>
         <div className="relative">
-          {myEnrollments.map((enr, index) => {
+          {filteredEnrollments.map((enr, index) => {
             const course = courses.find((c) => c.id === enr.courseId);
             return (
               <div key={enr.id} className="flex gap-4 pb-6 relative">
-                {index < myEnrollments.length - 1 && <div className="absolute left-[7px] top-4 bottom-0 w-0.5 bg-blue-200" />}
+                {index < filteredEnrollments.length - 1 && <div className="absolute left-[7px] top-4 bottom-0 w-0.5 bg-blue-200" />}
                 <div className={`w-4 h-4 rounded-full mt-1 flex-shrink-0 ${
                   enr.status === 'completed' ? 'bg-emerald-500' :
                   enr.status === 'in_progress' ? 'bg-amber-500' : 'bg-blue-500'
@@ -171,7 +213,7 @@ export default function StudentProfile() {
               </div>
             );
           })}
-          {myEnrollments.length === 0 && <p className="text-gray-400 text-center py-4">暂无学习记录</p>}
+          {filteredEnrollments.length === 0 && <p className="text-gray-400 text-center py-4">暂无学习记录</p>}
         </div>
       </div>
     </div>

@@ -27,7 +27,7 @@ export default function StudentGrades() {
     : myEnrollments.filter((enr) => getSemester(getGrade(enr.courseId)?.gradedAt || enr.enrollDate) === semester);
 
   const getCourseTitle = (id: string) => courses.find((c) => c.id === id)?.title || '未知';
-  const getCourseCredit = (id: string) => Math.round((courses.find((c) => c.id === id)?.duration || 0) / 8);
+  const getCourseCredit = (id: string) => courses.find((c) => c.id === id)?.credits || 0;
   const getGrade = (courseId: string) => myGrades.find((g) => g.courseId === courseId);
   const getGradePoint = (score: number) => {
     if (score >= 90) return 4.0;

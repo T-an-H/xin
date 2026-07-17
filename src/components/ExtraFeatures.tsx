@@ -50,8 +50,9 @@ function getFileIcon(type: string): LucideIcon {
 /* ─────────── 云盘 ─────────── */
 function CloudDrive() {
   const { cloudFiles, addCloudFile, deleteCloudFile } = useStore();
-  const inputRef = useRef<HTMLInputElement>(null);
   const currentUser = useStore((s) => s.currentUser);
+  const myCloudFiles = cloudFiles.filter((f) => f.uploadedBy === currentUser);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,10 +98,10 @@ function CloudDrive() {
           <Upload className="w-4 h-4" />
           上传文件
         </button>
-        <span className="text-sm text-gray-400">已用 {cloudFiles.length} 个文件</span>
+        <span className="text-sm text-gray-400">已用 {myCloudFiles.length} 个文件</span>
       </div>
 
-      {cloudFiles.length === 0 && (
+      {myCloudFiles.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <Cloud className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>暂无文件，点击上方按钮上传</p>
@@ -108,7 +109,7 @@ function CloudDrive() {
       )}
 
       <div className="space-y-2">
-        {cloudFiles.map((f) => {
+        {myCloudFiles.map((f) => {
           const Icn = Icon(f.type);
           return (
             <div key={f.id} className="flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow transition-shadow">
@@ -146,6 +147,8 @@ function CloudDrive() {
 /* ─────────── 待办 ─────────── */
 function TodoList() {
   const { todos, addTodo, updateTodo, deleteTodo } = useStore();
+  const currentUser = useStore((s) => s.currentUser);
+  const myTodos = todos.filter((t) => t.createdBy === currentUser);
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
 
@@ -157,13 +160,14 @@ function TodoList() {
       completed: false,
       createdAt: new Date().toISOString(),
       dueDate: dueDate || undefined,
+      createdBy: currentUser || '未知',
     });
     setTitle('');
     setDueDate('');
   };
 
-  const activeTodos = todos.filter((t) => !t.completed);
-  const doneTodos = todos.filter((t) => t.completed);
+  const activeTodos = myTodos.filter((t) => !t.completed);
+  const doneTodos = myTodos.filter((t) => t.completed);
 
   return (
     <div className="space-y-4">
@@ -226,7 +230,7 @@ function TodoList() {
         </div>
       )}
 
-      {todos.length === 0 && (
+      {myTodos.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>暂无待办事项</p>
@@ -240,6 +244,7 @@ function TodoList() {
 function OnlineDocs() {
   const { onlineDocs, addOnlineDoc, updateOnlineDoc, deleteOnlineDoc } = useStore();
   const currentUser = useStore((s) => s.currentUser);
+  const myDocs = onlineDocs.filter((d) => d.createdBy === currentUser);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [editTitle, setEditTitle] = useState('');
@@ -295,14 +300,14 @@ function OnlineDocs() {
         </button>
       </div>
 
-      {onlineDocs.length === 0 && (
+      {myDocs.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>暂无文档，点击上方按钮新建</p>
         </div>
       )}
 
-      {onlineDocs.map((doc) => (
+      {myDocs.map((doc) => (
         <div key={doc.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           {editingId === doc.id ? (
             <div className="p-4 space-y-3">
@@ -375,6 +380,8 @@ function OnlineDocs() {
 /* ─────────── 笔记 ─────────── */
 function Notes() {
   const { notes, addNote, updateNote, deleteNote } = useStore();
+  const currentUser = useStore((s) => s.currentUser);
+  const myNotes = notes.filter((n) => n.createdBy === currentUser);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [editTitle, setEditTitle] = useState('');
@@ -388,6 +395,7 @@ function Notes() {
       content: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      createdBy: currentUser || '未知',
     });
     setNewTitle('');
   };
@@ -427,7 +435,7 @@ function Notes() {
         </button>
       </div>
 
-      {notes.length === 0 && (
+      {myNotes.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <Edit3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>暂无笔记，点击上方按钮新建</p>
@@ -435,7 +443,7 @@ function Notes() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {notes.map((note) => (
+        {myNotes.map((note) => (
           <div key={note.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             {editingId === note.id ? (
               <div className="p-4 space-y-3">

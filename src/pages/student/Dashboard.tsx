@@ -1,10 +1,11 @@
 import { useStore } from '@/store';
 import StatCard from '@/components/StatCard';
-import { BookOpen, TrendingUp, Award, ArrowRight, Clock3, Sparkles, BellRing } from 'lucide-react';
+import { BookOpen, TrendingUp, Award, ArrowRight, Clock3, Sparkles, BellRing, Clock, Bell, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export default function StudentDashboard() {
-  const { students, enrollments, courses, schedules, grades, currentUser } = useStore();
+  const { students, enrollments, courses, schedules, grades, currentUser, evalReminders, pushNearDeadlineEvalReminders } = useStore();
   const student = students.find((s) => s.name === currentUser);
   const myEnrollments = student ? enrollments.filter((e) => e.studentId === student.id) : [];
   const myGrades = student ? grades.filter((g) => g.studentId === student.id) : [];
@@ -22,6 +23,16 @@ export default function StudentDashboard() {
     { title: '数据可视化与商业分析', detail: '课程资源更新完成', time: '昨日' },
     { title: '课程学习提醒', detail: '今日有 2 门课程待完成任务', time: '今天' },
   ];
+
+  // 进入仪表盘时推送待办提醒
+  useEffect(() => {
+    pushNearDeadlineEvalReminders();
+  }, []);
+
+  // 当前学生待办的评价提醒（截止前1周内）
+  const studentReminders = student ? evalReminders.filter(
+    (r) => r.studentId === student.id && r.status !== 'completed'
+  ) : [];
 
   return (
     <div className="space-y-6">
@@ -104,6 +115,25 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+
+      {/* 评价待办提醒 */}
+      {studentReminders.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-amber-700 font-medium mb-2">
+            <Bell className="w-5 h-5" />
+            评价提醒（截止前1周内 · {studentReminders.length}项）
+          </div>
+          <div className="space-y-1">
+            {studentReminders.slice(0, 5).map((r) => (
+              <p key={r.id} className="text-sm text-amber-600 flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                {r.courseTitle} 第{r.sessionNumber}次评价 截止{r.deadline}
+                {r.status === 'overdue' && <span className="text-red-500 font-medium">（已逾期）</span>}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
