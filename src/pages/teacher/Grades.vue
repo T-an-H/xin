@@ -130,8 +130,10 @@
               <td v-for="f in scoreFields" :key="f.key" class="px-2 py-3 text-center">
                 <input type="number" min="0" max="100" placeholder="0"
                   :value="getScoreInputValue(enr.id, f.key)"
-                  @input="(e) => handleScoreInput(enr.id, f.key, (e.target as HTMLInputElement).value)"
-                  class="w-16 px-2 py-1.5 rounded border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm text-center" />
+                  :readonly="f.readonly"
+                  @input="(e) => !f.readonly && handleScoreInput(enr.id, f.key, (e.target as HTMLInputElement).value)"
+                  class="w-16 px-2 py-1.5 rounded border border-gray-200 text-sm text-center"
+                  :class="f.readonly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none'" />
               </td>
               <td class="px-4 py-3 text-center">
                 <template v-if="getRowTotal(enr) != null">
@@ -196,8 +198,8 @@ const SEMESTERS = [
   { label: '全部学期', start: '', end: '' },
 ]
 
-const scoreFields: { key: keyof Omit<DetailedGrade, 'id' | 'studentId' | 'courseId' | 'gradedAt'>; label: string; group: 'regular' | 'midterm' | 'final' }[] = [
-  { key: 'selfEvalScore', label: '自评', group: 'regular' },
+const scoreFields: { key: keyof Omit<DetailedGrade, 'id' | 'studentId' | 'courseId' | 'gradedAt'>; label: string; group: 'regular' | 'midterm' | 'final'; readonly?: boolean }[] = [
+  { key: 'selfEvalScore', label: '自评', group: 'regular', readonly: true },
   { key: 'peerReviewScore', label: '组内互评', group: 'regular' },
   { key: 'interGroupScore', label: '组间互评', group: 'regular' },
   { key: 'teacherScore', label: '教师评价', group: 'regular' },
@@ -339,6 +341,7 @@ const handleSave = () => {
     const existing = getExisting(enr.studentId, enr.courseId)
     const detail: Record<string, number | undefined> = {}
     scoreFields.forEach((f) => {
+      if (f.readonly) return
       const v = parseInt(rowScores[f.key])
       detail[f.key] = isNaN(v) ? undefined : v
     })
@@ -346,7 +349,7 @@ const handleSave = () => {
     if (!hasAny) continue
 
     const dgData = {
-      selfEvalScore: detail.selfEvalScore as number | undefined,
+      selfEvalScore: existing?.selfEvalScore,
       peerReviewScore: detail.peerReviewScore as number | undefined,
       interGroupScore: detail.interGroupScore as number | undefined,
       teacherScore: detail.teacherScore as number | undefined,
@@ -418,10 +421,10 @@ const getScoreInputValue = (enrId: string, field: string) => {
 
 const getRowTotal = (enr: Enrollment) => {
   const existing = getExisting(enr.studentId, enr.courseId)
-  const rowScore: Record<string, number | undefined> = {}
+  const rowScore: Partial<DetailedGrade> = {}
   scoreFields.forEach((f) => {
     const v = scores.value[enr.id]?.[f.key]
-    rowScore[f.key] = v !== undefined ? parseInt(v) : (existing?.[f.key as keyof typeof existing] as number | undefined)
+    rowScore[f.key] = v !== undefined ? parseInt(v) : (existing?.[f.key as keyof DetailedGrade] as number | undefined)
   })
   if (!isNaN(rowScore.selfEvalScore as number)) {
     return store.calcTotalScore(enr.courseId, rowScore as DetailedGrade)

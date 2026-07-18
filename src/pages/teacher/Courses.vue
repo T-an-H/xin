@@ -94,7 +94,7 @@
                   <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">课程</th>
                   <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">状态</th>
                   <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">学习进度</th>
-                  <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">操作</th>
+                  
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-50">
@@ -121,14 +121,7 @@
                       <span class="text-xs font-medium text-gray-600 w-10">{{ enr.progress }}%</span>
                     </div>
                   </td>
-                  <td class="px-6 py-4">
-                    <div class="flex items-center gap-1">
-                      <button @click="handleProgressUpdate(enr.id, enr.progress - 10)"
-                        class="px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 rounded transition-colors">-10</button>
-                      <button @click="handleProgressUpdate(enr.id, enr.progress + 10)"
-                        class="px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 rounded transition-colors">+10</button>
-                    </div>
-                  </td>
+                  
                 </tr>
               </tbody>
             </table>
@@ -444,10 +437,7 @@ const displayEnrollments = computed(() => {
 const getCourseTitle = (id: string) => store.courses.find((c) => c.id === id)?.title || '未知'
 const getStudentName = (id: string) => store.students.find((s) => s.id === id)?.name || '未知'
 
-const handleProgressUpdate = (enrollmentId: string, progress: number) => {
-  const newProgress = Math.min(100, Math.max(0, progress))
-  store.updateEnrollment(enrollmentId, { progress: newProgress })
-}
+
 
 const statusLabels: Record<string, string> = {
   enrolled: '已报名', in_progress: '学习中', completed: '已完成', dropped: '已退课',
