@@ -1,0 +1,118 @@
+<template>
+  <div v-if="open" class="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" @click="onClose">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" @click.stop>
+      <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-5 border-b border-gray-100">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">{{ studentName }}</h2>
+          <p class="text-sm text-gray-400">{{ courseTitle }}</p>
+        </div>
+        <button @click="onClose" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <X class="w-5 h-5 text-gray-400" />
+        </button>
+      </div>
+
+      <div class="p-5 space-y-5">
+        <div v-if="!hasDetail" class="text-center py-8 text-gray-400 text-sm">暂无分项成绩数据</div>
+
+        <template v-if="hasDetail">
+          <SectionCalc
+            title="平时成绩"
+            :weight="cfg.regularWeight"
+            :score="regularScore"
+            :contribution="regularContrib"
+            :items="regularSubs"
+          />
+
+          <SectionCalc
+            v-if="cfg.midtermWeight > 0"
+            title="期中成绩"
+            :weight="cfg.midtermWeight"
+            :score="midtermScore"
+            :contribution="midtermContrib"
+            :items="midtermSubs"
+          />
+
+          <SectionCalc
+            v-if="cfg.finalWeight > 0"
+            title="期末成绩"
+            :weight="cfg.finalWeight"
+            :score="finalScore"
+            :contribution="finalContrib"
+            :items="finalSubs"
+          />
+
+          <div class="border-t border-gray-100 pt-4">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-gray-500">最终成绩</span>
+              <span class="text-2xl font-bold text-gray-900">{{ totalScore }}</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-1">
+              {{ regularScore }}×{{ cfg.regularWeight }}%
+              {{ cfg.midtermWeight > 0 ? `+ ${midtermScore}×${cfg.midtermWeight}%` : '' }}
+              {{ cfg.finalWeight > 0 ? `+ ${finalScore}×${cfg.finalWeight}%` : '' }}
+              =
+              {{ regularContrib.toFixed(1) }}{{ cfg.midtermWeight > 0 ? ` + ${midtermContrib.toFixed(1)}` : '' }}{{ cfg.finalWeight > 0 ? ` + ${finalContrib.toFixed(1)}` : '' }}
+              =
+              <span class="font-semibold">{{ totalScore }}</span>
+            </p>
+          </div>
+        </template>
+
+        <div class="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
+          <p><span class="font-medium">权重配置：</span>平时 {{ cfg.regularWeight }}% + 期中 {{ cfg.midtermWeight }}% + 期末 {{ cfg.finalWeight }}%</p>
+          <p v-if="cfg.regularWeight > 0">
+            平时构成：自评 {{ cfg.selfEvalWeight }}% · 组内互评 {{ cfg.peerReviewWeight }}% · 组间互评 {{ cfg.interGroupEvalWeight }}% · 教师 {{ cfg.teacherScoreWeight }}% · 企业导师 {{ cfg.mentorScoreWeight }}%
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+import { computed } from 'vue'
+import { X } from 'lucide-vue-next'
+import type { DetailedGrade, GradeWeightConfig } from '@/types'
+import SectionCalc from './ScoreDetail/SectionCalc.vue'
+
+const props = defineProps<{
+  open: boolean
+  onClose: () => void
+  studentName: string
+  courseTitle: string
+  detail: DetailedGrade | null
+  cfg: GradeWeightConfig
+  totalScore: number
+}>()
+
+const wAvg = (subScores: { score: number | undefined; weight: number }[]): number => {
+  const total = subScores.reduce((s, item) => s + (item.score ?? 0) * item.weight, 0)
+  return Math.round(total * 100) / 100
+}
+
+const regularSubs = computed(() => [
+  { score: props.detail?.selfEvalScore, weight: props.cfg.selfEvalWeight, label: '自评' },
+  { score: props.detail?.peerReviewScore, weight: props.cfg.peerReviewWeight, label: '组内互评' },
+  { score: props.detail?.interGroupScore, weight: props.cfg.interGroupEvalWeight, label: '组间互评' },
+  { score: props.detail?.teacherScore, weight: props.cfg.teacherScoreWeight, label: '教师评价' },
+  { score: props.detail?.mentorScore, weight: props.cfg.mentorScoreWeight, label: '企业导师评价' },
+])
+
+const midtermSubs = computed(() => [
+  { score: props.detail?.midtermExamScore, weight: props.cfg.midtermExamWeight, label: '期中考试' },
+  { score: props.detail?.midtermProjectScore, weight: props.cfg.midtermProjectWeight, label: '项目成绩(期中)' },
+])
+
+const finalSubs = computed(() => [
+  { score: props.detail?.finalExamScore, weight: props.cfg.finalExamWeight, label: '期末测试' },
+  { score: props.detail?.finalProjectScore, weight: props.cfg.finalProjectWeight, label: '项目成绩(期末)' },
+])
+
+const regularScore = computed(() => wAvg(regularSubs.value))
+const midtermScore = computed(() => wAvg(midtermSubs.value))
+const finalScore = computed(() => wAvg(finalSubs.value))
+const regularContrib = computed(() => regularScore.value * props.cfg.regularWeight / 100)
+const midtermContrib = computed(() => midtermScore.value * props.cfg.midtermWeight / 100)
+const finalContrib = computed(() => finalScore.value * props.cfg.finalWeight / 100)
+
+const hasDetail = computed(() => props.detail && regularSubs.value.some((s) => s.score !== undefined))
+</script>
