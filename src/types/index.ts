@@ -32,6 +32,8 @@ export interface Grade {
   studentId: string;
   courseId: string;
   score: number;
+  totalScore: number;
+  semester: string;
   comment: string;
   gradedAt: string;
 }
@@ -47,7 +49,9 @@ export const TierLabels: Record<LearningTier, string> = {
 
 export interface Student {
   id: string;
+  studentId: string;
   name: string;
+  className: string;
   phone: string;
   email: string;
   avatar: string;

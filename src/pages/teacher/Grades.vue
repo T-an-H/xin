@@ -376,6 +376,8 @@ const handleSave = () => {
         studentId: enr.studentId,
         courseId: enr.courseId,
         score: totalScore,
+        totalScore: totalScore,
+        semester: '2026年秋季(当前)',
         comment: '',
         gradedAt: now,
       })
@@ -418,10 +420,10 @@ const getScoreInputValue = (enrId: string, field: string) => {
 
 const getRowTotal = (enr: Enrollment) => {
   const existing = getExisting(enr.studentId, enr.courseId)
-  const rowScore: Record<string, number | undefined> = {}
+  const rowScore: Partial<DetailedGrade> = {}
   scoreFields.forEach((f) => {
     const v = scores.value[enr.id]?.[f.key]
-    rowScore[f.key] = v !== undefined ? parseInt(v) : (existing?.[f.key as keyof typeof existing] as number | undefined)
+    ;(rowScore as Record<string, number | undefined>)[f.key] = v !== undefined ? parseInt(v) : (existing?.[f.key as keyof typeof existing] as number | undefined)
   })
   if (!isNaN(rowScore.selfEvalScore as number)) {
     return store.calcTotalScore(enr.courseId, rowScore as DetailedGrade)
