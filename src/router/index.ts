@@ -30,11 +30,6 @@ const router = createRouter({
           component: () => import('@/pages/admin/Categories.vue'),
         },
         {
-          path: 'schedule',
-          name: 'AdminSchedule',
-          component: () => import('@/pages/admin/Schedule.vue'),
-        },
-        {
           path: 'students',
           name: 'AdminStudents',
           component: () => import('@/pages/admin/Students.vue'),

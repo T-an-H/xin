@@ -61,9 +61,8 @@ const router = useRouter()
 const adminNavItems = [
   { to: '/admin/courses', icon: BookOpen, label: '课程管理' },
   { to: '/admin/categories', icon: BarChart3, label: '分类管理' },
-  { to: '/admin/schedule', icon: Calendar, label: '排课管理' },
   { to: '/admin/students', icon: Users, label: '学员管理' },
-  { to: '/admin/statistics', icon: BarChart3, label: '成绩管理' },
+  { to: '/admin/statistics', icon: Award, label: '成绩管理' },
 ]
 
 const teacherNavItems = [
