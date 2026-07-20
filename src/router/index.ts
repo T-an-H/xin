@@ -25,11 +25,6 @@ const router = createRouter({
           component: () => import('@/pages/admin/Statistics.vue'),
         },
         {
-          path: 'categories',
-          name: 'AdminCategories',
-          component: () => import('@/pages/admin/Categories.vue'),
-        },
-        {
           path: 'students',
           name: 'AdminStudents',
           component: () => import('@/pages/admin/Students.vue'),

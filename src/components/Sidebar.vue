@@ -43,7 +43,6 @@ import { useAppStore } from '@/stores/app'
 import {
   LayoutDashboard,
   BookOpen,
-  BarChart3,
   LogOut,
   GraduationCap,
   ClipboardCheck,
@@ -60,7 +59,6 @@ const router = useRouter()
 
 const adminNavItems = [
   { to: '/admin/courses', icon: BookOpen, label: '课程管理' },
-  { to: '/admin/categories', icon: BarChart3, label: '分类管理' },
   { to: '/admin/students', icon: Users, label: '学员管理' },
   { to: '/admin/statistics', icon: Award, label: '成绩管理' },
 ]
