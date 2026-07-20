@@ -118,8 +118,8 @@ const roles = [
 
 const rolePortals: Record<UserRole, string> = {
   admin: '/admin/courses',
-  teacher: '/teacher/dashboard',
-  student: '/student/dashboard',
+  teacher: '/teacher/courses',
+  student: '/student/courses',
 }
 
 const handleLogin = () => {

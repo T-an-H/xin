@@ -41,7 +41,6 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import {
-  LayoutDashboard,
   BookOpen,
   BarChart3,
   LogOut,
@@ -67,14 +66,12 @@ const adminNavItems = [
 ]
 
 const teacherNavItems = [
-  { to: '/teacher/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/teacher/courses', icon: BookOpen, label: '我的课程' },
   { to: '/teacher/grades', icon: Award, label: '成绩管理' },
   { to: '/teacher/extra', icon: Lightbulb, label: '额外功能' },
 ]
 
 const studentNavItems = [
-  { to: '/student/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/student/profile', icon: User, label: '个人画像' },
   { to: '/student/courses', icon: BookOpen, label: '我的课程' },
   { to: '/student/grades', icon: Award, label: '成绩管理' },
