@@ -50,7 +50,6 @@ import {
   User,
   Lightbulb,
   Users,
-  Calendar,
 } from 'lucide-vue-next'
 
 const store = useAppStore()
@@ -75,7 +74,6 @@ const studentNavItems = [
   { to: '/student/profile', icon: User, label: '个人画像' },
   { to: '/student/courses', icon: BookOpen, label: '我的课程' },
   { to: '/student/grades', icon: Award, label: '实施成绩' },
-  { to: '/student/schedule', icon: Calendar, label: '我的课表' },
   { to: '/student/extra', icon: Lightbulb, label: '额外功能' },
 ]
 

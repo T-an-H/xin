@@ -94,11 +94,6 @@ const router = createRouter({
           component: () => import('@/pages/student/CourseLearn.vue'),
         },
         {
-          path: 'schedule',
-          name: 'StudentSchedule',
-          component: () => import('@/pages/student/Schedule.vue'),
-        },
-        {
           path: 'progress',
           name: 'StudentProgress',
           component: () => import('@/pages/student/Progress.vue'),
