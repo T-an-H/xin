@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">课程管理</h1>
-        <p class="text-gray-500 mt-1">按学院划分管理课程与分类信息</p>
+        <h1 class="text-2xl font-bold text-gray-900">课程实施管理</h1>
+        <p class="text-gray-500 mt-1">按学院划分管理课程实施信息，基础数据由教务系统导入</p>
       </div>
       <button @click="openCourseModal(null)" class="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
         <Plus class="w-4 h-4" /> 新建课程

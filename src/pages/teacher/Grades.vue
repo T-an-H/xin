@@ -3,8 +3,8 @@
     <!-- 页面头部 -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">成绩录入</h1>
-        <p class="text-gray-500 mt-1">按分项录入，系统自动按权重计算总分</p>
+        <h1 class="text-2xl font-bold text-gray-900">实施成绩录入</h1>
+        <p class="text-gray-500 mt-1">按分项录入课程实施成绩，系统自动按权重计算总分</p>
       </div>
       <div class="flex gap-3">
         <button @click="configOpen = true" class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors text-sm font-medium">

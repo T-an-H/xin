@@ -6,7 +6,7 @@
           <GraduationCap class="w-6 h-6 text-[#0f172a]" />
         </div>
         <div>
-          <h1 class="font-bold text-lg">课程管理</h1>
+          <h1 class="font-bold text-lg">课程实施管理</h1>
           <p class="text-xs text-white/50">{{ config.label }}</p>
         </div>
       </div>
@@ -58,15 +58,15 @@ const route = useRoute()
 const router = useRouter()
 
 const adminNavItems = [
-  { to: '/admin/courses', icon: BookOpen, label: '课程管理' },
+  { to: '/admin/courses', icon: BookOpen, label: '课程实施' },
   { to: '/admin/students', icon: Users, label: '学员管理' },
-  { to: '/admin/statistics', icon: Award, label: '成绩管理' },
+  { to: '/admin/statistics', icon: Award, label: '实施成绩' },
 ]
 
 const teacherNavItems = [
   { to: '/teacher/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/teacher/courses', icon: BookOpen, label: '我的课程' },
-  { to: '/teacher/grades', icon: Award, label: '成绩管理' },
+  { to: '/teacher/grades', icon: Award, label: '实施成绩' },
   { to: '/teacher/extra', icon: Lightbulb, label: '额外功能' },
 ]
 
@@ -74,7 +74,7 @@ const studentNavItems = [
   { to: '/student/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/student/profile', icon: User, label: '个人画像' },
   { to: '/student/courses', icon: BookOpen, label: '我的课程' },
-  { to: '/student/grades', icon: Award, label: '成绩管理' },
+  { to: '/student/grades', icon: Award, label: '实施成绩' },
   { to: '/student/schedule', icon: Calendar, label: '我的课表' },
   { to: '/student/extra', icon: Lightbulb, label: '额外功能' },
 ]

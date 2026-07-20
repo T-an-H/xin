@@ -7,8 +7,8 @@
           <div class="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center mb-6">
             <GraduationCap class="w-12 h-12 text-white" />
           </div>
-          <h1 class="text-3xl font-bold text-white mb-3">EduManage</h1>
-          <p class="text-white/70 text-lg">课程管理实施平台 · 高效协同管理</p>
+          <h1 class="text-3xl font-bold text-white mb-3">课程实施管理平台</h1>
+          <p class="text-white/70 text-lg">专注于课程实施过程管理 · 高效协同</p>
         </div>
         <div class="flex gap-4">
           <div class="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white/80 text-sm">管理员端</div>
@@ -23,7 +23,7 @@
           <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center mx-auto mb-4">
             <GraduationCap class="w-8 h-8 text-white" />
           </div>
-          <h2 class="text-xl font-bold text-gray-900">EduManage</h2>
+          <h2 class="text-xl font-bold text-gray-900">课程实施管理平台</h2>
         </div>
 
         <h2 class="text-2xl font-bold text-gray-900 mb-2 hidden lg:block">欢迎登录</h2>
@@ -111,9 +111,9 @@ const selectedRole = ref<UserRole>('admin')
 const error = ref('')
 
 const roles = [
-  { id: 'admin' as UserRole, label: '管理员', icon: UserCog, desc: '课程、学员、排课、数据管理', color: 'ring-amber-500 border-amber-500 bg-amber-50' },
+  { id: 'admin' as UserRole, label: '管理员', icon: UserCog, desc: '课程实施管理、数据统计、学员管理', color: 'ring-amber-500 border-amber-500 bg-amber-50' },
   { id: 'teacher' as UserRole, label: '教师', icon: GraduationCap, desc: '授课管理、学员进度、成绩录入', color: 'ring-emerald-500 border-emerald-500 bg-emerald-50' },
-  { id: 'student' as UserRole, label: '学生', icon: Users, desc: '我的课程、课表、学习进度', color: 'ring-blue-500 border-blue-500 bg-blue-50' },
+  { id: 'student' as UserRole, label: '学生', icon: Users, desc: '我的课程、学习进度、实施评价', color: 'ring-blue-500 border-blue-500 bg-blue-50' },
 ]
 
 const rolePortals: Record<UserRole, string> = {

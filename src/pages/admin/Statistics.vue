@@ -3,8 +3,8 @@
     <!-- 头部 -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">成绩管理</h1>
-        <p class="text-gray-500 mt-1">课程成绩分布与统计概览，支持一键导出</p>
+        <h1 class="text-2xl font-bold text-gray-900">实施成绩</h1>
+        <p class="text-gray-500 mt-1">课程实施成绩分布与统计概览，支持一键导出</p>
       </div>
       <button
         @click="exportGrades"

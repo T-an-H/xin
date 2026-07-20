@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">成绩管理</h1>
-        <p class="text-gray-500 mt-1">查看各课程成绩</p>
+        <h1 class="text-2xl font-bold text-gray-900">实施成绩</h1>
+        <p class="text-gray-500 mt-1">查看各课程实施成绩</p>
       </div>
       <select v-model="semester" class="px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm">
         <option value="">全部学期</option>

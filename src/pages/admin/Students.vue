@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">学员管理</h1>
-      <p class="text-gray-500 mt-1">管理所有学员信息</p>
+      <p class="text-gray-500 mt-1">学员实施信息管理，基础数据由教务系统导入</p>
     </div>
 
     <div class="flex gap-3">
