@@ -16,50 +16,35 @@
     </div>
 
     <!-- 统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-            <BookOpen class="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-500">总课程数</p>
-            <p class="text-xl font-bold text-gray-900">{{ store.courses.length }}</p>
-          </div>
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+          <BookOpen class="w-5 h-5 text-blue-600" />
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">总课程数</p>
+          <p class="text-xl font-bold text-gray-900">{{ store.courses.length }}</p>
         </div>
       </div>
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-            <Users class="w-5 h-5 text-emerald-600" />
+      <!-- 按学院分类的课程成绩汇总 -->
+      <div class="space-y-4">
+        <div v-for="section in courseSections" :key="section.categoryId" class="space-y-1.5">
+          <div class="flex items-center gap-2 text-sm">
+            <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" :style="{ backgroundColor: section.color }" />
+            <span class="text-gray-500 text-xs font-medium">{{ section.name }}</span>
+            <span class="text-gray-400 text-xs">({{ section.courses.length }}门)</span>
           </div>
-          <div>
-            <p class="text-xs text-gray-500">总学生数</p>
-            <p class="text-xl font-bold text-gray-900">{{ store.students.length }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-            <TrendingUp class="w-5 h-5 text-amber-600" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-500">总平均分</p>
-            <p class="text-xl font-bold text-gray-900">{{ totalAvg }}</p>
+          <div v-for="course in section.courses" :key="course.id" class="ml-4 space-y-1">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-700">{{ course.title }}</span>
+              <span class="text-gray-500 text-xs">{{ getCourseAvg(course.id) }}分</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-500" :style="{ width: `${getCourseAvg(course.id)}%`, backgroundColor: section.color }" />
+            </div>
           </div>
         </div>
-      </div>
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-            <Award class="w-5 h-5 text-purple-600" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-500">已评成绩</p>
-            <p class="text-xl font-bold text-gray-900">{{ store.grades.length }}</p>
-          </div>
-        </div>
+        <div v-if="filteredCourses.length === 0" class="text-center py-4 text-gray-400">暂无数据</div>
       </div>
     </div>
 
@@ -78,23 +63,6 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- 左侧：图表区域 -->
       <div class="lg:col-span-2 space-y-6">
-        <!-- 课程成绩汇总 -->
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-800 mb-4">课程成绩汇总</h3>
-          <div class="space-y-3">
-            <div v-for="course in filteredCourses" :key="course.id" class="space-y-1.5">
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-700">{{ course.title }}</span>
-                <span class="text-gray-500 text-xs">{{ getCourseAvg(course.id) }}分</span>
-              </div>
-              <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full rounded-full transition-all duration-500" :style="{ width: `${getCourseAvg(course.id)}%`, backgroundColor: getChartColor(course.id) }" />
-              </div>
-            </div>
-            <div v-if="filteredCourses.length === 0" class="text-center py-8 text-gray-400">暂无数据</div>
-          </div>
-        </div>
-
         <!-- 成绩分布 -->
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-800 mb-4">成绩分布</h3>
@@ -202,7 +170,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { BookOpen, Users, TrendingUp, Award, Download, Search } from 'lucide-vue-next'
+import { BookOpen, Download, Search } from 'lucide-vue-next'
 
 const store = useAppStore()
 const searchText = ref('')
@@ -233,11 +201,6 @@ const filteredGrades = computed(() => {
 // ====== 统计 ======
 const allScores = computed(() => store.grades.map((g) => g.totalScore))
 
-const totalAvg = computed(() => {
-  if (allScores.value.length === 0) return 0
-  return Math.round(allScores.value.reduce((s, v) => s + v, 0) / allScores.value.length)
-})
-
 const maxScore = computed(() => {
   if (allScores.value.length === 0) return 0
   return Math.max(...allScores.value)
@@ -254,17 +217,21 @@ const passRate = computed(() => {
   return Math.round((passed / allScores.value.length) * 100)
 })
 
+// ====== 按学院分组 ======
+const courseSections = computed(() => {
+  return store.categories.map((cat) => ({
+    categoryId: cat.id,
+    name: cat.name,
+    color: cat.color,
+    courses: filteredCourses.value.filter((c) => c.categoryId === cat.id),
+  }))
+})
+
 // ====== 课程成绩 ======
 const getCourseAvg = (courseId: string) => {
   const grades = store.grades.filter((g) => g.courseId === courseId)
   if (grades.length === 0) return 0
   return Math.round(grades.reduce((s, g) => s + g.totalScore, 0) / grades.length)
-}
-
-const getChartColor = (courseId: string) => {
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
-  const idx = store.courses.findIndex((c) => c.id === courseId)
-  return colors[idx % colors.length]
 }
 
 // ====== 成绩分布 ======
