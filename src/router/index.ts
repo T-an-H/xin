@@ -34,20 +34,14 @@ const router = createRouter({
           name: 'AdminSchedule',
           component: () => import('@/pages/admin/Schedule.vue'),
         },
-      ],
-    },
-    {
-      path: '/students',
-      component: Layout,
-      children: [
         {
-          path: '',
-          name: 'Students',
+          path: 'students',
+          name: 'AdminStudents',
           component: () => import('@/pages/admin/Students.vue'),
         },
         {
-          path: ':id',
-          name: 'StudentDetail',
+          path: 'students/:id',
+          name: 'AdminStudentDetail',
           component: () => import('@/pages/admin/StudentDetail.vue'),
         },
       ],

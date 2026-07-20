@@ -200,8 +200,8 @@ const SEMESTERS = [
 
 const scoreFields: { key: keyof Omit<DetailedGrade, 'id' | 'studentId' | 'courseId' | 'gradedAt'>; label: string; group: 'regular' | 'midterm' | 'final'; readonly?: boolean }[] = [
   { key: 'selfEvalScore', label: '自评', group: 'regular', readonly: true },
-  { key: 'peerReviewScore', label: '组内互评', group: 'regular' },
-  { key: 'interGroupScore', label: '组间互评', group: 'regular' },
+  { key: 'peerReviewScore', label: '组内互评', group: 'regular', readonly: true },
+  { key: 'interGroupScore', label: '组间互评', group: 'regular', readonly: true },
   { key: 'teacherScore', label: '教师评价', group: 'regular' },
   { key: 'mentorScore', label: '企业导师评价', group: 'regular' },
   { key: 'midtermExamScore', label: '期中考试', group: 'midterm' },
@@ -350,8 +350,8 @@ const handleSave = () => {
 
     const dgData = {
       selfEvalScore: existing?.selfEvalScore,
-      peerReviewScore: detail.peerReviewScore as number | undefined,
-      interGroupScore: detail.interGroupScore as number | undefined,
+      peerReviewScore: existing?.peerReviewScore,
+      interGroupScore: existing?.interGroupScore,
       teacherScore: detail.teacherScore as number | undefined,
       mentorScore: detail.mentorScore as number | undefined,
       midtermExamScore: detail.midtermExamScore as number | undefined,
