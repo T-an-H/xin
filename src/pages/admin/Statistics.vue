@@ -15,36 +15,40 @@
       </button>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-          <BookOpen class="w-5 h-5 text-blue-600" />
+    <!-- 总课程数（按学院） -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+      <div class="flex items-center justify-between px-6 py-4 cursor-pointer select-none" @click="toggleCollapse('courses')">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+            <BookOpen class="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">总课程数</p>
+            <p class="text-xl font-bold text-gray-900">{{ store.courses.length }}</p>
+          </div>
         </div>
-        <div>
-          <p class="text-xs text-gray-500">总课程数</p>
-          <p class="text-xl font-bold text-gray-900">{{ store.courses.length }}</p>
-        </div>
+        <ChevronDown class="w-5 h-5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': !collapsed.has('courses') }" />
       </div>
-      <!-- 按学院分类的课程成绩汇总 -->
-      <div class="space-y-4">
-        <div v-for="section in courseSections" :key="section.categoryId" class="space-y-1.5">
-          <div class="flex items-center gap-2 text-sm">
-            <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" :style="{ backgroundColor: section.color }" />
-            <span class="text-gray-500 text-xs font-medium">{{ section.name }}</span>
-            <span class="text-gray-400 text-xs">({{ section.courses.length }}门)</span>
-          </div>
-          <div v-for="course in section.courses" :key="course.id" class="ml-4 space-y-1">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-gray-700">{{ course.title }}</span>
-              <span class="text-gray-500 text-xs">{{ getCourseAvg(course.id) }}分</span>
+      <div v-show="!collapsed.has('courses')" class="px-6 pb-6 border-t border-gray-100 pt-4">
+        <div class="space-y-4">
+          <div v-for="section in courseSections" :key="section.categoryId" class="space-y-1.5">
+            <div class="flex items-center gap-2 text-sm">
+              <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" :style="{ backgroundColor: section.color }" />
+              <span class="text-gray-500 text-xs font-medium">{{ section.name }}</span>
+              <span class="text-gray-400 text-xs">({{ section.courses.length }}门)</span>
             </div>
-            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full rounded-full transition-all duration-500" :style="{ width: `${getCourseAvg(course.id)}%`, backgroundColor: section.color }" />
+            <div v-for="course in section.courses" :key="course.id" class="ml-4 space-y-1">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-700">{{ course.title }}</span>
+                <span class="text-gray-500 text-xs">{{ getCourseAvg(course.id) }}分</span>
+              </div>
+              <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500" :style="{ width: `${getCourseAvg(course.id)}%`, backgroundColor: section.color }" />
+              </div>
             </div>
           </div>
+          <div v-if="filteredCourses.length === 0" class="text-center py-4 text-gray-400">暂无数据</div>
         </div>
-        <div v-if="filteredCourses.length === 0" class="text-center py-4 text-gray-400">暂无数据</div>
       </div>
     </div>
 
@@ -61,32 +65,38 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- 左侧：图表区域 -->
+      <!-- 左侧 -->
       <div class="lg:col-span-2 space-y-6">
         <!-- 成绩分布 -->
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-800 mb-4">成绩分布</h3>
-          <div class="space-y-2">
-            <div v-for="(range, idx) in gradeRanges" :key="idx" class="flex items-center gap-3">
-              <span class="text-xs text-gray-500 w-16">{{ range.label }}</span>
-              <div class="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
-                <div class="h-full rounded transition-all duration-500" :style="{ width: `${range.percent}%`, backgroundColor: range.color }" />
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between px-6 py-4 cursor-pointer select-none" @click="toggleCollapse('distribution')">
+            <h3 class="text-sm font-semibold text-gray-800">成绩分布</h3>
+            <ChevronDown class="w-5 h-5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': !collapsed.has('distribution') }" />
+          </div>
+          <div v-show="!collapsed.has('distribution')" class="px-6 pb-6 border-t border-gray-100 pt-4">
+            <div class="space-y-2">
+              <div v-for="(range, idx) in gradeRanges" :key="idx" class="flex items-center gap-3">
+                <span class="text-xs text-gray-500 w-16">{{ range.label }}</span>
+                <div class="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
+                  <div class="h-full rounded transition-all duration-500" :style="{ width: `${range.percent}%`, backgroundColor: range.color }" />
+                </div>
+                <span class="text-xs text-gray-500 w-24 text-right">{{ range.count }}人 ({{ range.percent }}%)</span>
               </div>
-              <span class="text-xs text-gray-500 w-24 text-right">{{ range.count }}人 ({{ range.percent }}%)</span>
+              <div v-if="allScores.length === 0" class="text-center py-8 text-gray-400">暂无成绩数据</div>
             </div>
-            <div v-if="allScores.length === 0" class="text-center py-8 text-gray-400">暂无成绩数据</div>
           </div>
         </div>
 
         <!-- 成绩明细表 -->
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-100">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between px-6 py-4 cursor-pointer select-none" @click="toggleCollapse('detail')">
             <h3 class="text-sm font-semibold text-gray-800">成绩明细</h3>
+            <ChevronDown class="w-5 h-5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': !collapsed.has('detail') }" />
           </div>
-          <div class="overflow-x-auto">
+          <div v-show="!collapsed.has('detail')" class="overflow-x-auto border-t border-gray-100">
             <table class="w-full">
               <thead>
-                <tr class="bg-gray-50 border-b border-gray-100">
+                <tr class="bg-gray-50">
                   <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">学生</th>
                   <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">课程</th>
                   <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">成绩</th>
@@ -124,42 +134,52 @@
         </div>
       </div>
 
-      <!-- 右侧：统计概览 -->
+      <!-- 右侧 -->
       <div class="space-y-6">
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-800 mb-4">课程统计</h3>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">进行中</span>
-              <span class="text-lg font-bold text-green-600">{{ store.courses.filter(c => c.status === 'active').length }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">已结束</span>
-              <span class="text-lg font-bold text-gray-400">{{ store.courses.filter(c => c.status !== 'active').length }}</span>
-            </div>
-            <div class="border-t border-gray-100 pt-3">
+        <!-- 课程统计 -->
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between px-6 py-4 cursor-pointer select-none" @click="toggleCollapse('stats')">
+            <h3 class="text-sm font-semibold text-gray-800">课程统计</h3>
+            <ChevronDown class="w-5 h-5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': !collapsed.has('stats') }" />
+          </div>
+          <div v-show="!collapsed.has('stats')" class="px-6 pb-6 border-t border-gray-100 pt-4">
+            <div class="space-y-4">
               <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">进行中</span>
+                <span class="text-lg font-bold text-green-600">{{ store.courses.filter(c => c.status === 'active').length }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">已结束</span>
+                <span class="text-lg font-bold text-gray-400">{{ store.courses.filter(c => c.status !== 'active').length }}</span>
+              </div>
+              <div class="flex items-center justify-between pt-2">
                 <span class="text-sm text-gray-600">最高分</span>
                 <span class="text-lg font-bold text-blue-600">{{ maxScore }}</span>
               </div>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">最低分</span>
-              <span class="text-lg font-bold text-red-500">{{ minScore }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">及格率</span>
-              <span class="text-lg font-bold text-emerald-600">{{ passRate }}%</span>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">最低分</span>
+                <span class="text-lg font-bold text-red-500">{{ minScore }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">及格率</span>
+                <span class="text-lg font-bold text-emerald-600">{{ passRate }}%</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-800 mb-3">分类统计</h3>
-          <div class="space-y-2">
-            <div v-for="cat in store.categories" :key="cat.id" class="flex items-center justify-between text-sm">
-              <span class="text-gray-600">{{ cat.name }}</span>
-              <span class="text-gray-900 font-medium">{{ store.courses.filter(c => c.categoryId === cat.id).length }}门</span>
+        <!-- 分类统计 -->
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between px-6 py-4 cursor-pointer select-none" @click="toggleCollapse('categories')">
+            <h3 class="text-sm font-semibold text-gray-800">分类统计</h3>
+            <ChevronDown class="w-5 h-5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': !collapsed.has('categories') }" />
+          </div>
+          <div v-show="!collapsed.has('categories')" class="px-6 pb-6 border-t border-gray-100 pt-4">
+            <div class="space-y-2">
+              <div v-for="cat in store.categories" :key="cat.id" class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">{{ cat.name }}</span>
+                <span class="text-gray-900 font-medium">{{ store.courses.filter(c => c.categoryId === cat.id).length }}门</span>
+              </div>
             </div>
           </div>
         </div>
@@ -170,11 +190,23 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { BookOpen, Download, Search } from 'lucide-vue-next'
+import { BookOpen, Download, Search, ChevronDown } from 'lucide-vue-next'
 
 const store = useAppStore()
 const searchText = ref('')
 const selectedCourse = ref('all')
+
+// ====== 折叠控制 ======
+const collapsed = ref<Set<string>>(new Set())
+
+const toggleCollapse = (key: string) => {
+  if (collapsed.value.has(key)) {
+    collapsed.value.delete(key)
+  } else {
+    collapsed.value.add(key)
+  }
+  collapsed.value = new Set(collapsed.value)
+}
 
 // ====== 筛选 ======
 const filteredCourses = computed(() => {
