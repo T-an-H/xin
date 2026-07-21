@@ -231,3 +231,5 @@ export const detailedGrades: import('@/types').DetailedGrade[] = [
   // 吴磊 (stu-19)
   { id: 'dg-13', studentId: 'stu-19', courseId: 'course-3', selfEvalScore: 72, teacherScore: 76, finalExamScore: 78, finalProjectScore: 74, gradedAt: '2026-07-24' },
 ];
+
+// ========== 课程安排（排课）Mock 数据 ==========
