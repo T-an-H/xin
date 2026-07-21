@@ -17,17 +17,21 @@
 
       <!-- 评价场次列表 -->
       <div v-for="session in totalSessions" :key="session" class="border rounded-lg overflow-hidden" :class="sessionReminders[session]?.status === 'overdue' ? 'border-red-200' : 'border-gray-100'">
-        <button @click="openEvalModal(session)" class="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-gray-50 transition-colors">
+        <button @click="sessionState(session).disabled ? null : openEvalModal(session)" :disabled="sessionState(session).disabled" class="w-full flex items-center justify-between px-4 py-3 text-sm transition-colors" :class="sessionState(session).disabled ? 'bg-gray-50 cursor-not-allowed text-gray-400' : 'hover:bg-gray-50 text-gray-800'">
           <div class="flex items-center gap-3">
-            <span class="font-medium text-gray-800">第{{ session }}次评价</span>
-            <span :class="`text-xs px-1.5 py-0.5 rounded-full ${sessionReminders[session]?.status === 'overdue' ? 'bg-red-100 text-red-600' : sessionReminders[session]?.status === 'pending' ? 'bg-amber-100 text-amber-600' : 'text-gray-400'}`">
+            <span :class="sessionState(session).disabled ? 'text-gray-400' : 'font-medium text-gray-800'">第{{ session }}次评价</span>
+            <span v-if="sessionState(session).disabled && sessionState(session).reason" class="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+              {{ sessionState(session).reason }}
+            </span>
+            <span v-else :class="`text-xs px-1.5 py-0.5 rounded-full ${sessionReminders[session]?.status === 'overdue' ? 'bg-red-100 text-red-600' : sessionReminders[session]?.status === 'pending' ? 'bg-amber-100 text-amber-600' : 'text-gray-400'}`">
               {{ sessionReminders[session]?.status === 'overdue' ? '已逾期' : sessionReminders[session]?.status === 'pending' ? '待评价' : '' }}
             </span>
-            <span class="text-xs text-gray-500">{{ getSessionEvals(session).filter(e => e.record).length }}/{{ enabledTypes.length }} 项已评</span>
+            <span class="text-xs" :class="sessionState(session).disabled ? 'text-gray-300' : 'text-gray-500'">{{ getSessionEvals(session).filter(e => e.record).length }}/{{ enabledTypes.length }} 项已评</span>
           </div>
           <div class="flex items-center gap-2">
-            <CheckCircle v-if="getSessionEvals(session).filter(e => e.record).length === enabledTypes.length" class="w-3.5 h-3.5 text-emerald-500" />
-            <ChevronRight class="w-4 h-4 text-gray-400" />
+            <CheckCircle v-if="!sessionState(session).disabled && getSessionEvals(session).filter(e => e.record).length === enabledTypes.length" class="w-3.5 h-3.5 text-emerald-500" />
+            <Lock v-else-if="sessionState(session).disabled" class="w-3.5 h-3.5 text-gray-300" />
+            <ChevronRight v-else class="w-4 h-4 text-gray-400" />
           </div>
         </button>
       </div>
@@ -108,7 +112,7 @@ import { ref, computed, watch, reactive, type Component } from 'vue'
 import { useAppStore } from '@/stores/app'
 import {
   AlertTriangle, User, Users, Building2, GraduationCap, Briefcase,
-  CheckCircle, ChevronRight
+  CheckCircle, ChevronRight, Lock
 } from 'lucide-vue-next'
 import type { EvalType, EvalAnomaly } from '@/types'
 import { EvalTypeLabels, EvalTypeColors, EvalTemplateLabels, EvalFrequencyLabels, TEMPLATE_EVAL_TYPES } from '@/types'
@@ -156,8 +160,26 @@ const sessionReminders = computed(() => {
 const evalModalOpen = ref(false)
 const editingSession = ref(0)
 
+function sessionState(session: number): { disabled: boolean; reason: string } {
+  // 已锁定 → 不可评价
+  if (store.isSessionLocked(props.courseId, session)) {
+    return { disabled: true, reason: '该轮次评价已锁定' }
+  }
+  // 最终轮次已过截止期
+  if (session === totalSessions.value && store.isFinalSessionDeadlinePassed?.(props.courseId, totalSessions.value)) {
+    return { disabled: true, reason: '评价已截止' }
+  }
+  // 未到开启时间
+  if (!store.isSessionTime(props.courseId, session)) {
+    return { disabled: true, reason: session === 1 ? '第一节课尚未开始' : '该轮次尚未到开启时间' }
+  }
+  return { disabled: false, reason: '' }
+}
+
 function openEvalModal(session: number) {
   editingSession.value = session
+  // 当第 N 次评价开启时，自动锁定第 1 ~ N-1 次
+  store.autoLockPreviousSession(props.courseId, session)
   modalScores.value = { self: 75 }
   validationErrors.value = {}
   submitError.value = ''

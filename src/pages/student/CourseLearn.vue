@@ -32,78 +32,164 @@
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <!-- ===== AI 分层 ===== -->
           <div v-if="activeTab === 'ai_tier'" class="space-y-6">
-            <!-- 当前层级 -->
-            <div>
-              <h3 class="text-sm font-semibold text-gray-800 mb-3">AI 学习层级评估</h3>
-              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
-                <div class="flex items-center justify-between mb-4">
-                  <div>
-                    <p class="text-xs text-gray-500 mb-1">当前学习层级</p>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
-                      :class="tierBadgeClass">
-                      <Layers class="w-4 h-4" />
-                      {{ tierLabel }}
-                    </span>
-                  </div>
-                  <div class="text-right">
-                    <p class="text-xs text-gray-500">综合评分</p>
-                    <p class="text-2xl font-bold" :class="myGrade ? 'text-blue-600' : 'text-gray-400'">
-                      {{ myGrade?.score ?? '-' }}
-                    </p>
-                  </div>
-                </div>
-                <!-- 能力雷达图 -->
-                <div class="flex justify-center">
-                  <svg viewBox="0 0 210 210" class="w-56 h-56">
-                    <polygon v-for="level in 5" :key="level" :points="gridPoints(level)"
-                      fill="none" stroke="#cbd5e1" stroke-width="0.8" />
-                    <line v-for="(_, i) in radarData" :key="'axis-' + i"
-                      :x1="105" :y1="105" :x2="axisEndX(i)" :y2="axisEndY(i)"
-                      stroke="#cbd5e1" stroke-width="0.8" />
-                    <polygon :points="dataPolygonPoints"
-                      fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" stroke-width="2" />
-                    <g v-for="(d, i) in radarData" :key="'point-' + i">
-                      <circle :cx="dataPointX(i)" :cy="dataPointY(i)" r="4" fill="#3b82f6" stroke="white" stroke-width="2" />
-                      <text :x="dataLabelX(i)" :y="dataLabelY(i)"
-                        :text-anchor="dataLabelAnchor(i)" font-size="10" fill="#64748b">
-                        {{ d.label }} {{ d.value }}分
-                      </text>
-                    </g>
-                  </svg>
-                </div>
-              </div>
+            <!-- 未到开始条件 -->
+            <div v-if="!firstClassEnded" class="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
+              <Layers class="w-12 h-12 mx-auto mb-3 text-amber-400" />
+              <h3 class="text-lg font-semibold text-amber-700 mb-2">AI 分层测试</h3>
+              <p class="text-sm text-amber-600">第一节课尚未结束，AI 分层测试将在第一节课结束后开启</p>
+              <p class="text-xs text-amber-400 mt-1">届时将根据第一节课内容生成 10 道测试题，依据得分判定学习层级</p>
             </div>
 
-            <!-- AI 学习建议 -->
-            <div>
-              <h3 class="text-sm font-semibold text-gray-800 mb-3">AI 学习建议</h3>
-              <div class="space-y-3">
-                <div v-for="(tip, i) in aiTips" :key="i"
-                  class="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50">
-                  <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span class="text-xs font-bold text-blue-600">{{ i + 1 }}</span>
+            <!-- 条件已满足但未测试 -->
+            <div v-else-if="firstClassEnded && !tierFinalized" class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-8 text-center">
+              <Sparkles class="w-12 h-12 mx-auto mb-3 text-blue-500" />
+              <h3 class="text-lg font-semibold text-blue-800 mb-2">AI 分层测试已开放</h3>
+              <p class="text-sm text-blue-600 mb-6">完成 10 道测试题（单选+判断），系统将根据得分判定你的学习层级</p>
+              <button @click="openAITest"
+                class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-500/25 inline-flex items-center gap-2">
+                <HelpCircle class="w-5 h-5" />
+                开始 AI 分层测试
+              </button>
+            </div>
+
+            <!-- 已分层 → 永久锁定展示 -->
+            <div v-else>
+              <!-- 当前层级 -->
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">AI 学习层级评估</h3>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <p class="text-xs text-gray-500 mb-1">当前学习层级</p>
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
+                        :class="tierBadgeClass">
+                        <Layers class="w-4 h-4" />
+                        {{ tierLabel }}
+                      </span>
+                      <span class="ml-2 text-[10px] text-gray-400">已锁定 · 该学期不可修改</span>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-xs text-gray-500">分层测试得分</p>
+                      <p class="text-2xl font-bold text-blue-600">{{ myTierScore }}</p>
+                      <p class="text-xs text-gray-400">/ {{ totalQuestions * 10 }}分</p>
+                    </div>
                   </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">{{ tip.title }}</p>
-                    <p class="text-xs text-gray-500 mt-0.5">{{ tip.desc }}</p>
+
+                  <!-- 锁定提示 -->
+                  <div class="mt-3 flex items-center gap-2 px-3 py-2 bg-gray-100/80 rounded-lg text-xs text-gray-500">
+                    <Lock class="w-3.5 h-3.5" />
+                    <span>AI 分层结果已锁定，本学期不可更改。后续任务、资源、作业将根据 {{ tierLabel }} 进行适配</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 分层对比 -->
-            <div>
-              <h3 class="text-sm font-semibold text-gray-800 mb-3">层级对照</h3>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div v-for="tier in tierComparison" :key="tier.level"
-                  class="p-3 rounded-lg border"
-                  :class="tier.level === myTier ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200' : 'border-gray-100'">
-                  <p class="text-xs font-semibold mb-1" :class="tier.color">{{ tier.label }}</p>
-                  <p class="text-xs text-gray-500">{{ tier.desc }}</p>
+              <!-- AI 学习建议 -->
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">AI 学习建议</h3>
+                <div class="space-y-3">
+                  <div v-for="(tip, i) in aiTips" :key="i"
+                    class="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                    <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span class="text-xs font-bold text-blue-600">{{ i + 1 }}</span>
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">{{ tip.title }}</p>
+                      <p class="text-xs text-gray-500 mt-0.5">{{ tip.desc }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 分层对比 -->
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">层级对照</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div v-for="ct in tierComparison" :key="ct.level"
+                    class="p-3 rounded-lg border"
+                    :class="ct.level === myTier ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200' : 'border-gray-100'">
+                    <p class="text-xs font-semibold mb-1" :class="ct.color">{{ ct.label }}</p>
+                    <p class="text-xs text-gray-500">{{ ct.desc }}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <!-- AI 分层测试弹窗 -->
+          <Modal :is-open="aiTestOpen" :on-close="closeAITest"
+            title="AI 分层测试" max-width="max-w-2xl">
+            <template v-if="!testSubmitted">
+              <div class="space-y-6">
+                <!-- 进度 -->
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-500">已答 {{ answeredCount }}/{{ totalQuestions }} 题</span>
+                  <span class="text-xs text-gray-400">每题 10 分，满分 {{ totalQuestions * 10 }} 分</span>
+                </div>
+                <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-500 rounded-full transition-all"
+                    :style="{ width: (answeredCount / totalQuestions * 100) + '%' }" />
+                </div>
+
+                <!-- 题目列表 -->
+                <div v-for="(q, i) in testQuestions" :key="q.id"
+                  class="p-4 rounded-lg border"
+                  :class="testAnswers[q.id] !== undefined ? 'border-blue-200 bg-blue-50/30' : 'border-gray-100'">
+                  <p class="text-sm font-medium text-gray-900 mb-3">
+                    <span class="text-blue-600 font-bold">{{ i + 1 }}.</span>
+                    {{ q.question }}
+                    <span class="ml-1 text-[10px] text-gray-400">({{ q.type === 'true_false' ? '判断题' : '单选题' }})</span>
+                  </p>
+                  <div class="space-y-1.5">
+                    <button v-for="(opt, oi) in q.options" :key="oi"
+                      @click="selectAnswer(q.id, q.type === 'true_false' ? (oi === 0) : oi)"
+                      class="w-full text-left px-3 py-2 rounded-lg text-sm border transition-all"
+                      :class="testAnswers[q.id] === (q.type === 'true_false' ? (oi === 0) : oi)
+                        ? 'border-blue-400 bg-blue-100 text-blue-700 font-medium'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-700'">
+                      {{ opt }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                <span v-if="!allAnswered" class="text-xs text-amber-500">请完成所有题目后再提交</span>
+                <span v-else class="text-xs text-emerald-500">所有题目已作答</span>
+                <button @click="submitAITest" :disabled="!allAnswered"
+                  class="px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+                  :class="allAnswered ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed'">
+                  提交并判定层级
+                </button>
+              </div>
+            </template>
+
+            <!-- 结果展示 -->
+            <template v-else>
+              <div class="text-center py-6 space-y-4">
+                <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center"
+                  :class="testScore >= 80 ? 'bg-emerald-100' : testScore >= 60 ? 'bg-blue-100' : 'bg-amber-100'">
+                  <Award class="w-10 h-10" :class="testScore >= 80 ? 'text-emerald-500' : testScore >= 60 ? 'text-blue-500' : 'text-amber-500'" />
+                </div>
+                <div>
+                  <p class="text-4xl font-bold text-gray-900">{{ testScore }}<span class="text-lg text-gray-400">/{{ totalQuestions * 10 }}</span></p>
+                  <p class="text-sm text-gray-500 mt-1">得分</p>
+                </div>
+                <div>
+                  <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-base font-bold"
+                    :class="tierBadgeClass">
+                    <Layers class="w-5 h-5" />
+                    {{ store.determineTier(testScore) === 'excellent' ? '卓越层' : store.determineTier(testScore) === 'advanced' ? '进阶层' : '基础层' }}
+                  </span>
+                </div>
+                <p class="text-xs text-gray-400">本次分层结果已在系统中锁定，本学期不可修改</p>
+                <button @click="closeAITest"
+                  class="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors inline-flex items-center gap-2">
+                  <CheckCircle class="w-4 h-4" />
+                  确认并查看
+                </button>
+              </div>
+            </template>
+          </Modal>
 
           <!-- ===== 知识图谱 (泡泡图) ===== -->
           <div v-if="activeTab === 'knowledge_graph'" class="space-y-5">
@@ -119,28 +205,98 @@
 
             <!-- 泡泡视图 -->
             <template v-if="graphViewMode === 'bubble'">
-              <!-- 分类图例 -->
-              <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+              <!-- 分类图例 + 关联图例 -->
+              <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-500 items-center">
                 <span v-for="cat in categoryColors" :key="cat.key" class="flex items-center gap-1.5">
-                  <span class="w-3 h-3 rounded-full" :style="{ background: cat.light }" />
+                  <span class="w-3 h-3 rounded-full" :style="{ background: cat.mid }" />
                   {{ cat.label }}
+                </span>
+                <span class="text-gray-300">|</span>
+                <span v-for="rel in relationLegend" :key="rel.key" class="flex items-center gap-1.5">
+                  <svg width="20" height="4" class="overflow-visible"><line x1="0" y1="2" x2="20" y2="2" :stroke="rel.color" stroke-width="2" :stroke-dasharray="rel.dash" /></svg>
+                  {{ rel.label }}
                 </span>
               </div>
 
-              <!-- 泡泡容器 -->
-              <div class="flex flex-wrap justify-center gap-4 py-6 min-h-[200px] items-center">
-                <div v-for="node in kgNodes" :key="node.id"
-                  @click="selectedBubble = selectedBubble === node.id ? null : node.id"
-                  class="relative rounded-full flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110"
-                  :style="bubbleStyle(node)"
-                  :title="`${node.label}\n${node.description}\n掌握度: ${node.mastery}%`">
-                  <span class="text-white font-bold leading-tight text-center" :class="bubbleTextClass(node)">{{ node.shortLabel }}</span>
-                  <span class="text-white/90 text-[10px] leading-tight" :class="bubbleTextClass(node)">{{ node.mastery }}%</span>
-                </div>
+              <!-- SVG 知识图谱 -->
+              <div class="relative bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <svg :viewBox="`0 0 ${SVG_W} ${SVG_H}`" class="w-full" style="min-height: 480px">
+                  <!-- 背景网格 -->
+                  <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f1f5f9" stroke-width="0.5" />
+                    </pattern>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid)" />
+
+                  <!-- 分类环带 -->
+                  <g v-for="(ring, ri) in categoryRings" :key="ri">
+                    <ellipse :cx="SVG_CX" :cy="SVG_CY" :rx="ring.rx" :ry="ring.ry"
+                      fill="none" :stroke="ring.color" stroke-width="1" stroke-dasharray="4,4" stroke-opacity="0.3" />
+                    <text :x="SVG_CX + ring.rx - 4" :y="SVG_CY - ring.ry + 16" font-size="10" :fill="ring.color" fill-opacity="0.5" text-anchor="end">{{ ring.label }}</text>
+                  </g>
+
+                  <!-- 关联连线 -->
+                  <g v-for="(edge, ei) in renderedEdges" :key="'edge-' + ei">
+                    <path :d="edge.path" fill="none"
+                      :stroke="edge.color" :stroke-width="edge.width" :stroke-dasharray="edge.dash"
+                      stroke-linecap="round" opacity="0.5"
+                      class="transition-all duration-300"
+                      :class="{ 'opacity-100': selectedBubble && (edge.source === selectedBubble || edge.target === selectedBubble) }" />
+                    <!-- 箭头标记 -->
+                    <polygon :points="edge.arrow" :fill="edge.color" opacity="0.5"
+                      :class="{ 'opacity-100': selectedBubble && (edge.source === selectedBubble || edge.target === selectedBubble) }" />
+                    <!-- 关系标签（连线中间） -->
+                    <text :x="edge.midX" :y="edge.midY" font-size="8" :fill="edge.color"
+                      text-anchor="middle" dominant-baseline="middle" opacity="0.6"
+                      class="pointer-events-none select-none">
+                      {{ edge.label }}
+                    </text>
+                  </g>
+
+                  <!-- 知识点节点 -->
+                  <g v-for="pn in positionedNodes" :key="pn.node.id"
+                    @click="selectedBubble = selectedBubble === pn.node.id ? null : pn.node.id"
+                    class="cursor-pointer"
+                    :class="{ 'selected-node': selectedBubble === pn.node.id }">
+                    <!-- 阴影光晕（选中/大掌握度） -->
+                    <circle v-if="pn.node.mastery >= 75" :cx="pn.x" :cy="pn.y" :r="pn.r + 6"
+                      :fill="pn.fill" opacity="0.15" filter="url(#glow)" />
+                    <!-- 外圈（选中时高亮） -->
+                    <circle :cx="pn.x" :cy="pn.y" :r="pn.r + 3"
+                      fill="none" :stroke="pn.fill" stroke-width="2"
+                      :class="selectedBubble === pn.node.id ? 'opacity-100' : 'opacity-0'"
+                      class="transition-opacity duration-200" />
+                    <!-- 主体圆 -->
+                    <circle :cx="pn.x" :cy="pn.y" :r="pn.r"
+                      :fill="pn.fill" stroke="white" stroke-width="2"
+                      class="transition-all duration-200 hover:brightness-110"
+                      :style="{ filter: pn.node.mastery >= 80 ? 'drop-shadow(0 2px 6px ' + pn.fill + '66)' : 'none' }" />
+                    <!-- 文字 - 标签 -->
+                    <text :x="pn.x" :y="pn.y - (pn.r > 30 ? 0 : 0)" font-size="11" font-weight="700"
+                      fill="white" text-anchor="middle" dominant-baseline="central"
+                      class="pointer-events-none select-none">
+                      {{ pn.node.label.length > (pn.r > 30 ? 5 : 3) ? pn.node.label.slice(0, pn.r > 30 ? 4 : 2) : pn.node.label }}
+                    </text>
+                    <!-- 文字 - 掌握度 -->
+                    <text :x="pn.x" :y="pn.y + (pn.r > 25 ? 11 : 0)" font-size="9"
+                      fill="white" fill-opacity="0.9" text-anchor="middle" dominant-baseline="central"
+                      class="pointer-events-none select-none">
+                      {{ pn.node.mastery }}%
+                    </text>
+                  </g>
+
+                  <!-- 无节点提示 -->
+                  <text v-if="positionedNodes.length === 0" x="50%" y="50%" font-size="14" fill="#9ca3af" text-anchor="middle" dominant-baseline="middle">暂无知识点数据</text>
+                </svg>
               </div>
 
-              <!-- 选中泡泡的详情 -->
-              <div v-if="selectedBubble" class="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2">
+              <!-- 选中节点的详情 -->
+              <div v-if="selectedBubble && bubbleNode(selectedBubble)" class="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2">
                 <div class="flex items-center gap-2">
                   <span class="w-3 h-3 rounded-full" :style="{ background: bubbleColor(bubbleNode(selectedBubble)?.mastery ?? 50, bubbleNode(selectedBubble)?.category ?? 'foundation') }" />
                   <p class="text-sm font-bold text-gray-800">{{ bubbleNode(selectedBubble)?.label }}</p>
@@ -168,20 +324,7 @@
                 </div>
               </div>
 
-              <!-- 全部关联关系 -->
-              <div class="space-y-1">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">全部知识关联（{{ kgEdges.length }}条）</p>
-                <div class="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
-                  <div v-for="(edge, i) in kgEdges" :key="i"
-                    class="flex items-center gap-1.5 px-4 py-2 text-xs">
-                    <span class="font-medium text-gray-700">{{ nodeLabel(edge.source) }}</span>
-                    <ArrowRight class="w-3 h-3 text-gray-400 flex-shrink-0" />
-                    <span class="px-1.5 py-0.5 rounded text-[10px] flex-shrink-0" :class="relationChipClass(edge.relation)">{{ edge.label }}</span>
-                    <ArrowRight class="w-3 h-3 text-gray-400 flex-shrink-0" />
-                    <span class="font-medium text-gray-700">{{ nodeLabel(edge.target) }}</span>
-                  </div>
-                </div>
-              </div>
+
             </template>
 
             <!-- JSON 视图 -->
@@ -372,10 +515,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import {
   ArrowLeft, BookOpen, FileText, ClipboardCheck, Edit3,
-  CheckCircle, Circle, Layers, GitBranch, BarChart3, Award, Sparkles, UserCheck, Users, MessageSquare, ArrowRight, Eye
+  CheckCircle, Circle, Layers, GitBranch, BarChart3, Award, Sparkles, UserCheck, Users, MessageSquare, ArrowRight, Eye, HelpCircle, X, Lock
 } from 'lucide-vue-next'
 import StudentEvaluation from '@/components/StudentEvaluation.vue'
-import type { Evaluation } from '@/types'
+import type { Evaluation, AITierQuestion, LearningTier } from '@/types'
+import Modal from '@/components/Modal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -407,44 +551,103 @@ const myGrade = computed(() =>
   store.grades.find((g) => g.courseId === courseId && g.studentId === myStudent.value?.id)
 )
 
-// ===== 任务 =====
-const courseTasks = computed(() => [
-  { id: '1', title: '完成第1章学习', dueDate: '2025-03-15', completed: true, score: 85 },
-  { id: '2', title: '完成第2章学习', dueDate: '2025-03-22', completed: true, score: 78 },
-  { id: '3', title: '完成第3章学习', dueDate: '2025-03-29', completed: false },
-  { id: '4', title: '完成第4章学习', dueDate: '2025-04-05', completed: false },
-])
+// ===== 任务（按层级区分） =====
+const courseTasks = computed(() => {
+  const tier = tierFinalized.value ? myTier.value : 'basic'
+  const basicTasks = [
+    { id: '1', title: '完成第1章基础概念学习', dueDate: '2025-03-15', completed: true, score: 85 },
+    { id: '2', title: '完成第2章基础知识练习', dueDate: '2025-03-22', completed: true, score: 78 },
+    { id: '3', title: '完成第3章基础巩固任务', dueDate: '2025-03-29', completed: false },
+    { id: '4', title: '完成第4章基础应用练习', dueDate: '2025-04-05', completed: false },
+  ]
+  const advancedTasks = [
+    { id: '1', title: '完成第1章核心概念深入学习', dueDate: '2025-03-15', completed: true, score: 92 },
+    { id: '2', title: '完成第2章进阶实践项目', dueDate: '2025-03-22', completed: true, score: 88 },
+    { id: '3', title: '完成第3章拓展分析任务', dueDate: '2025-03-29', completed: false },
+    { id: '4', title: '完成第4章综合应用项目', dueDate: '2025-04-05', completed: false },
+  ]
+  const excellentTasks = [
+    { id: '1', title: '完成第1章高阶理论探究', dueDate: '2025-03-15', completed: true, score: 97 },
+    { id: '2', title: '完成第2章创新实践项目', dueDate: '2025-03-22', completed: true, score: 95 },
+    { id: '3', title: '完成第3章跨章节整合任务', dueDate: '2025-03-29', completed: false },
+    { id: '4', title: '完成开源项目贡献任务', dueDate: '2025-04-05', completed: false },
+  ]
+  if (tier === 'excellent') return excellentTasks
+  if (tier === 'advanced') return advancedTasks
+  return basicTasks
+})
 
-// ===== 资源 =====
-const courseResources = computed(() => [
-  { id: '1', title: '课程大纲.pdf', type: 'PDF', size: '2.3 MB' },
-  { id: '2', title: '第1章课件.pptx', type: 'PPT', size: '5.1 MB' },
-  { id: '3', title: '参考书目.pdf', type: 'PDF', size: '1.8 MB' },
-  { id: '4', title: '练习题集.docx', type: 'DOC', size: '0.5 MB' },
-])
+// ===== 资源（按层级区分） =====
+const courseResources = computed(() => {
+  const tier = tierFinalized.value ? myTier.value : 'basic'
+  const basicResources = [
+    { id: '1', title: '课程大纲.pdf', type: 'PDF', size: '2.3 MB' },
+    { id: '2', title: '第1章课件（基础版）.pptx', type: 'PPT', size: '5.1 MB' },
+    { id: '3', title: '基础参考书目.pdf', type: 'PDF', size: '1.8 MB' },
+    { id: '4', title: '基础练习题集.docx', type: 'DOC', size: '0.5 MB' },
+  ]
+  const advancedResources = [
+    { id: '1', title: '课程大纲.pdf', type: 'PDF', size: '2.3 MB' },
+    { id: '2', title: '第1-3章完整课件.pptx', type: 'PPT', size: '8.5 MB' },
+    { id: '3', title: '进阶参考书目及论文合集.pdf', type: 'PDF', size: '3.2 MB' },
+    { id: '4', title: '项目案例分析集.docx', type: 'DOC', size: '1.1 MB' },
+    { id: '5', title: '实战项目模板.zip', type: 'ZIP', size: '4.7 MB' },
+  ]
+  const excellentResources = [
+    { id: '1', title: '课程大纲.pdf', type: 'PDF', size: '2.3 MB' },
+    { id: '2', title: '全章节高阶课件合集.pptx', type: 'PPT', size: '12.3 MB' },
+    { id: '3', title: '前沿领域文献综述.pdf', type: 'PDF', size: '4.1 MB' },
+    { id: '4', title: '竞赛项目案例集.docx', type: 'DOC', size: '2.8 MB' },
+    { id: '5', title: '开源项目代码库.zip', type: 'ZIP', size: '8.2 MB' },
+    { id: '6', title: '学术论文写作指南.pdf', type: 'PDF', size: '1.5 MB' },
+  ]
+  if (tier === 'excellent') return excellentResources
+  if (tier === 'advanced') return advancedResources
+  return basicResources
+})
 
-// ===== 作业 =====
-const courseHomework = computed(() => [
-  { id: '1', title: '第1章课后作业', dueDate: '2025-03-20', submitted: true },
-  { id: '2', title: '第2章课后作业', dueDate: '2025-03-27', submitted: true },
-  { id: '3', title: '第3章课后作业', dueDate: '2025-04-03', submitted: false },
-])
+// ===== 作业（按层级区分） =====
+const courseHomework = computed(() => {
+  const tier = tierFinalized.value ? myTier.value : 'basic'
+  const basicHomework = [
+    { id: '1', title: '基础概念填空题', dueDate: '2025-03-20', submitted: true },
+    { id: '2', title: '基础代码练习题', dueDate: '2025-03-27', submitted: true },
+    { id: '3', title: '基础应用题', dueDate: '2025-04-03', submitted: false },
+  ]
+  const advancedHomework = [
+    { id: '1', title: '进阶编程作业', dueDate: '2025-03-20', submitted: true },
+    { id: '2', title: '综合案例分析报告', dueDate: '2025-03-27', submitted: true },
+    { id: '3', title: '小型项目开发作业', dueDate: '2025-04-03', submitted: false },
+    { id: '4', title: '代码审查与重构作业', dueDate: '2025-04-10', submitted: false },
+  ]
+  const excellentHomework = [
+    { id: '1', title: '高阶算法设计与实现', dueDate: '2025-03-20', submitted: true },
+    { id: '2', title: '创新项目研究作业', dueDate: '2025-03-27', submitted: true },
+    { id: '3', title: '跨学科综合应用作业', dueDate: '2025-04-03', submitted: false },
+    { id: '4', title: '学术论文摘要与框架', dueDate: '2025-04-10', submitted: false },
+  ]
+  if (tier === 'excellent') return excellentHomework
+  if (tier === 'advanced') return advancedHomework
+  return basicHomework
+})
 
 // ===== AI 分层 =====
-const myTier = computed(() => {
-  const progress = myEnrollment.value?.progress ?? 0
-  const score = myGrade.value?.score ?? 0
-  if (score >= 85 || progress >= 80) return 'excellent' as const
-  if (score >= 70 || progress >= 50) return 'advanced' as const
-  return 'basic' as const
-})
+// 从 store 获取真实分层记录
+const tierRecord = computed(() =>
+  myStudent.value ? store.getStudentTier(courseId, myStudent.value.id) : null
+)
+const myTier = computed<LearningTier>(() => tierRecord.value?.tier ?? 'basic')
+const myTierScore = computed(() => tierRecord.value?.score ?? 0)
+const tierFinalized = computed(() => tierRecord.value !== null)
+const firstClassEnded = computed(() => store.isFirstClassStarted(courseId))
 
 const tierLabel = computed(() => {
   const map = { basic: '基础层', advanced: '进阶层', excellent: '卓越层' }
-  return map[myTier.value]
+  return tierFinalized.value ? map[myTier.value] : '未分层'
 })
 
 const tierBadgeClass = computed(() => {
+  if (!tierFinalized.value) return 'bg-gray-50 text-gray-500 border border-gray-200'
   const map = {
     basic: 'bg-amber-50 text-amber-600 border border-amber-200',
     advanced: 'bg-blue-50 text-blue-600 border border-blue-200',
@@ -459,25 +662,79 @@ const tierComparison = computed(() => [
   { level: 'excellent' as const, label: '卓越层', color: 'text-emerald-600', desc: '全面掌握课程内容，具备独立项目实践能力' },
 ])
 
-const radarData = computed(() => {
-  const evals = store.evaluations.filter((e) => e.courseId === courseId && e.studentId === myStudent.value?.id)
-  const selfScore = evals.filter((e) => e.type === 'self').reduce((s, e) => s + e.score, 0) /
-    Math.max(1, evals.filter((e) => e.type === 'self').length)
-  const teacherScore = evals.filter((e) => e.type === 'teacher').reduce((s, e) => s + e.score, 0) /
-    Math.max(1, evals.filter((e) => e.type === 'teacher').length)
-  const peerScore = evals.filter((e) => e.type === 'intra_group').reduce((s, e) => s + e.score, 0) /
-    Math.max(1, evals.filter((e) => e.type === 'intra_group').length)
-  const progress = myEnrollment.value?.progress ?? 50
-  const gradeScore = myGrade.value?.score ?? 70
-  return [
-    { label: '自主学习', value: Math.round(selfScore) || 75 },
-    { label: '教师评价', value: Math.round(teacherScore) || 70 },
-    { label: '协作互评', value: Math.round(peerScore) || 65 },
-    { label: '学习进度', value: Math.round(progress) },
-    { label: '考试成绩', value: Math.round(gradeScore) },
-    { label: '问题解决', value: Math.round((gradeScore + progress) / 2) || 70 },
-  ]
-})
+// ===== AI 分层测试弹窗 =====
+const aiTestOpen = ref(false)
+const testQuestions = ref<AITierQuestion[]>([])
+const testAnswers = ref<Record<string, number | boolean>>({})
+const testSubmitted = ref(false)
+const testScore = ref(0)
+
+/** 根据课程生成模拟 AI 分层测试题（每门课10题，10分/题） */
+function getMockAITierQuestions(courseId: string): AITierQuestion[] {
+  const questionSets: Record<string, AITierQuestion[]> = {
+    'course-1': [
+      { id: 'q1', type: 'single_choice', question: 'React 中 JSX 最终会被编译成什么？', options: ['原生 HTML', 'JavaScript 函数调用', 'CSS 代码', 'XML 标记'], answer: 1, score: 10 },
+      { id: 'q2', type: 'single_choice', question: '以下哪个 Hook 用于管理副作用？', options: ['useState', 'useEffect', 'useContext', 'useReducer'], answer: 1, score: 10 },
+      { id: 'q3', type: 'true_false', question: 'React 组件名必须大写字母开头', options: ['正确', '错误'], answer: true, score: 10 },
+      { id: 'q4', type: 'single_choice', question: 'Props 在组件间是？', options: ['可变的', '只读的', '异步的', '全局的'], answer: 1, score: 10 },
+      { id: 'q5', type: 'true_false', question: 'useState 的更新是同步的', options: ['正确', '错误'], answer: false, score: 10 },
+      { id: 'q6', type: 'single_choice', question: '以下哪个不是 React 生命周期方法？', options: ['componentDidMount', 'componentWillUnmount', 'componentRendered', 'componentDidUpdate'], answer: 2, score: 10 },
+      { id: 'q7', type: 'true_false', question: '虚拟 DOM 可以提高页面渲染性能', options: ['正确', '错误'], answer: true, score: 10 },
+      { id: 'q8', type: 'single_choice', question: 'React 中列表渲染需要使用什么属性？', options: ['id', 'key', 'ref', 'index'], answer: 1, score: 10 },
+      { id: 'q9', type: 'single_choice', question: '以下哪个是受控组件的特征？', options: ['由 DOM 控制状态', '由 React state 控制表单值', '使用 ref 获取值', '无需事件处理'], answer: 1, score: 10 },
+      { id: 'q10', type: 'true_false', question: 'React.Fragment 可以包含 key 属性', options: ['正确', '错误'], answer: true, score: 10 },
+    ],
+    'course-2': [
+      { id: 'q1', type: 'single_choice', question: 'Python 中列表使用什么符号？', options: ['()', '[]', '{}', '<>'], answer: 1, score: 10 },
+      { id: 'q2', type: 'single_choice', question: 'NumPy 数组相比 Python 列表的主要优势是？', options: ['支持更多数据类型', '向量化运算速度快', '占用更少内存', '以上都是'], answer: 3, score: 10 },
+      { id: 'q3', type: 'true_false', question: 'Pandas 的 DataFrame 是二维数据结构', options: ['正确', '错误'], answer: true, score: 10 },
+      { id: 'q4', type: 'single_choice', question: '以下哪个不是数据可视化的常用库？', options: ['Matplotlib', 'Seaborn', 'NumPy', 'Plotly'], answer: 2, score: 10 },
+      { id: 'q5', type: 'true_false', question: '数据清洗是数据分析中最耗时的环节之一', options: ['正确', '错误'], answer: true, score: 10 },
+      { id: 'q6', type: 'single_choice', question: '描述性统计不包括以下哪项？', options: ['均值', '标准差', '回归系数', '中位数'], answer: 2, score: 10 },
+      { id: 'q7', type: 'true_false', question: '机器学习属于监督学习的一种方法', options: ['正确', '错误'], answer: false, score: 10 },
+      { id: 'q8', type: 'single_choice', question: '特征工程的目的是什么？', options: ['增加数据量', '提升模型性能', '减少计算资源', '简化算法'], answer: 1, score: 10 },
+      { id: 'q9', type: 'single_choice', question: '以下哪个是降维算法？', options: ['K-Means', 'PCA', '线性回归', '决策树'], answer: 1, score: 10 },
+      { id: 'q10', type: 'true_false', question: '交叉验证可以有效防止过拟合', options: ['正确', '错误'], answer: true, score: 10 },
+    ],
+  }
+  return questionSets[courseId] || questionSets['course-1']
+}
+
+function openAITest() {
+  testQuestions.value = getMockAITierQuestions(courseId)
+  testAnswers.value = {}
+  testSubmitted.value = false
+  testScore.value = 0
+  aiTestOpen.value = true
+}
+
+function selectAnswer(questionId: string, answer: number | boolean) {
+  testAnswers.value = { ...testAnswers.value, [questionId]: answer }
+}
+
+function submitAITest() {
+  let score = 0
+  for (const q of testQuestions.value) {
+    const userAnswer = testAnswers.value[q.id]
+    if (userAnswer === q.answer) {
+      score += q.score
+    }
+  }
+  testScore.value = score
+  testSubmitted.value = true
+
+  if (myStudent.value) {
+    store.submitAITierTest(courseId, myStudent.value.id, score)
+  }
+}
+
+function closeAITest() {
+  aiTestOpen.value = false
+}
+
+const totalQuestions = computed(() => testQuestions.value.length)
+const answeredCount = computed(() => Object.keys(testAnswers.value).length)
+const allAnswered = computed(() => answeredCount.value === totalQuestions.value)
 
 const aiTips = computed(() => {
   const tier = myTier.value
@@ -501,65 +758,6 @@ const aiTips = computed(() => {
     { title: '实践应用', desc: '可以尝试将所学知识应用到实际项目中，产出完整作品' },
   ]
 })
-
-// 雷达图计算
-function gridPoints(level: number): string {
-  const r = level * 24
-  return radarData.value.map((_, i) => {
-    const angle = (i * 60 - 90) * Math.PI / 180
-    return `${105 + r * Math.cos(angle)},${105 + r * Math.sin(angle)}`
-  }).join(' ')
-}
-
-function axisEndX(i: number): number {
-  const angle = (i * 60 - 90) * Math.PI / 180
-  return 105 + 120 * Math.cos(angle)
-}
-
-function axisEndY(i: number): number {
-  const angle = (i * 60 - 90) * Math.PI / 180
-  return 105 + 120 * Math.sin(angle)
-}
-
-const dataPolygonPoints = computed(() => {
-  return radarData.value.map((d, i) => {
-    const angle = (i * 60 - 90) * Math.PI / 180
-    const r = d.value * 1.2
-    return `${105 + r * Math.cos(angle)},${105 + r * Math.sin(angle)}`
-  }).join(' ')
-})
-
-function dataPointX(i: number): number {
-  const angle = (i * 60 - 90) * Math.PI / 180
-  const r = radarData.value[i].value * 1.2
-  return 105 + r * Math.cos(angle)
-}
-
-function dataPointY(i: number): number {
-  const angle = (i * 60 - 90) * Math.PI / 180
-  const r = radarData.value[i].value * 1.2
-  return 105 + r * Math.sin(angle)
-}
-
-function dataLabelX(i: number): number {
-  const angle = (i * 60 - 90) * Math.PI / 180
-  const r = radarData.value[i].value * 1.2
-  const x = 105 + r * Math.cos(angle)
-  return x + (x > 105 ? 10 : -10)
-}
-
-function dataLabelY(i: number): number {
-  const angle = (i * 60 - 90) * Math.PI / 180
-  const r = radarData.value[i].value * 1.2
-  return 105 + r * Math.sin(angle) + 4
-}
-
-function dataLabelAnchor(i: number): string {
-  const angle = (i * 60 - 90) * Math.PI / 180
-  const r = radarData.value[i].value * 1.2
-  const x = 105 + r * Math.cos(angle)
-  return x > 105 ? 'start' : 'end'
-}
 
 // ===== 知识图谱 (节点 + 边) =====
 interface KnowledgeNode {
@@ -717,48 +915,58 @@ const knowledgeGraphData = computed<KnowledgeGraph>(() =>
   generateKnowledgeGraph(courseId, myStudent.value?.id || '')
 )
 
-// ===== 知识图谱泡泡可视化辅助 =====
+// ===== 知识图谱 SVG 可视化 =====
 const graphViewMode = ref<'bubble' | 'json'>('bubble')
 
 function toggleGraphView() {
   graphViewMode.value = graphViewMode.value === 'bubble' ? 'json' : 'bubble'
 }
 
-// 提取节点基本信息
-const kgNodes = computed(() =>
-  knowledgeGraphData.value.nodes.map((n) => ({
-    ...n,
-    shortLabel: n.label.length > 4 ? n.label.slice(0, 2) : n.label.slice(0, 2),
-  }))
-)
-
-const kgEdges = computed(() => knowledgeGraphData.value.edges)
-
 function nodeLabel(id: string): string {
   const n = knowledgeGraphData.value.nodes.find((n) => n.id === id)
   return n ? n.label : id
 }
 
-// 泡泡尺寸 = 60px ~ 130px (基于 mastery 缩放)
-const MIN_BUBBLE = 60
-const MAX_BUBBLE = 130
-function bubbleSize(mastery: number): number {
-  return MIN_BUBBLE + (mastery / 100) * (MAX_BUBBLE - MIN_BUBBLE)
-}
+// SVG 画布尺寸（增大画布避免拥挤）
+const SVG_W = 800
+const SVG_H = 540
+const SVG_CX = SVG_W / 2
+const SVG_CY = SVG_H / 2
 
-// 分类颜色配置 (light 用于图例, deep 用于深色高掌握度)
+// 分类环带配置（增大环间距，防止不同层节点重叠）
+const categoryRings = computed(() => {
+  const rings: { rx: number; ry: number; color: string; label: string }[] = []
+  const radii = [100, 160, 220, 280]
+  // 与分类颜色统一，半透明描边
+  const ringColors = ['#93c5fd', '#67e8f9', '#a5b4fc', '#c4b5fd']
+  const ringLabels = ['基础知识', '核心知识', '进阶能力', '综合能力']
+  for (let i = 0; i < radii.length; i++) {
+    rings.push({ rx: radii[i], ry: radii[i] * 0.82, color: ringColors[i], label: ringLabels[i] })
+  }
+  return rings
+})
+
+// 关联关系图例（柔和蓝色系）
+const relationLegend = [
+  { key: 'prerequisite', label: '前置依赖', color: '#60a5fa', dash: '' },
+  { key: 'related_to', label: '相关联', color: '#94a3b8', dash: '5,4' },
+  { key: 'extends', label: '拓展延伸', color: '#a78bfa', dash: '3,5' },
+  { key: 'part_of', label: '组成关系', color: '#f87171', dash: '7,4' },
+]
+
+// 分类颜色配置（柔和蓝色系，与主题统一）
 const categoryColors = [
-  { key: 'foundation', label: '基础知识', light: '#93c5fd', mid: '#3b82f6', deep: '#1d4ed8' },
-  { key: 'core', label: '核心能力', light: '#6ee7b7', mid: '#10b981', deep: '#047857' },
-  { key: 'advanced', label: '进阶能力', light: '#fcd34d', mid: '#f59e0b', deep: '#b45309' },
-  { key: 'comprehensive', label: '综合能力', light: '#c4b5fd', mid: '#8b5cf6', deep: '#6d28d9' },
+  { key: 'foundation', label: '基础知识', light: '#dbeafe', mid: '#93c5fd', deep: '#3b82f6' },
+  { key: 'core', label: '核心知识', light: '#cffafe', mid: '#67e8f9', deep: '#06b6d4' },
+  { key: 'advanced', label: '进阶能力', light: '#e0e7ff', mid: '#a5b4fc', deep: '#6366f1' },
+  { key: 'comprehensive', label: '综合能力', light: '#ede9fe', mid: '#c4b5fd', deep: '#8b5cf6' },
 ]
 
 function categoryColorMap(cat: string): { light: string; mid: string; deep: string } {
   return categoryColors.find((c) => c.key === cat) || categoryColors[0]
 }
 
-// 计算泡泡颜色：掌握度越高 -> 越深 (light -> mid -> deep 渐变)
+// 泡泡颜色：掌握度越高 -> 越深
 function bubbleColor(mastery: number, category: string): string {
   const cc = categoryColorMap(category)
   if (mastery >= 80) return cc.deep
@@ -766,23 +974,178 @@ function bubbleColor(mastery: number, category: string): string {
   return cc.light
 }
 
-// 泡泡样式
-function bubbleStyle(node: { mastery: number; category: string }): Record<string, string> {
-  const size = bubbleSize(node.mastery)
-  return {
-    width: `${size}px`,
-    height: `${size}px`,
-    background: bubbleColor(node.mastery, node.category),
-    boxShadow: node.mastery >= 80 ? `0 4px 14px ${bubbleColor(node.mastery, node.category)}66` : 'none',
-  }
+// 泡泡尺寸：直径 30px ~ 70px（基于掌握度）
+function bubbleSize(mastery: number): number {
+  return 30 + (mastery / 100) * 40
 }
 
-// 泡泡字体大小：大泡泡用大字体
-function bubbleTextClass(node: { mastery: number }): string {
-  if (node.mastery >= 80) return 'text-sm'
-  if (node.mastery >= 50) return 'text-xs'
-  return 'text-[10px]'
+interface PositionedNode {
+  x: number
+  y: number
+  r: number
+  fill: string
+  node: KnowledgeNode
 }
+
+// 计算节点在 SVG 中的位置：按类别分布在不同的同心环上
+// 每个环偏移不同起始角度，避免不同层节点重叠
+const positionedNodes = computed<PositionedNode[]>(() => {
+  const nodes = knowledgeGraphData.value.nodes
+  const categoryRadius: Record<string, number> = {
+    foundation: 100,
+    core: 160,
+    advanced: 220,
+    comprehensive: 280,
+  }
+  // 每层偏移角度（度），让各层节点交错分布，防止重叠
+  const ringAngleOffsets: Record<string, number> = {
+    foundation: 0,
+    core: 20,
+    advanced: -15,
+    comprehensive: 10,
+  }
+
+  // 按类别分组
+  const grouped: Record<string, KnowledgeNode[]> = {}
+  for (const n of nodes) {
+    if (!grouped[n.category]) grouped[n.category] = []
+    grouped[n.category].push(n)
+  }
+
+  const result: PositionedNode[] = []
+  for (const [cat, catNodes] of Object.entries(grouped)) {
+    const r = categoryRadius[cat] || 160
+    const count = catNodes.length
+    // 弧宽动态调整：节点越多弧越宽，但不超过 200°，避免底部
+    const arcDeg = Math.min(200, 60 + count * 30)
+    const arcRad = (arcDeg * Math.PI) / 180
+    const offsetRad = ((ringAngleOffsets[cat] || 0) * Math.PI) / 180
+    const startAngle = -Math.PI / 2 - arcRad / 2 + offsetRad
+    const step = count > 1 ? arcRad / (count - 1) : 0
+
+    catNodes.forEach((node, i) => {
+      const angle = startAngle + step * i
+      const radius = bubbleSize(node.mastery) / 2
+      const fill = bubbleColor(node.mastery, cat)
+      result.push({
+        x: SVG_CX + r * Math.cos(angle),
+        y: SVG_CY + r * Math.sin(angle),
+        r: radius,
+        fill,
+        node,
+      })
+    })
+  }
+
+  // 二次碰撞检测：如果同层或跨层节点距离太近，轻微推开
+  const MIN_GAP = 4 // 节点间最小间距
+  for (let iter = 0; iter < 3; iter++) {
+    let moved = false
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        const a = result[i]
+        const b = result[j]
+        const dx = b.x - a.x
+        const dy = b.y - a.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const minDist = a.r + b.r + MIN_GAP
+        if (dist < minDist && dist > 0.01) {
+          // 沿连线方向推开
+          const push = (minDist - dist) / 2
+          const nx = dx / dist
+          const ny = dy / dist
+          a.x -= nx * push
+          a.y -= ny * push
+          b.x += nx * push
+          b.y += ny * push
+          moved = true
+        }
+      }
+    }
+    if (!moved) break
+  }
+
+  return result
+})
+
+interface RenderedEdge {
+  source: string
+  target: string
+  path: string
+  arrow: string
+  midX: number
+  midY: number
+  label: string
+  color: string
+  dash: string
+  width: number
+}
+
+// 根据位置数据渲染边（SVG path + 箭头）
+const renderedEdges = computed<RenderedEdge[]>(() => {
+  const posMap = new Map<string, { x: number; y: number; r: number }>()
+  for (const pn of positionedNodes.value) {
+    posMap.set(pn.node.id, { x: pn.x, y: pn.y, r: pn.r })
+  }
+
+  const edgeStyles: Record<string, { color: string; dash: string; width: number }> = {
+    prerequisite: { color: '#3b82f6', dash: '', width: 2 },
+    related_to: { color: '#6b7280', dash: '5,3', width: 1.5 },
+    extends: { color: '#8b5cf6', dash: '3,4', width: 1.5 },
+    part_of: { color: '#d97706', dash: '7,3', width: 1.5 },
+  }
+
+  const result: RenderedEdge[] = []
+  for (const edge of knowledgeGraphData.value.edges) {
+    const src = posMap.get(edge.source)
+    const tgt = posMap.get(edge.target)
+    if (!src || !tgt) continue
+
+    const style = edgeStyles[edge.relation] || edgeStyles.related_to
+
+    // 计算起点/终点（从圆边出发，而非圆心）
+    const dx = tgt.x - src.x
+    const dy = tgt.y - src.y
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    if (dist < 1) continue
+    const nx = dx / dist
+    const ny = dy / dist
+
+    const x1 = src.x + nx * src.r
+    const y1 = src.y + ny * src.r
+    const x2 = tgt.x - nx * tgt.r
+    const y2 = tgt.y - ny * tgt.r
+
+    // 贝塞尔曲线控制点（偏移使曲线更自然）
+    const midX = (x1 + x2) / 2
+    const midY = (y1 + y2) / 2
+    const cpx = midX - ny * 20
+    const cpy = midY + nx * 20
+    const path = `M ${x1} ${y1} Q ${cpx} ${cpy} ${x2} ${y2}`
+
+    // 箭头（在终点处的小三角形）
+    const arrowSize = 8
+    const ax = x2 - nx * arrowSize
+    const ay = y2 - ny * arrowSize
+    const apx = -ny * arrowSize * 0.4
+    const apy = nx * arrowSize * 0.4
+    const arrow = `${ax - apx},${ay - apy} ${x2},${y2} ${ax + apx},${ay + apy}`
+
+    result.push({
+      source: edge.source,
+      target: edge.target,
+      path,
+      arrow,
+      midX: (x1 + x2) / 2,
+      midY: (y1 + y2) / 2 - 6,
+      label: edge.label,
+      color: style.color,
+      dash: style.dash,
+      width: style.width,
+    })
+  }
+  return result
+})
 
 // 选中的泡泡节点
 const selectedBubble = ref<string | null>(null)

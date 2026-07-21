@@ -3,20 +3,26 @@
     <!-- 页面头部 -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">成绩录入</h1>
-        <p class="text-gray-500 mt-1">按分项录入，系统自动按权重计算总分</p>
+        <h1 class="text-2xl font-bold text-gray-900">成绩查询</h1>
+        <p class="text-gray-500 mt-1">查看学生成绩、课程统计概览，支持导出和打印</p>
       </div>
-      <div class="flex gap-3">
-        <button @click="handleSave" class="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors shadow-lg shadow-emerald-500/25 text-sm font-medium">
-          <Save class="w-5 h-5" />
-          {{ saved ? '已保存' : '保存成绩' }}
+      <div class="flex items-center gap-2">
+        <button @click="handleExportGrades"
+          class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+          <Download class="w-4 h-4" />
+          导出 Excel
+        </button>
+        <button @click="handlePrintGrades"
+          class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+          <Printer class="w-4 h-4" />
+          打印成绩表
         </button>
       </div>
     </div>
 
     <!-- 筛选栏 -->
     <div class="flex flex-wrap gap-4">
-      <select v-model="selectedCourse" @change="scores = {}"
+      <select v-model="selectedCourse"
         class="px-4 py-2.5 rounded-lg border border-gray-200 focus:border-emerald-500 outline-none text-sm bg-white">
         <option value="all">全部课程</option>
         <option v-for="c in myCourses" :key="c.id" :value="c.id">{{ c.title }}</option>
@@ -97,24 +103,23 @@
       <span>平时 = 自评 {{ currentCfg.selfEvalWeight }}% + 组内互评 {{ currentCfg.peerReviewWeight }}% + 组间互评 {{ currentCfg.interGroupEvalWeight }}% + 教师 {{ currentCfg.teacherScoreWeight }}% + 企业导师 {{ currentCfg.mentorScoreWeight }}%</span>
     </div>
 
-    <!-- 成绩录入表 -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <!-- 成绩查询表 -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" ref="printRef">
       <div class="overflow-x-auto">
-        <table class="w-full min-w-[1200px]">
+        <table class="w-full min-w-[600px]">
           <thead>
             <tr class="bg-gray-50 border-b border-gray-100">
-              <th class="text-left px-4 py-3 text-sm font-medium text-gray-500 sticky left-0 bg-gray-50 z-10">学员</th>
+              <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">学员</th>
               <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">课程</th>
-              <th v-for="f in scoreFields" :key="f.key" class="text-center px-2 py-3 text-xs font-medium text-gray-500 min-w-[80px]">
-                <span class="block">{{ f.label }}</span>
-                <span class="text-[10px] text-gray-400">{{ groupLabels[f.group] }}</span>
-              </th>
-              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[70px]">总分</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[80px]">总分</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[70px]">等级</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[100px]">评阅时间</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[70px]">详情</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr v-for="enr in filteredEnrollments" :key="enr.id" class="hover:bg-gray-50 transition-colors">
-              <td class="px-4 py-3 sticky left-0 bg-white hover:bg-gray-50 z-10">
+              <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
                   <div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
                     <span class="text-xs font-medium text-emerald-600">{{ getStudentName(enr.studentId).charAt(0) }}</span>
@@ -123,22 +128,27 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ getCourseTitle(enr.courseId) }}</td>
-              <td v-for="f in scoreFields" :key="f.key" class="px-2 py-3 text-center">
-                <input type="number" min="0" max="100" placeholder="0"
-                  :value="getScoreInputValue(enr.id, f.key)"
-                  :readonly="f.readonly"
-                  @input="(e) => !f.readonly && handleScoreInput(enr.id, f.key, (e.target as HTMLInputElement).value)"
-                  class="w-16 px-2 py-1.5 rounded border border-gray-200 text-sm text-center"
-                  :class="f.readonly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none'" />
+              <td class="px-4 py-3 text-center">
+                <span v-if="getStudentTotal(enr)" class="font-semibold text-sm" :class="getTotalColorClass(getStudentTotal(enr)!)">
+                  {{ getStudentTotal(enr) }}
+                </span>
+                <span v-else class="text-gray-300">-</span>
               </td>
               <td class="px-4 py-3 text-center">
-                <template v-if="getRowTotal(enr) != null">
-                  <button @click="openDetail(enr)"
-                    class="font-semibold text-sm px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-                    :class="getTotalColorClass(getRowTotal(enr)!)">
-                    {{ getRowTotal(enr) }}
-                  </button>
-                </template>
+                <span v-if="getStudentTotal(enr)" class="text-xs px-2 py-0.5 rounded-full" :class="getGradeLevel(getStudentTotal(enr)!).color">
+                  {{ getGradeLevel(getStudentTotal(enr)!).label }}
+                </span>
+                <span v-else class="text-gray-300">-</span>
+              </td>
+              <td class="px-4 py-3 text-center text-sm text-gray-500">
+                {{ getGradedAt(enr) || '-' }}
+              </td>
+              <td class="px-4 py-3 text-center">
+                <button v-if="getStudentTotal(enr) !== null"
+                  @click="openDetail(enr)"
+                  class="text-xs text-blue-500 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors">
+                  查看详情
+                </button>
                 <span v-else class="text-gray-300">-</span>
               </td>
             </tr>
@@ -164,7 +174,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { Save, BarChart3, ChevronDown, ChevronUp } from 'lucide-vue-next'
+import { BarChart3, ChevronDown, ChevronUp, Download, Printer } from 'lucide-vue-next'
 import ScoreDetail from '@/components/ScoreDetail.vue'
 import type { DetailedGrade, Enrollment } from '@/types'
 
@@ -186,31 +196,12 @@ const SEMESTERS = [
   { label: '全部学期', start: '', end: '' },
 ]
 
-const scoreFields: { key: keyof Omit<DetailedGrade, 'id' | 'studentId' | 'courseId' | 'gradedAt'>; label: string; group: 'regular' | 'midterm' | 'final'; readonly?: boolean }[] = [
-  { key: 'selfEvalScore', label: '自评', group: 'regular', readonly: true },
-  { key: 'peerReviewScore', label: '组内互评', group: 'regular', readonly: true },
-  { key: 'interGroupScore', label: '组间互评', group: 'regular', readonly: true },
-  { key: 'teacherScore', label: '教师评价', group: 'regular' },
-  { key: 'mentorScore', label: '企业导师评价', group: 'regular' },
-  { key: 'midtermExamScore', label: '期中考试', group: 'midterm' },
-  { key: 'midtermProjectScore', label: '项目成绩(期中)', group: 'midterm' },
-  { key: 'finalExamScore', label: '期末测试', group: 'final' },
-  { key: 'finalProjectScore', label: '项目成绩(期末)', group: 'final' },
-]
-
-const groupLabels: Record<string, string> = {
-  regular: '平时成绩',
-  midterm: '期中成绩',
-  final: '期末成绩',
-}
-
 // ====== State ======
 const selectedCourse = ref('all')
-const scores = ref<Record<string, Record<string, string>>>({})
-const saved = ref(false)
 const showStats = ref(true)
 const selectedSemester = ref('all')
 const detailTarget = ref<{ studentName: string; courseTitle: string; courseId: string; studentId: string } | null>(null)
+const printRef = ref<HTMLElement | null>(null)
 
 // ====== Computed ======
 const myCourses = computed(() => store.courses.filter((c) => c.teacher === store.currentUser))
@@ -218,8 +209,26 @@ const myCourseIds = computed(() => myCourses.value.map((c) => c.id))
 
 const filteredEnrollments = computed(() => {
   return store.enrollments.filter((e) => {
-    const matchCourse = selectedCourse.value === 'all' || e.courseId === selectedCourse.value
-    return matchCourse && myCourseIds.value.includes(e.courseId)
+    // 只显示该教师的课程
+    if (!myCourseIds.value.includes(e.courseId)) return false
+    // 排除退课学生
+    if (e.status === 'dropped') return false
+    // 按课程筛选
+    if (selectedCourse.value !== 'all' && e.courseId !== selectedCourse.value) return false
+    // 按学期筛选
+    if (selectedSemester.value !== 'all') {
+      const idx = parseInt(selectedSemester.value)
+      if (!isNaN(idx) && idx >= 0 && idx < SEMESTERS.length) {
+        const sem = SEMESTERS[idx]
+        if (sem && sem.start) {
+          const schedule = store.schedules.find((s) => s.id === e.scheduleId)
+          if (!schedule || schedule.startDate < sem.start || schedule.startDate > sem.end) {
+            return false
+          }
+        }
+      }
+    }
+    return true
   })
 })
 
@@ -227,17 +236,6 @@ const getStudentName = (id: string) => store.students.find((s) => s.id === id)?.
 const getCourseTitle = (id: string) => store.courses.find((c) => c.id === id)?.title || '未知'
 const getExisting = (studentId: string, courseId: string) =>
   store.detailedGrades.find((d) => d.studentId === studentId && d.courseId === courseId)
-
-const getScore = (enrId: string, field: string) => {
-  const enrollment = store.enrollments.find((e) => e.id === enrId)
-  if (!enrollment) return ''
-  const existing = getExisting(enrollment.studentId, enrollment.courseId)
-  if (!existing) return ''
-  const val = existing[field as keyof typeof existing]
-  return val != null ? String(val) : ''
-}
-
-const cfg = computed(() => selectedCourse.value !== 'all' ? store.getGradeConfig(selectedCourse.value) : null)
 
 const stats = computed(() => {
   let courseGrades = selectedCourse.value === 'all'
@@ -312,111 +310,22 @@ const detailTargetTotalScore = computed(() => {
 })
 
 // ====== Functions ======
-const handleSave = () => {
-  const now = new Date().toISOString().slice(0, 10)
-  for (const enr of filteredEnrollments.value) {
-    // 检查课程是否已结束
-    const course = store.courses.find(c => c.id === enr.courseId)
-    if (course && course.status === 'inactive') {
-      alert(`课程「${course.title}」已结束，无法修改成绩`)
-      return
-    }
-    const rowScores = scores.value[enr.id]
-    if (!rowScores) continue
-    const existing = getExisting(enr.studentId, enr.courseId)
-    const detail: Record<string, number | undefined> = {}
-    scoreFields.forEach((f) => {
-      if (f.readonly) return
-      const v = parseInt(rowScores[f.key])
-      detail[f.key] = isNaN(v) ? undefined : v
-    })
-    const hasAny = Object.values(detail).some((v) => v !== undefined)
-    if (!hasAny) continue
 
-    const dgData = {
-      selfEvalScore: existing?.selfEvalScore,
-      peerReviewScore: existing?.peerReviewScore,
-      interGroupScore: existing?.interGroupScore,
-      teacherScore: detail.teacherScore as number | undefined,
-      mentorScore: detail.mentorScore as number | undefined,
-      midtermExamScore: detail.midtermExamScore as number | undefined,
-      midtermProjectScore: detail.midtermProjectScore as number | undefined,
-      finalExamScore: detail.finalExamScore as number | undefined,
-      finalProjectScore: detail.finalProjectScore as number | undefined,
-      gradedAt: now,
-    }
-
-    const totalScore = store.calcTotalScore(enr.courseId, dgData as DetailedGrade)
-
-    if (existing) {
-      store.updateDetailedGrade(existing.id, dgData)
-      const g = store.grades.find((g) => g.studentId === enr.studentId && g.courseId === enr.courseId)
-      if (g) store.updateGrade(g.id, { score: totalScore, gradedAt: now })
-    } else {
-      store.addDetailedGrade({
-        id: `dg-${Date.now()}-${enr.id}`,
-        studentId: enr.studentId,
-        courseId: enr.courseId,
-        ...dgData,
-      } as DetailedGrade)
-      store.addGrade({
-        id: `g-${Date.now()}-${enr.id}`,
-        studentId: enr.studentId,
-        courseId: enr.courseId,
-        score: totalScore,
-        comment: '',
-        gradedAt: now,
-      })
-    }
-  }
-  saved.value = true
-  setTimeout(() => saved.value = false, 2000)
+/** 获取学生该课程的总分 */
+function getStudentTotal(enr: Enrollment): number | null {
+  const g = store.grades.find((g) => g.studentId === enr.studentId && g.courseId === enr.courseId)
+  return g?.score ?? null
 }
 
-const handleDeleteGrade = (gradeId: string) => {
-  if (confirm('确定删除此成绩记录？')) {
-    store.deleteGrade(gradeId)
-  }
+/** 获取评阅时间 */
+function getGradedAt(enr: Enrollment): string {
+  const g = store.grades.find((g) => g.studentId === enr.studentId && g.courseId === enr.courseId)
+  return g?.gradedAt || ''
 }
 
 const getGradeLevel = (score: number) => {
   const level = GRADE_COLORS.find((g) => score >= g.range[0] && score <= g.range[1])
   return level || GRADE_COLORS[GRADE_COLORS.length - 1]
-}
-
-const handleScoreInput = (enrId: string, field: string, value: string) => {
-  scores.value = {
-    ...scores.value,
-    [enrId]: { ...(scores.value[enrId] || {}), [field]: value },
-  }
-}
-
-const getScoreInputValue = (enrId: string, field: string) => {
-  const enrollment = store.enrollments.find((e) => e.id === enrId)
-  if (!enrollment) return ''
-  const existing = getExisting(enrollment.studentId, enrollment.courseId)
-  const val = scores.value[enrId]?.[field]
-  if (val !== undefined) return val
-  if (existing) {
-    const existingVal = existing[field as keyof typeof existing]
-    return existingVal != null ? String(existingVal) : ''
-  }
-  return ''
-}
-
-const getRowTotal = (enr: Enrollment) => {
-  const existing = getExisting(enr.studentId, enr.courseId)
-  const rowScore: Partial<DetailedGrade> = {}
-  scoreFields.forEach((f) => {
-    const v = scores.value[enr.id]?.[f.key]
-    rowScore[f.key] = v !== undefined ? parseInt(v) : (existing?.[f.key as keyof DetailedGrade] as number | undefined)
-  })
-  if (!isNaN(rowScore.selfEvalScore as number)) {
-    return store.calcTotalScore(enr.courseId, rowScore as DetailedGrade)
-  } else if (existing) {
-    return store.grades.find((g) => g.studentId === enr.studentId && g.courseId === enr.courseId)?.score
-  }
-  return undefined
 }
 
 const getTotalColorClass = (total: number) => {
@@ -433,6 +342,65 @@ const openDetail = (enr: Enrollment) => {
     courseTitle: getCourseTitle(enr.courseId),
     courseId: enr.courseId,
     studentId: enr.studentId,
+  }
+}
+
+/** 导出 Excel */
+async function handleExportGrades() {
+  try {
+    const XLSX = await import('xlsx')
+    const data = filteredEnrollments.value.map((enr) => {
+      const total = getStudentTotal(enr)
+      return {
+        '学生姓名': getStudentName(enr.studentId),
+        '课程': getCourseTitle(enr.courseId),
+        '总分': total ?? '-',
+        '等级': total !== null ? getGradeLevel(total).label : '-',
+        '评阅时间': getGradedAt(enr) || '-',
+      }
+    })
+    const ws = XLSX.utils.json_to_sheet(data)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, '成绩')
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([buf], { type: 'application/octet-stream' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `成绩查询-${selectedCourseTitle.value}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('导出失败:', err)
+    alert('导出失败')
+  }
+}
+
+/** 打印成绩表 */
+function handlePrintGrades() {
+  if (!printRef.value) return
+  const printContent = printRef.value.innerHTML
+  const style = `
+    <style>
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+      th { background: #f9fafb; font-weight: 600; color: #6b7280; }
+    </style>
+  `
+  const win = window.open('', '_blank')
+  if (win) {
+    win.document.write(`
+      <html>
+        <head><title>成绩表 - ${selectedCourseTitle.value}</title>${style}</head>
+        <body>
+          <h2 style="text-align:center;margin:20px 0;font-size:20px;">成绩表 - ${selectedCourseTitle.value}</h2>
+          ${printContent}
+        </body>
+      </html>
+    `)
+    win.document.close()
+    win.focus()
+    win.print()
   }
 }
 </script>

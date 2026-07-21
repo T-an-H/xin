@@ -1,4 +1,4 @@
-import type { Category, Course, Student, Schedule, Enrollment, Teacher, Grade, Evaluation, EvaluationConfig, StudentGroup } from '@/types';
+import type { Category, Course, Student, Schedule, Enrollment, Teacher, Grade, Evaluation, EvaluationConfig, StudentGroup, Mentor, Leader } from '@/types';
 
 export const categories: Category[] = [
   { id: 'cat-1', name: '编程开发', color: '#3b82f6', courseCount: 8 },
@@ -9,7 +9,7 @@ export const categories: Category[] = [
 ];
 
 export const courses: Course[] = [
-  { id: 'course-1', title: 'React 前端开发实战', description: '从零到一掌握 React 18 核心特性，包括 Hooks、Context、Suspense 等高级用法，完成企业级项目开发。', categoryId: 'cat-1', cover: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop', credits: 6, duration: 48, status: 'active', createdAt: '2026-06-01', teacher: '王老师' },
+  { id: 'course-1', title: 'React 前端开发实战', description: '从零到一掌握 React 18 核心特性，包括 Hooks、Context、Suspense 等高级用法，完成企业级项目开发。', categoryId: 'cat-1', cover: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop', credits: 6, duration: 48, status: 'active', createdAt: '2026-06-01', teacher: '王老师', mentor: '张导师' },
   { id: 'course-2', title: 'Python 数据分析入门', description: '学习 Python 数据处理、分析和可视化，掌握 Pandas、NumPy、Matplotlib 等核心库。', categoryId: 'cat-2', cover: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400&h=300&fit=crop', credits: 5, duration: 36, status: 'active', createdAt: '2026-06-05', teacher: '李老师' },
   { id: 'course-3', title: 'UI/UX 设计思维', description: '系统学习用户体验设计流程，从用户研究到原型设计，打造令人惊艳的产品体验。', categoryId: 'cat-3', cover: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop', credits: 4, duration: 32, status: 'active', createdAt: '2026-06-10', teacher: '陈老师' },
   { id: 'course-4', title: 'TypeScript 高级编程', description: '深入 TypeScript 类型系统、泛型、装饰器、条件类型等高级特性，提升代码质量。', categoryId: 'cat-1', cover: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=400&h=300&fit=crop', credits: 5, duration: 40, status: 'active', createdAt: '2026-06-15', teacher: '王老师' },
@@ -137,6 +137,18 @@ export const teachers: Teacher[] = [
   { id: 't-8', name: '周老师', phone: '138****1008', email: 'zhou@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhou', courseIds: ['course-14', 'course-18'] },
   { id: 't-9', name: '钱老师', phone: '138****1009', email: 'qian@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=qian', courseIds: ['course-15', 'course-19'] },
   { id: 't-10', name: '吴老师', phone: '138****1010', email: 'wu@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wu', courseIds: ['course-16', 'course-20'] },
+];
+
+/** 企业导师 */
+export const mentors: Mentor[] = [
+  { id: 'm-1', name: '张导师', phone: '139****2001', email: 'zhangmentor@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangmentor', courseIds: ['course-1', 'course-14'] },
+  { id: 'm-2', name: '李导师', phone: '139****2002', email: 'limentor@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=limentor', courseIds: ['course-4', 'course-11'] },
+];
+
+/** 学院领导 */
+export const leaders: Leader[] = [
+  { id: 'l-1', name: '刘院长', phone: '139****3001', email: 'liuhead@example.com', categoryIds: ['cat-1', 'cat-2'], asTeacher: true },
+  { id: 'l-2', name: '陈院长', phone: '139****3002', email: 'chenhead@example.com', categoryIds: ['cat-3', 'cat-4', 'cat-5'], asMentor: false },
 ];
 
 export const grades: Grade[] = [
