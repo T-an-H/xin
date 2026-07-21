@@ -205,3 +205,13 @@ export const evaluations: import('@/types').Evaluation[] = [
   { id: 'ev-18', courseId: 'course-1', studentId: 'stu-5', sessionNumber: 1, type: 'inter_group', score: 65, evaluatorId: 'stu-1', evaluatorName: '张明', createdAt: '2026-07-11' },
   { id: 'ev-19', courseId: 'course-1', studentId: 'stu-5', sessionNumber: 1, type: 'teacher', score: 72, evaluatorId: 't-1', evaluatorName: '王老师', comment: '与自评差异较大', createdAt: '2026-07-12' },
 ];
+
+// ========== 详细成绩数据 ==========
+
+export const detailedGrades: import('@/types').DetailedGrade[] = [
+  { id: 'dg-1', studentId: 'stu-1', courseId: 'course-1', selfEvalScore: 85, peerReviewScore: 82, interGroupScore: 78, teacherScore: 88, mentorScore: 85, gradedAt: '2026-07-15' },
+  { id: 'dg-2', studentId: 'stu-1', courseId: 'course-4', selfEvalScore: 78, peerReviewScore: 80, interGroupScore: 75, teacherScore: 82, mentorScore: null, gradedAt: '2026-07-18' },
+  { id: 'dg-3', studentId: 'stu-1', courseId: 'course-14', selfEvalScore: 92, peerReviewScore: 88, interGroupScore: 85, teacherScore: 86, mentorScore: 88, gradedAt: '2026-07-22' },
+  { id: 'dg-4', studentId: 'stu-1', courseId: 'course-15', selfEvalScore: 88, peerReviewScore: 85, interGroupScore: 82, teacherScore: 90, mentorScore: null, gradedAt: '2026-07-23' },
+  { id: 'dg-5', studentId: 'stu-1', courseId: 'course-16', selfEvalScore: 75, peerReviewScore: 78, interGroupScore: null, teacherScore: 80, mentorScore: null, gradedAt: '2026-07-24' },
+];

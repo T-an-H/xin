@@ -16,7 +16,8 @@ import {
   grades as mockGrades,
   evaluationConfigs as mockEvalConfigs,
   evaluations as mockEvaluations,
-  studentGroups as mockStudentGroups
+  studentGroups as mockStudentGroups,
+  detailedGrades as mockDetailedGrades
 } from '@/data/mockData'
 
 type UserRole = 'admin' | 'teacher' | 'student' | null
@@ -52,7 +53,7 @@ export const useAppStore = defineStore('app', () => {
   const studentGroups = ref<StudentGroup[]>(loadFromStorage<StudentGroup[]>('studentGroups', mockStudentGroups))
   const evalReminders = ref<EvalReminder[]>(loadFromStorage<EvalReminder[]>('evalReminders', []))
   const gradeConfigs = ref<Record<string, GradeWeightConfig>>(loadFromStorage<Record<string, GradeWeightConfig>>('gradeConfigs', {}))
-  const detailedGrades = ref<DetailedGrade[]>(loadFromStorage<DetailedGrade[]>('detailedGrades', []))
+  const detailedGrades = ref<DetailedGrade[]>(loadFromStorage<DetailedGrade[]>('detailedGrades', mockDetailedGrades))
   const isLoggedIn = ref<boolean>(loadFromStorage<boolean>('isLoggedIn', false))
   const currentUser = ref<string | null>(loadFromStorage<string | null>('currentUser', null))
   const currentRole = ref<UserRole>(loadFromStorage<UserRole>('currentRole', null))
