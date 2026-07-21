@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Course, Category, Student, Schedule, Enrollment, Teacher, Grade, CloudFile, TodoItem, OnlineDoc, Note, Evaluation, EvaluationConfig, StudentGroup, EvalAnomaly, EvalType, EvalTemplate, EvalReminder, EvalFrequency, OverdueRule, GradeWeightConfig, DetailedGrade } from '@/types';
 import { getDefaultGradeConfig } from '@/types';
-import { courses as mockCourses, categories as mockCategories, students as mockStudents, schedules as mockSchedules, enrollments as mockEnrollments, teachers as mockTeachers, grades as mockGrades, evaluationConfigs as mockEvalConfigs, evaluations as mockEvaluations, studentGroups as mockStudentGroups } from '@/data/mockData';
+import { courses as mockCourses, categories as mockCategories, students as mockStudents, schedules as mockSchedules, enrollments as mockEnrollments, teachers as mockTeachers, grades as mockGrades, evaluationConfigs as mockEvalConfigs, evaluations as mockEvaluations, studentGroups as mockStudentGroups, detailedGrades as mockDetailedGrades } from '@/data/mockData';
 
 interface AppState {
   courses: Course[];
@@ -76,6 +76,8 @@ interface AppState {
   pushNearDeadlineEvalReminders: () => void;
   /** 处理逾期评价（取历史平均分） */
   processSessionOverdue: (courseId: string, sessionNumber: number) => void;
+  /** 将某条评价提醒标记为已完成 */
+  markEvalReminderCompleted: (courseId: string, studentId: string, sessionNumber: number) => void;
   /** 检查某课程是否有分组 */
   hasGroups: (courseId: string) => boolean;
   /** 是否有临近截止的评价待办 */
@@ -97,7 +99,10 @@ type UserRole = 'admin' | 'teacher' | 'student' | null;
 const loadFromStorage = <T>(key: string, fallback: T): T => {
   try {
     const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
+    if (!stored) return fallback;
+    const parsed = JSON.parse(stored);
+    if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(fallback)) return fallback;
+    return parsed;
   } catch {
     return fallback;
   }
@@ -124,7 +129,7 @@ export const useStore = create<AppState>((set, get) => ({
   studentGroups: loadFromStorage<StudentGroup[]>('studentGroups', mockStudentGroups),
   evalReminders: loadFromStorage<EvalReminder[]>('evalReminders', []),
   gradeConfigs: loadFromStorage<Record<string, GradeWeightConfig>>('gradeConfigs', {}),
-  detailedGrades: loadFromStorage<DetailedGrade[]>('detailedGrades', []),
+  detailedGrades: loadFromStorage<DetailedGrade[]>('detailedGrades', mockDetailedGrades),
   isLoggedIn: loadFromStorage<boolean>('isLoggedIn', false),
   currentUser: loadFromStorage<string | null>('currentUser', null),
   currentRole: loadFromStorage<UserRole>('currentRole', null),
@@ -451,42 +456,49 @@ export const useStore = create<AppState>((set, get) => ({
     const courseEnrollments = enrollments.filter(
       (e) => e.courseId === courseId && e.status !== 'dropped'
     );
-    // 默认截止日期：每2周作为一个session周期
     const startDate = new Date(course.createdAt || new Date());
     const reminders: EvalReminder[] = [];
 
-    const hasGroups = get().hasGroups(courseId);
-    const enabledTypes = (globalThis as any).TEMPLATE_EVAL_TYPES?.[config.template] || [];
+    const TEMPLATE_MAP: Record<string, string[]> = {
+      all: ['self', 'intra_group', 'inter_group', 'teacher', 'mentor'],
+      standard: ['self', 'teacher', 'inter_group'],
+      simple: ['self', 'teacher'],
+      project: ['self', 'intra_group', 'teacher', 'mentor', 'inter_group'],
+    };
+    const enabledTypes = TEMPLATE_MAP[config.template] || ['self', 'teacher'];
 
     for (const enr of courseEnrollments) {
       for (let s = 1; s <= totalSessions; s++) {
-        // 检查学生是否已提交自评
-        const hasSelf = evaluations.some(
-          (e) => e.courseId === courseId && e.studentId === enr.studentId && e.sessionNumber === s && e.type === 'self'
-        );
-        if (hasSelf) continue;
+        for (const type of enabledTypes) {
+          // 教师/导师评价的提醒对象是课程教师，自评/互评的提醒对象是学生
+          const targetIsTeacher = type === 'teacher' || type === 'mentor';
+          const hasEval = evaluations.some(
+            (e) => e.courseId === courseId && e.studentId === enr.studentId && e.sessionNumber === s && e.type === type
+          );
+          if (hasEval) continue;
 
-        // 计算截止时间
-        const weekOffset = s * 2;
-        const deadline = new Date(startDate);
-        deadline.setDate(deadline.getDate() + weekOffset * 7);
-        const deadlineStr = deadline.toISOString().split('T')[0];
+          // 计算截止时间：每个 session 周期为 2 周
+          const weekOffset = s * 2;
+          const deadline = new Date(startDate);
+          deadline.setDate(deadline.getDate() + weekOffset * 7);
+          const deadlineStr = deadline.toISOString().split('T')[0];
 
-        // 检查是否已有提醒
-        const exists = get().evalReminders.some(
-          (r) => r.courseId === courseId && r.studentId === enr.studentId && r.sessionNumber === s
-        );
-        if (exists) continue;
+          // 用教师ID作为 reminder 标识（对教师评价）/ 学生ID（对学生评价）
+          const targetId = targetIsTeacher ? course.teacher : enr.studentId;
+          const reminderId = `reminder-${courseId}-${targetId}-${type}-${s}`;
+          const exists = get().evalReminders.some((r) => r.id === reminderId);
+          if (exists) continue;
 
-        reminders.push({
-          id: `reminder-${courseId}-${enr.studentId}-${s}`,
-          courseId,
-          courseTitle: course.title,
-          studentId: enr.studentId,
-          sessionNumber: s,
-          deadline: deadlineStr,
-          status: new Date(deadlineStr) < new Date() ? 'overdue' : 'pending',
-        });
+          reminders.push({
+            id: reminderId,
+            courseId,
+            courseTitle: course.title,
+            studentId: targetId,
+            sessionNumber: s,
+            deadline: deadlineStr,
+            status: new Date(deadlineStr) < new Date() ? 'overdue' : 'pending',
+          });
+        }
       }
     }
     if (reminders.length > 0) {
@@ -496,25 +508,38 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
   pushNearDeadlineEvalReminders: () => {
-    const { evalReminders, todos, students, currentUser, currentRole } = get();
+    const { evalReminders, todos, students, teachers, currentUser, currentRole } = get();
     const now = new Date();
     const oneWeekLater = new Date(now);
     oneWeekLater.setDate(oneWeekLater.getDate() + 7);
 
-    const student = students.find((s) => s.name === currentUser);
+    // 获取当前用户的提醒（教师看教师类提醒，学生看学生类提醒）
+    const isTeacher = currentRole === 'teacher';
+    const isStudent = currentRole === 'student';
+
     const pendingReminders = evalReminders.filter((r) => {
       if (r.status === 'completed') return false;
-      if (student && r.studentId !== student.id) return false;
-      const deadline = new Date(r.deadline);
-      // 在截止前1周内 且 未过期
-      return deadline >= now && deadline <= oneWeekLater;
+      // 教师：提醒与教师姓名匹配的 reminder
+      if (isTeacher && r.studentId === currentUser) {
+        const deadline = new Date(r.deadline);
+        return deadline >= now && deadline <= oneWeekLater;
+      }
+      // 学生：提醒与学生匹配
+      if (isStudent) {
+        const student = students.find((s) => s.name === currentUser);
+        if (student && r.studentId === student.id) {
+          const deadline = new Date(r.deadline);
+          return deadline >= now && deadline <= oneWeekLater;
+        }
+      }
+      return false;
     });
 
     const existingTodoKeys = new Set(todos.map((t) => t.title));
     let newCount = 0;
 
     for (const r of pendingReminders) {
-      const todoTitle = `📋 ${r.courseTitle} 第${r.sessionNumber}次评价即将截止（${r.deadline}）`;
+      const todoTitle = `📋 评价提醒：${r.courseTitle} 第${r.sessionNumber}次评价即将截止（${r.deadline}）`;
       if (existingTodoKeys.has(todoTitle)) continue;
       todos.push({
         id: `todo-eval-${Date.now()}-${r.id}`,
@@ -532,6 +557,20 @@ export const useStore = create<AppState>((set, get) => ({
       saveToStorage('todos', todos);
       set({ todos: [...todos] });
     }
+  },
+  markEvalReminderCompleted: (courseId, studentId, sessionNumber) => {
+    const reminders = get().evalReminders.map((r) => {
+      if (
+        r.courseId === courseId &&
+        r.studentId === studentId &&
+        r.sessionNumber === sessionNumber
+      ) {
+        return { ...r, status: 'completed' as const };
+      }
+      return r;
+    });
+    saveToStorage('evalReminders', reminders);
+    set({ evalReminders: reminders });
   },
   processSessionOverdue: (courseId, sessionNumber) => {
     const { evalConfigs, evaluations, students, enrollments, courses } = get();

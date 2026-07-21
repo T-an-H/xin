@@ -52,14 +52,14 @@ const router = createRouter({
       redirect: '/',
       children: [
         {
-          path: 'dashboard',
-          name: 'TeacherDashboard',
-          component: () => import('@/pages/teacher/Dashboard.vue'),
-        },
-        {
           path: 'courses',
           name: 'TeacherCourses',
           component: () => import('@/pages/teacher/Courses.vue'),
+        },
+        {
+          path: 'courses/:id',
+          name: 'TeacherCourseDetail',
+          component: () => import('@/pages/teacher/CourseDetail.vue'),
         },
         {
           path: 'students',
@@ -88,11 +88,6 @@ const router = createRouter({
       component: Layout,
       redirect: '/',
       children: [
-        {
-          path: 'dashboard',
-          name: 'StudentDashboard',
-          component: () => import('@/pages/student/Dashboard.vue'),
-        },
         {
           path: 'courses',
           name: 'StudentCourses',

@@ -21,7 +21,10 @@
         :class="$route.path.startsWith(item.to) ? 'bg-white/15 text-white font-medium' : 'text-white/60 hover:text-white hover:bg-white/5'"
       >
         <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
-        <span>{{ item.label }}</span>
+        <span class="relative">
+          {{ item.label }}
+          <span v-if="showExtraBadge(item)" class="absolute -top-2 -right-3 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-[#0f172a]" />
+        </span>
       </router-link>
     </nav>
 
@@ -41,7 +44,6 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import {
-  LayoutDashboard,
   BookOpen,
   BarChart3,
   LogOut,
@@ -67,14 +69,12 @@ const adminNavItems = [
 ]
 
 const teacherNavItems = [
-  { to: '/teacher/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/teacher/courses', icon: BookOpen, label: '我的课程' },
   { to: '/teacher/grades', icon: Award, label: '成绩管理' },
   { to: '/teacher/extra', icon: Lightbulb, label: '额外功能' },
 ]
 
 const studentNavItems = [
-  { to: '/student/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/student/profile', icon: User, label: '个人画像' },
   { to: '/student/courses', icon: BookOpen, label: '我的课程' },
   { to: '/student/grades', icon: Award, label: '成绩管理' },
@@ -89,6 +89,33 @@ const roleConfig: Record<string, { items: typeof adminNavItems; color: string; l
 }
 
 const config = computed(() => roleConfig[store.currentRole || 'admin'])
+
+/** 当前用户是否有未完成的评价待办任务 */
+const hasPendingEvalTodos = computed(() => {
+  if (store.currentRole === 'student') {
+    const student = store.students.find((s) => s.name === store.currentUser)
+    if (!student) return false
+    return store.evalReminders.some(
+      (r) => r.studentId === student.id && r.status !== 'completed'
+    )
+  }
+  if (store.currentRole === 'teacher') {
+    return store.evalReminders.some(
+      (r) => r.studentId === store.currentUser && r.status !== 'completed'
+    )
+  }
+  return false
+})
+
+/** 判断是否为额外功能菜单项且需要显示红点 */
+const showExtraBadge = (item: { to: string; label: string }) => {
+  if (item.label !== '额外功能') return false
+  // 评价代办红点
+  if (hasPendingEvalTodos.value) return true
+  // 配置提醒红点（教师端）
+  if (store.currentRole === 'teacher' && store.getPendingConfigCourses().length > 0) return true
+  return false
+}
 
 const handleLogout = () => {
   store.logout()

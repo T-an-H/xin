@@ -32,8 +32,11 @@ export interface Grade {
   studentId: string;
   courseId: string;
   score: number;
+  semester?: string;
   comment: string;
   gradedAt: string;
+  /** 综合总成绩（可能不同于 score） */
+  totalScore?: number;
 }
 
 /** 学习层级 */
@@ -53,6 +56,10 @@ export interface Student {
   avatar: string;
   joinDate: string;
   status: 'active' | 'inactive';
+  /** 学号 */
+  studentId?: string;
+  /** 班级 */
+  className?: string;
   /** 高考成绩或入学成绩（用于无上学期成绩时判定层级） */
   enrollmentScore?: number;
 }
@@ -132,6 +139,24 @@ export interface DetailedGrade {
   midtermProjectScore?: number;
   finalExamScore?: number;
   finalProjectScore?: number;
+  gradedAt: string;
+}
+
+/** 考试/项目成绩 */
+export interface ExamScore {
+  id: string;
+  courseId: string;
+  studentId: string;
+  /** 考试/项目名称，如"期中考试"、"项目一" */
+  examName: string;
+  score: number;
+  /** 满分 */
+  fullScore: number;
+  /** 权重（百分比，如 50 表示 50%） */
+  weight: number;
+  type: 'midterm_exam' | 'midterm_project' | 'final_exam' | 'final_project' | 'quiz' | 'assignment';
+  status: 'draft' | 'submitted';
+  createdAt: string;
   gradedAt: string;
 }
 
