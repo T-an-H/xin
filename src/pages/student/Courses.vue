@@ -17,10 +17,12 @@
             : 'border-gray-100 hover:shadow-lg'
         ]"
       >
-        <!-- 待评价标记 -->
-        <div v-if="!isEnded(enrollment) && hasPendingEval(enrollment)" class="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-full text-xs text-amber-600 font-medium">
-          <AlertCircle class="w-3 h-3" />
-          <span>待评价</span>
+        <!-- 待评价红点标记（一直显示直到评价完成） -->
+        <div v-if="!isEnded(enrollment) && hasPendingEval(enrollment)" class="absolute top-3 right-3 z-10">
+          <span class="relative inline-flex">
+            <AlertCircle class="w-5 h-5 text-red-500" />
+            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
+          </span>
         </div>
         <!-- AI 分层标记 -->
         <div v-if="getTierBadge(enrollment.courseId)" class="absolute top-3 left-3 z-10"

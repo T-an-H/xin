@@ -13,7 +13,11 @@
         :class="`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`"
       >
         <component :is="tab.icon" class="w-4 h-4" />
-        {{ tab.label }}
+        <span class="relative">
+          {{ tab.label }}
+          <span v-if="tab.id === 'todos' && hasPendingReminders"
+            class="absolute -top-2 -right-3 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
+        </span>
       </button>
     </div>
 
@@ -26,7 +30,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Cloud, CheckCircle, FileText, Edit3 } from 'lucide-vue-next'
 import { useAppStore } from '@/stores/app'
 import CloudDrive from './ExtraFeatures/CloudDrive.vue'
@@ -35,6 +39,21 @@ import OnlineDocs from './ExtraFeatures/OnlineDocs.vue'
 import Notes from './ExtraFeatures/Notes.vue'
 
 const store = useAppStore()
+
+/** 是否有未完成的评价待办（显示红点） */
+const hasPendingReminders = computed(() => {
+  const user = store.currentUser
+  if (!user) return false
+  if (store.currentRole === 'student') {
+    const student = store.students.find((s) => s.name === user)
+    if (!student) return false
+    return store.evalReminders.some((r) => r.studentId === student.id && r.status !== 'completed')
+  }
+  if (store.currentRole === 'teacher') {
+    return store.evalReminders.some((r) => r.studentId === user && r.status !== 'completed')
+  }
+  return false
+})
 
 const tabs = [
   { id: 'cloud', label: '云盘', icon: Cloud },
