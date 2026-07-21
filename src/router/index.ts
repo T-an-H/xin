@@ -126,6 +126,40 @@ const router = createRouter({
       ],
     },
     {
+      path: '/mentor',
+      component: Layout,
+      redirect: '/',
+      children: [
+        {
+          path: 'courses',
+          name: 'MentorCourses',
+          component: () => import('@/pages/mentor/Courses.vue'),
+        },
+        {
+          path: 'courses/:id',
+          name: 'MentorCourseDetail',
+          component: () => import('@/pages/mentor/CourseDetail.vue'),
+        },
+      ],
+    },
+    {
+      path: '/leader',
+      component: Layout,
+      redirect: '/',
+      children: [
+        {
+          path: 'courses',
+          name: 'LeaderCourses',
+          component: () => import('@/pages/leader/Courses.vue'),
+        },
+        {
+          path: 'students',
+          name: 'LeaderStudents',
+          component: () => import('@/pages/leader/Students.vue'),
+        },
+      ],
+    },
+    {
       path: '/',
       redirect: '/login',
     },

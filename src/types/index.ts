@@ -16,6 +16,8 @@ export interface Course {
   status: 'active' | 'inactive' | 'draft';
   createdAt: string;
   teacher: string;
+  /** 企业导师名称 */
+  mentor?: string;
 }
 
 export interface Teacher {
@@ -25,6 +27,30 @@ export interface Teacher {
   email: string;
   avatar: string;
   courseIds: string[];
+}
+
+/** 企业导师 */
+export interface Mentor {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  avatar: string;
+  courseIds: string[];
+}
+
+/** 学院领导 */
+export interface Leader {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  /** 管辖学院/分类ID列表 */
+  categoryIds: string[];
+  /** 同时是授课导师（可选） */
+  asTeacher?: boolean;
+  /** 同时是企业导师（可选） */
+  asMentor?: boolean;
 }
 
 export interface Grade {
@@ -262,11 +288,13 @@ export const EvalFrequencyDescs: Record<EvalFrequency, string> = {
 };
 
 /** 逾期处理规则 */
-export type OverdueRule = 'average' | 'none';
+export type OverdueRule = 'average' | 'none' | 'zero' | 'full';
 
 export const OverdueRuleLabels: Record<OverdueRule, string> = {
   average: '取历史平均分',
-  none: '不做处理',
+  none: '不处理',
+  zero: '记0分',
+  full: '记满分',
 };
 
 /** 课程评价配置 */
@@ -327,4 +355,31 @@ export interface EvalAnomaly {
   avgScore: number;
   diff: number;
   warning: string;
+}
+
+// ========== AI 分层 ==========
+
+/** AI 分层测试题目 */
+export interface AITierQuestion {
+  id: string;
+  /** 题目内容 */
+  question: string;
+  /** 题目类型 */
+  type: 'single_choice' | 'true_false';
+  /** 选项（单选题用） */
+  options?: string[];
+  /** 正确答案索引（单选题）或布尔值（判断题） */
+  answer: number | boolean;
+  /** 分值 */
+  score: number;
+}
+
+/** 学生分层记录 */
+export interface StudentTierRecord {
+  courseId: string;
+  studentId: string;
+  tier: LearningTier;
+  score: number;
+  /** 分层时间 */
+  createdAt: string;
 }

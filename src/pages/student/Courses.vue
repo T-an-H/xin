@@ -22,6 +22,12 @@
           <AlertCircle class="w-3 h-3" />
           <span>待评价</span>
         </div>
+        <!-- AI 分层标记 -->
+        <div v-if="getTierBadge(enrollment.courseId)" class="absolute top-3 left-3 z-10"
+          :class="getTierBadge(enrollment.courseId)?.class">
+          <Layers class="w-3 h-3" />
+          <span>{{ getTierBadge(enrollment.courseId)?.label }}</span>
+        </div>
 
         <!-- 封面图区域 -->
         <div class="relative h-36 bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden">
@@ -126,7 +132,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { BookOpen, ArrowRight, Clock, CheckCircle, AlertCircle } from 'lucide-vue-next'
+import { BookOpen, ArrowRight, Clock, CheckCircle, AlertCircle, Layers } from 'lucide-vue-next'
 import type { Enrollment } from '@/types'
 
 const store = useAppStore()
@@ -159,6 +165,18 @@ const hasPendingEval = (enrollment: Enrollment) => {
       r.courseId === enrollment.courseId &&
       (r.status === 'pending' || r.status === 'overdue')
   )
+}
+
+const getTierBadge = (courseId: string) => {
+  if (!student.value) return null
+  const record = store.getStudentTier(courseId, student.value.id)
+  if (!record) return null
+  const map = {
+    basic: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 border border-amber-200', label: '基础层' },
+    advanced: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700 border border-blue-200', label: '进阶层' },
+    excellent: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-700 border border-emerald-200', label: '卓越层' },
+  }
+  return map[record.tier] || null
 }
 
 const progressBarColor = (progress: number) => {

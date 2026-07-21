@@ -3,7 +3,8 @@ import { defineStore } from 'pinia'
 import type {
   Course, Category, Student, Schedule, Enrollment, Teacher, Grade,
   CloudFile, TodoItem, OnlineDoc, Note, Evaluation, EvaluationConfig,
-  StudentGroup, EvalAnomaly, EvalReminder, GradeWeightConfig, DetailedGrade
+  StudentGroup, EvalAnomaly, EvalReminder, GradeWeightConfig, DetailedGrade,
+  Mentor, Leader, AITierQuestion, StudentTierRecord, EvalType
 } from '@/types'
 import { getDefaultGradeConfig, TEMPLATE_EVAL_TYPES } from '@/types'
 import {
@@ -17,10 +18,12 @@ import {
   evaluationConfigs as mockEvalConfigs,
   evaluations as mockEvaluations,
   studentGroups as mockStudentGroups,
-  detailedGrades as mockDetailedGrades
+  detailedGrades as mockDetailedGrades,
+  mentors as mockMentors,
+  leaders as mockLeaders
 } from '@/data/mockData'
 
-type UserRole = 'admin' | 'teacher' | 'student' | null
+type UserRole = 'admin' | 'teacher' | 'student' | 'mentor' | 'leader' | null
 
 const loadFromStorage = <T>(key: string, fallback: T): T => {
   try {
@@ -63,6 +66,13 @@ export const useAppStore = defineStore('app', () => {
   const currentRole = ref<UserRole>(loadFromStorage<UserRole>('currentRole', null))
   const hasEvalReminders = ref<boolean>(false)
 
+  // 企业导师数据
+  const mentors = ref<Mentor[]>(loadFromStorage<Mentor[]>('mentors', mockMentors))
+  // 学院领导数据
+  const leaders = ref<Leader[]>(loadFromStorage<Leader[]>('leaders', mockLeaders))
+  // 次要角色（用于 leader+teacher/mentor 双重身份）
+  const secondaryRoles = ref<UserRole[]>(loadFromStorage<UserRole[]>('secondaryRoles', []))
+
   // 教师已提交的评价记录（string[]，key: `${courseId}||${studentId}||${session}||${type}`）
   const teacherSubmittedEvals = ref<string[]>(
     loadFromStorage<string[]>('teacherSubmittedEvals', [])
@@ -89,6 +99,11 @@ export const useAppStore = defineStore('app', () => {
     loadFromStorage<string[]>('lockedSessions', [])
   )
 
+  // AI 分层记录（key: `${courseId}||${studentId}`）
+  const studentTiers = ref<Record<string, StudentTierRecord>>(
+    loadFromStorage<Record<string, StudentTierRecord>>('studentTiers', {})
+  )
+
   // ====== Actions ======
 
   function login(username: string, role: UserRole) {
@@ -98,15 +113,34 @@ export const useAppStore = defineStore('app', () => {
     isLoggedIn.value = true
     currentUser.value = username
     currentRole.value = role
+
+    // 检测双重身份：如果以 mentor/leader 登录，检测是否同时有其他角色
+    const detected: UserRole[] = []
+    if (role === 'leader') {
+      // 检测 leader 是否同时也是教师或导师
+      const leaderData = leaders.value.find((l) => l.name === username)
+      if (leaderData) {
+        if (leaderData.asTeacher && teachers.value.some((t) => t.name === username)) {
+          detected.push('teacher')
+        }
+        if (leaderData.asMentor && mentors.value.some((m) => m.name === username)) {
+          detected.push('mentor')
+        }
+      }
+    }
+    secondaryRoles.value = detected
+    localStorage.setItem('secondaryRoles', JSON.stringify(detected))
   }
 
   function logout() {
     localStorage.setItem('isLoggedIn', JSON.stringify(false))
     localStorage.setItem('currentUser', JSON.stringify(null))
     localStorage.setItem('currentRole', JSON.stringify(null))
+    localStorage.setItem('secondaryRoles', JSON.stringify([]))
     isLoggedIn.value = false
     currentUser.value = null
     currentRole.value = null
+    secondaryRoles.value = []
   }
 
   function addCourse(course: Course) {
@@ -518,71 +552,160 @@ export const useAppStore = defineStore('app', () => {
     return lockedSessions.value.includes(`${courseId}||${sessionNumber}`)
   }
 
-  /** 
+  /**
+   * 获取某评价轮次对应的课次索引范围
+   * 将课程所有课次按总评价次数均分
+   */
+  function getSessionScheduleRangeIndex(courseId: string, sessionNumber: number, totalSessions: number): { startIdx: number; endIdx: number } | null {
+    const courseSchedules = schedules.value
+      .filter((s) => s.courseId === courseId)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+
+    if (courseSchedules.length === 0) return null
+
+    const perSession = Math.ceil(courseSchedules.length / totalSessions)
+    const startIdx = (sessionNumber - 1) * perSession
+    const endIdx = Math.min(sessionNumber * perSession - 1, courseSchedules.length - 1)
+
+    if (startIdx >= courseSchedules.length) return null
+
+    return { startIdx, endIdx }
+  }
+
+  /**
    * 获取某评价轮次对应的课次结束日期
-   * 将课程的所有课次(startDate排序)按顺序映射到评价轮次
+   * 将课程的所有课次按总评价次数均分后，取对应轮次的最后一节课结束时间
    */
   function getSessionEndDate(courseId: string, sessionNumber: number): Date | null {
+    const totalSessions = getEvalSessions(courseId)
+    const range = getSessionScheduleRangeIndex(courseId, sessionNumber, totalSessions)
+    if (!range) return null
+
     const courseSchedules = schedules.value
       .filter((s) => s.courseId === courseId)
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    if (sessionNumber >= 1 && sessionNumber <= courseSchedules.length) {
-      return new Date(courseSchedules[sessionNumber - 1].endDate)
-    }
-    return null
+
+    return new Date(courseSchedules[range.endIdx].endDate)
   }
 
   /**
-   * 判断某评价轮次是否已到上课时间（上完课才能评价）
-   * 所有评价轮次统一以第二节课结束为起始时间
+   * 判断某评价轮次是否已到开启时间
+   * 第1次评价从第一节课上课就开启
+   * 第k次评价从该轮次对应第一节课上课时开启
    */
-  function isSessionTime(courseId: string, _sessionNumber: number): boolean {
+  function isSessionTime(courseId: string, sessionNumber: number): boolean {
+    const totalSessions = getEvalSessions(courseId)
+
     const courseSchedules = schedules.value
       .filter((s) => s.courseId === courseId)
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    if (courseSchedules.length === 0) return true // 无法判断时默认可用
-    if (courseSchedules.length === 1) return new Date() >= new Date(courseSchedules[0].endDate) // 只有一节课时用第一节课
-    return new Date() >= new Date(courseSchedules[1].endDate)
+
+    if (courseSchedules.length === 0) return true
+
+    // 第1次评价从第一节课上课就开启
+    if (sessionNumber === 1) {
+      return new Date() >= new Date(courseSchedules[0].startDate)
+    }
+
+    // 其他轮次：从对应轮次第一节课上课开始
+    const range = getSessionScheduleRangeIndex(courseId, sessionNumber, totalSessions)
+    if (!range) return true
+    return new Date() >= new Date(courseSchedules[range.startIdx].startDate)
   }
 
   /**
-   * 判断最终评价轮次是否已过3天截止期
-   * 最后一节课结束后3天内可评价，超过3天锁定
+   * 判断最终评价轮次是否已过截止期
+   * 最后一次评价在课程结束后结束（最后一节课结束时间）
    */
   function isFinalSessionDeadlinePassed(courseId: string, totalSessions: number): boolean {
-    const endDate = getSessionEndDate(courseId, totalSessions)
-    if (!endDate) return false
-    const deadline = new Date(endDate)
-    deadline.setDate(deadline.getDate() + 3)
-    return new Date() > deadline
+    const courseSchedules = schedules.value
+      .filter((s) => s.courseId === courseId)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+
+    if (courseSchedules.length === 0) return false
+
+    // 最终评价截止时间：最后一节课结束
+    const lastEndDate = new Date(courseSchedules[courseSchedules.length - 1].endDate)
+    return new Date() > lastEndDate
   }
 
   /**
-   * 自动锁定上一轮次并处理逾期
-   * 当教师开始评价第 N 轮时调用，锁定第 N-1 轮
+   * 自动锁定所有历史轮次并处理逾期
+   * 当第 N 次评价开启时，第 1 ~ N-1 次及之前的评价自动锁定
    */
   function autoLockPreviousSession(courseId: string, currentSession: number) {
-    const prevSession = currentSession - 1
-    if (prevSession >= 1) {
-      // 先处理逾期评价（对未评价的学生自动走逾期规则）
-      processSessionOverdue(courseId, prevSession)
-      // 标记该轮次的所有提醒为已完成
-      markSessionEvalRemindersCompleted(courseId, prevSession)
-      // 锁定该轮次
-      lockSession(courseId, prevSession)
+    for (let s = 1; s < currentSession; s++) {
+      if (!isSessionLocked(courseId, s)) {
+        processSessionOverdue(courseId, s)
+        markSessionEvalRemindersCompleted(courseId, s)
+        lockSession(courseId, s)
+      }
+    }
+  }
+
+  /**
+   * 自动锁定所有已到期的评价轮次
+   * 当第 N+1 轮次已到开启时间时，锁定第 N 轮次
+   * 当课程结束时，锁定最终轮次
+   * 按课程逐一检查
+   */
+  function autoLockExpiredSessions() {
+    const activeCourses = courses.value.filter((c) => c.status === 'active')
+    for (const course of activeCourses) {
+      const total = getEvalSessions(course.id)
+      // 检查各轮次：如果下一轮已到开启时间，锁定当前轮
+      for (let s = 1; s < total; s++) {
+        if (isSessionTime(course.id, s + 1) && !isSessionLocked(course.id, s)) {
+          processSessionOverdue(course.id, s)
+          markSessionEvalRemindersCompleted(course.id, s)
+          lockSession(course.id, s)
+        }
+      }
+      // 课程已结束，锁定最终轮次
+      if (isFinalSessionDeadlinePassed(course.id, total) && !isSessionLocked(course.id, total)) {
+        processSessionOverdue(course.id, total)
+        markSessionEvalRemindersCompleted(course.id, total)
+        lockSession(course.id, total)
+      }
     }
   }
 
   // ====== 评价待办提醒生成 ======
 
+  /**
+   * 计算某评价轮次的截止日期
+   * - 最终轮次：最后一节课结束时间
+   * - 非最终轮次：该轮次对应最后一节课结束时间
+   */
+  function getSessionDeadline(courseId: string, sessionNumber: number, totalSessions: number): string {
+    const courseSchedules = schedules.value
+      .filter((s) => s.courseId === courseId)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+
+    if (courseSchedules.length === 0) return ''
+
+    if (sessionNumber >= totalSessions) {
+      // 最终轮次：最后一节课结束时间
+      const lastEnd = new Date(courseSchedules[courseSchedules.length - 1].endDate)
+      return lastEnd.toISOString().split('T')[0]
+    }
+    // 非最终轮次：该轮次最后一节课结束时间
+    const end = getSessionEndDate(courseId, sessionNumber)
+    if (end) return end.toISOString().split('T')[0]
+    return ''
+  }
+
   /** 
    * 当某评价轮次可开始评价时，生成待办提醒（教师端和学生端）
+   * 含截止日期计算
    */
   function generateSessionReminders(courseId: string, sessionNumber: number) {
     const course = courses.value.find((c) => c.id === courseId)
     const config = evalConfigs.value.find((c) => c.courseId === courseId)
     if (!course || !config) return
 
+    const totalSessions = getEvalSessions(courseId)
+    const deadline = getSessionDeadline(courseId, sessionNumber, totalSessions)
     const enabledTypes = TEMPLATE_EVAL_TYPES[config.template] || ['self', 'teacher']
     const courseEnrollments = enrollments.value.filter(
       (e) => e.courseId === courseId && e.status !== 'dropped'
@@ -605,7 +728,7 @@ export const useAppStore = defineStore('app', () => {
           courseTitle: course.title,
           studentId: targetId,
           sessionNumber,
-          deadline: '',
+          deadline,
           status: 'pending',
         })
       }
@@ -618,9 +741,35 @@ export const useAppStore = defineStore('app', () => {
   }
 
   /**
+   * 检查并自动标记逾期的评价提醒
+   * 当截止日期已过且仍为 pending 状态时，标记为 overdue
+   */
+  function checkAndMarkOverdueReminders() {
+    const now = new Date()
+    let changed = false
+    evalReminders.value = evalReminders.value.map((r) => {
+      if (r.status !== 'pending') return r
+      if (!r.deadline) return r
+      const deadline = new Date(r.deadline)
+      if (now > deadline) {
+        changed = true
+        return { ...r, status: 'overdue' as const }
+      }
+      return r
+    })
+    if (changed) {
+      saveToStorage('evalReminders', evalReminders.value)
+    }
+  }
+
+  /**
    * 扫描所有活跃课程，为已到上课时间的轮次生成待办提醒
+   * 同时自动锁定已到期的轮次，并检查逾期
    */
   function checkAndGenerateSessionReminders() {
+    // 先处理自动锁定
+    autoLockExpiredSessions()
+
     const activeCourses = courses.value.filter((c) => c.status === 'active')
     for (const course of activeCourses) {
       const totalSessions = getEvalSessions(course.id)
@@ -630,6 +779,8 @@ export const useAppStore = defineStore('app', () => {
         }
       }
     }
+    // 同步检查逾期提醒
+    checkAndMarkOverdueReminders()
   }
 
   function getEvalSessions(courseId: string): number {
@@ -754,41 +905,81 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
+  /**
+   * 逾期处理：对某课程某轮次中未提交的评价，按配置规则自动处理
+   * 适用于所有评价类型（自评/教师评/导师评/组内互评/组间互评）
+   * 规则：
+   *   average - 取该学生该类型的历史平均分
+   *   zero    - 记 0 分
+   *   full    - 记 100 分
+   *   none    - 不处理，跳过
+   */
   function processSessionOverdue(courseId: string, sessionNumber: number) {
     const config = evalConfigs.value.find((c) => c.courseId === courseId)
-    if (!config || config.overdueRule !== 'average') return
+    if (!config || config.overdueRule === 'none') return
 
+    const course = courses.value.find((c) => c.id === courseId)
+    if (!course) return
+
+    const enabledTypes = TEMPLATE_EVAL_TYPES[config.template] || ['self', 'teacher']
     const courseEnrollments = enrollments.value.filter(
       (e) => e.courseId === courseId && e.status !== 'dropped'
     )
     const newEvals: Evaluation[] = []
 
     for (const enr of courseEnrollments) {
-      const hasSelf = evaluations.value.some(
-        (e) => e.courseId === courseId && e.studentId === enr.studentId && e.sessionNumber === sessionNumber && e.type === 'self'
-      )
-      if (hasSelf) continue
+      for (const type of enabledTypes) {
+        // 已有该类型评价则跳过
+        if (evaluations.value.some(
+          (e) => e.courseId === courseId && e.studentId === enr.studentId && e.sessionNumber === sessionNumber && e.type === type
+        )) continue
 
-      const historyEvals = evaluations.value.filter(
-        (e) => e.courseId === courseId && e.studentId === enr.studentId && e.type === 'self' && e.sessionNumber < sessionNumber
-      )
-      if (historyEvals.length === 0) continue
+        let score: number | null = null
+        let comment = ''
 
-      const avgScore = Math.round(historyEvals.reduce((s, e) => s + e.score, 0) / historyEvals.length)
-      const student = students.value.find((s) => s.id === enr.studentId)
+        switch (config.overdueRule) {
+          case 'average': {
+            // 取同一学生同一评价类型的历史轮次平均分
+            const historyEvals = evaluations.value.filter(
+              (e) => e.courseId === courseId && e.studentId === enr.studentId && e.type === type && e.sessionNumber < sessionNumber
+            )
+            if (historyEvals.length === 0) continue // 无历史记录则跳过
+            score = Math.round(historyEvals.reduce((s, e) => s + e.score, 0) / historyEvals.length)
+            comment = `自动取历史平均分（逾期未评，${score}分）`
+            break
+          }
+          case 'zero':
+            score = 0
+            comment = '逾期未评，记0分'
+            break
+          case 'full':
+            score = 100
+            comment = '逾期未评，记满分'
+            break
+        }
 
-      newEvals.push({
-        id: `auto-${courseId}-${enr.studentId}-${sessionNumber}-${Date.now()}`,
-        courseId,
-        studentId: enr.studentId,
-        sessionNumber,
-        type: 'self',
-        score: avgScore,
-        evaluatorId: enr.studentId,
-        evaluatorName: student?.name || '未知',
-        comment: `自动取历史平均分（逾期未评，${avgScore}分）`,
-        createdAt: new Date().toISOString().split('T')[0],
-      })
+        if (score === null) continue
+
+        // 确定评价人和评价名
+        const targetIsTeacher = type === 'teacher' || type === 'mentor'
+        const evaluatorId = targetIsTeacher ? course.teacher : enr.studentId
+        const evaluatorName = targetIsTeacher
+          ? course.teacher
+          : (students.value.find((s) => s.id === enr.studentId)?.name || '未知')
+
+        newEvals.push({
+          id: `auto-${courseId}-${enr.studentId}-${sessionNumber}-${type}-${Date.now()}`,
+          courseId,
+          studentId: enr.studentId,
+          sessionNumber,
+          type: type as EvalType,
+          score,
+          evaluatorId,
+          evaluatorName,
+          comment,
+          createdAt: new Date().toISOString().split('T')[0],
+        })
+      }
     }
 
     if (newEvals.length > 0) {
@@ -925,6 +1116,71 @@ export const useAppStore = defineStore('app', () => {
     return result
   }
 
+  // ====== 企业导师相关 ======
+
+  /** 获取某导师负责的所有课程ID */
+  function getMentorCourseIds(mentorName: string): string[] {
+    const mentor = mentors.value.find((m) => m.name === mentorName)
+    if (mentor) return mentor.courseIds
+    // 也检查课程 mentor 字段
+    return courses.value.filter((c) => c.mentor === mentorName).map((c) => c.id)
+  }
+
+  // ====== 学院领导相关 ======
+
+  /** 获取某领导管辖的所有课程 */
+  function getLeaderCourses(leaderName: string): Course[] {
+    const leader = leaders.value.find((l) => l.name === leaderName)
+    if (!leader) return []
+    return courses.value.filter((c) => leader.categoryIds.includes(c.categoryId))
+  }
+
+  /** 获取某领导管辖的所有学生（去重） */
+  function getLeaderStudents(leaderName: string): Student[] {
+    const leader = leaders.value.find((l) => l.name === leaderName)
+    if (!leader) return []
+    const courseIds = courses.value
+      .filter((c) => leader.categoryIds.includes(c.categoryId))
+      .map((c) => c.id)
+    const studentIds = new Set(
+      enrollments.value
+        .filter((e) => courseIds.includes(e.courseId))
+        .map((e) => e.studentId)
+    )
+    return students.value.filter((s) => studentIds.has(s.id))
+  }
+
+  // ====== AI 分层 ======
+
+  /** 获取某学生某课程的 AI 分层记录 */
+  function getStudentTier(courseId: string, studentId: string): StudentTierRecord | null {
+    const key = `${courseId}||${studentId}`
+    return studentTiers.value[key] ?? null
+  }
+
+  /** 根据分数判定层级 */
+  function determineTier(score: number): 'basic' | 'advanced' | 'excellent' {
+    if (score >= 80) return 'excellent'
+    if (score >= 60) return 'advanced'
+    return 'basic'
+  }
+
+  /** 提交 AI 分层测试结果 */
+  function submitAITierTest(courseId: string, studentId: string, score: number) {
+    const resultKey = `${courseId}||${studentId}`
+    const tier = determineTier(score)
+    const record: StudentTierRecord = {
+      courseId,
+      studentId,
+      tier,
+      score,
+      createdAt: new Date().toISOString().split('T')[0],
+    }
+    studentTiers.value = { ...studentTiers.value, [resultKey]: record }
+    saveToStorage('studentTiers', studentTiers.value)
+    return record
+  }
+
   return {
     // state
     courses, categories, students, schedules, enrollments, teachers, grades,
@@ -933,9 +1189,11 @@ export const useAppStore = defineStore('app', () => {
     gradeConfigs, detailedGrades,
     isLoggedIn, currentUser, currentRole,
     hasEvalReminders,
+    mentors, leaders, secondaryRoles,
     examScores,
     examWeights,
     lockedSessions,
+    studentTiers,
     // actions
     login, logout,
     addCourse, updateCourse, deleteCourse,
@@ -954,8 +1212,8 @@ export const useAppStore = defineStore('app', () => {
     addExamScore, updateExamScore, submitExamScores, getExamScoresForCourse, getExamNames,
     setExamWeight, getExamWeight, getExamWeightsForCourse,
     hasFinalExamSubmitted, isEvalConfigEditable, isWeightConfigEditable,
-    lockSession, isSessionLocked, getSessionEndDate, isSessionTime, isFinalSessionDeadlinePassed, autoLockPreviousSession,
-    generateSessionReminders, checkAndGenerateSessionReminders,
+    lockSession, isSessionLocked, getSessionScheduleRangeIndex, getSessionEndDate, isSessionTime, isFinalSessionDeadlinePassed, autoLockPreviousSession, autoLockExpiredSessions,
+    generateSessionReminders, checkAndGenerateSessionReminders, getSessionDeadline, checkAndMarkOverdueReminders,
     generateEvalReminders, pushNearDeadlineEvalReminders, processSessionOverdue,
     markEvalReminderCompleted, markSessionEvalRemindersCompleted,
     isFirstClassStarted, markConfigCompleted, getPendingConfigCourses,
@@ -964,5 +1222,7 @@ export const useAppStore = defineStore('app', () => {
     saveGradeConfig, getGradeConfig,
     addDetailedGrade, updateDetailedGrade, getDetailedGrades,
     calcTotalScore,
+    getMentorCourseIds, getLeaderCourses, getLeaderStudents,
+    getStudentTier, determineTier, submitAITierTest,
   }
 })
