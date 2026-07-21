@@ -1,5 +1,54 @@
 <template>
   <div class="space-y-4">
+    <!-- 配置提醒 -->
+    <div v-if="store.currentRole === 'teacher' && pendingConfigCourses.length > 0" class="space-y-1.5">
+      <p class="text-xs font-medium text-blue-400 uppercase tracking-wider flex items-center gap-1">
+        <Settings class="w-3.5 h-3.5" />
+        配置提醒
+        <span class="text-xs font-normal text-gray-400">（请在课前完成配置）</span>
+      </p>
+      <div v-for="cfg in pendingConfigCourses" :key="cfg.courseId"
+        class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 shadow-sm group">
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+          <Settings class="w-4 h-4 text-blue-600" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-blue-900 truncate">{{ cfg.courseTitle }}</p>
+          <p class="text-xs text-blue-600">未配置：{{ cfg.missing.join('、') }}</p>
+        </div>
+        <router-link to="/teacher/courses"
+          class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <ArrowRight class="w-3 h-3" />
+          去配置
+        </router-link>
+      </div>
+    </div>
+
+    <!-- 评价待办提醒 -->
+    <div v-if="pendingEvalReminders.length > 0" class="space-y-1.5">
+      <p class="text-xs font-medium text-red-400 uppercase tracking-wider flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        评价待办
+        <span class="text-xs font-normal text-gray-400">（{{ pendingEvalReminders.length }}项待评价）</span>
+      </p>
+      <div v-for="group in evalReminderGroups" :key="group.key"
+        class="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200 shadow-sm group">
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+          <ClipboardCheck class="w-4 h-4 text-amber-600" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-amber-900 truncate">{{ group.courseTitle }}</p>
+          <p class="text-xs text-amber-600">{{ group.label }}</p>
+        </div>
+        <router-link :to="group.link"
+          class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
+          <ArrowRight class="w-3 h-3" />
+          去评价
+        </router-link>
+      </div>
+    </div>
+
+    <!-- 手动添加待办 -->
     <div class="flex items-center gap-3">
       <input type="text" v-model="title" @keydown.enter="handleAdd" placeholder="添加待办事项..." class="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm" />
       <input type="date" v-model="dueDate" class="px-3 py-2.5 rounded-lg border border-gray-200 focus:border-amber-500 outline-none text-sm" />
@@ -35,7 +84,7 @@
       </div>
     </div>
 
-    <div v-if="myTodos.length === 0" class="text-center py-12 text-gray-400">
+    <div v-if="myTodos.length === 0 && pendingEvalReminders.length === 0" class="text-center py-12 text-gray-400">
       <CheckCircle class="w-12 h-12 mx-auto mb-3 opacity-50" />
       <p>暂无待办事项</p>
     </div>
@@ -43,16 +92,64 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Plus, Circle, CheckCircle, X } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Plus, Circle, CheckCircle, X, ClipboardCheck, ArrowRight, Settings } from 'lucide-vue-next'
 import { useAppStore } from '@/stores/app'
+import { EvalTypeLabels } from '@/types'
 
 const store = useAppStore()
+const router = useRouter()
 const title = ref('')
 const dueDate = ref('')
 
 const myTodos = computed(() => store.todos.filter((t) => t.createdBy === store.currentUser))
 const activeTodos = computed(() => myTodos.value.filter((t) => !t.completed))
 const doneTodos = computed(() => myTodos.value.filter((t) => t.completed))
+
+/** 待配置的课程（仅教师端） */
+const pendingConfigCourses = computed(() => store.getPendingConfigCourses())
+
+/** 当前用户的待办评价提醒（未完成的） */
+const pendingEvalReminders = computed(() => {
+  if (!store.currentUser) return []
+  if (store.currentRole === 'teacher') {
+    return store.evalReminders.filter(
+      (r) => r.studentId === store.currentUser && r.status !== 'completed'
+    )
+  }
+  if (store.currentRole === 'student') {
+    const student = store.students.find((s) => s.name === store.currentUser)
+    if (!student) return []
+    return store.evalReminders.filter(
+      (r) => r.studentId === student.id && r.status !== 'completed'
+    )
+  }
+  return []
+})
+
+/** 按课程+轮次分组，生成描述和跳转链接 */
+const evalReminderGroups = computed(() => {
+  const groups = new Map<string, { courseTitle: string; session: number; types: string[]; key: string }>()
+  for (const r of pendingEvalReminders.value) {
+    const key = `${r.courseId}||${r.sessionNumber}`
+    if (!groups.has(key)) {
+      groups.set(key, { courseTitle: r.courseTitle, session: r.sessionNumber, types: [], key })
+    }
+    // 从 reminderId 中提取 type: session-reminder-{courseId}-{targetId}-{type}-{session}
+    const parts = r.id.split('-')
+    const type = parts[parts.length - 2]
+    if (type && !groups.get(key)!.types.includes(type)) {
+      groups.get(key)!.types.push(type)
+    }
+  }
+  return Array.from(groups.values()).map((g) => ({
+    ...g,
+    label: `第${g.session}次评价 · ${g.types.map((t) => EvalTypeLabels[t as keyof typeof EvalTypeLabels] || t).join('、')}`,
+    link: store.currentRole === 'teacher'
+      ? `/teacher/courses`
+      : `/student/courses`,
+  }))
+})
 
 const handleAdd = () => {
   if (!title.value.trim()) return

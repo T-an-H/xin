@@ -26,12 +26,15 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Cloud, CheckCircle, FileText, Edit3 } from 'lucide-vue-next'
+import { useAppStore } from '@/stores/app'
 import CloudDrive from './ExtraFeatures/CloudDrive.vue'
 import TodoList from './ExtraFeatures/TodoList.vue'
 import OnlineDocs from './ExtraFeatures/OnlineDocs.vue'
 import Notes from './ExtraFeatures/Notes.vue'
+
+const store = useAppStore()
 
 const tabs = [
   { id: 'cloud', label: '云盘', icon: Cloud },
@@ -41,4 +44,29 @@ const tabs = [
 ]
 
 const activeTab = ref('cloud')
+
+onMounted(() => {
+  store.pushNearDeadlineEvalReminders()
+  // 扫描所有课程，为已到时间的评价轮次生成待办提醒
+  store.checkAndGenerateSessionReminders()
+  // 如果有未完成的评价代办，默认切换到待办 tab
+  const user = store.currentUser
+  if (!user) return
+  let hasPending = false
+  if (store.currentRole === 'student') {
+    const student = store.students.find((s) => s.name === user)
+    if (student) {
+      hasPending = store.evalReminders.some(
+        (r) => r.studentId === student.id && r.status !== 'completed'
+      )
+    }
+  } else if (store.currentRole === 'teacher') {
+    hasPending = store.evalReminders.some(
+      (r) => r.studentId === user && r.status !== 'completed'
+    )
+  }
+  if (hasPending) {
+    activeTab.value = 'todos'
+  }
+})
 </script>

@@ -140,20 +140,20 @@ export const teachers: Teacher[] = [
 ];
 
 export const grades: Grade[] = [
-  { id: 'g-1', studentId: 'stu-1', courseId: 'course-1', score: 88, comment: '表现优秀', gradedAt: '2026-07-15' },
-  { id: 'g-2', studentId: 'stu-2', courseId: 'course-1', score: 92, comment: '非常好', gradedAt: '2026-07-15' },
-  { id: 'g-3', studentId: 'stu-3', courseId: 'course-2', score: 75, comment: '需要加强练习', gradedAt: '2026-07-16' },
-  { id: 'g-4', studentId: 'stu-4', courseId: 'course-2', score: 80, comment: '良好', gradedAt: '2026-07-16' },
-  { id: 'g-5', studentId: 'stu-5', courseId: 'course-3', score: 85, comment: '设计感不错', gradedAt: '2026-07-17' },
-  { id: 'g-6', studentId: 'stu-8', courseId: 'course-5', score: 95, comment: '优秀学员', gradedAt: '2026-07-17' },
-  { id: 'g-7', studentId: 'stu-14', courseId: 'course-3', score: 70, comment: '继续努力', gradedAt: '2026-07-15' },
-  { id: 'g-8', studentId: 'stu-15', courseId: 'course-1', score: 90, comment: '很棒', gradedAt: '2026-07-16' },
-  { id: 'g-9', studentId: 'stu-1', courseId: 'course-14', score: 86, comment: '具备较好的应用理解能力', gradedAt: '2026-07-22' },
-  { id: 'g-10', studentId: 'stu-1', courseId: 'course-15', score: 91, comment: '数据分析能力突出', gradedAt: '2026-07-22' },
-  { id: 'g-11', studentId: 'stu-1', courseId: 'course-16', score: 78, comment: '表达较清晰，继续加强节奏控制', gradedAt: '2026-07-23' },
-  { id: 'g-12', studentId: 'stu-17', courseId: 'course-14', score: 82, comment: '应用能力较好，继续深入', gradedAt: '2026-07-25' },
-  { id: 'g-13', studentId: 'stu-19', courseId: 'course-3', score: 76, comment: '设计基础扎实', gradedAt: '2026-07-24' },
-  { id: 'g-14', studentId: 'stu-18', courseId: 'course-15', score: 88, comment: '数据分析能力出色', gradedAt: '2026-07-25' },
+  { id: 'g-1', studentId: 'stu-1', courseId: 'course-1', score: 88, semester: '2026年', comment: '表现优秀', gradedAt: '2026-07-15' },
+  { id: 'g-2', studentId: 'stu-2', courseId: 'course-1', score: 92, semester: '2026年', comment: '非常好', gradedAt: '2026-07-15' },
+  { id: 'g-3', studentId: 'stu-3', courseId: 'course-2', score: 75, semester: '2026年', comment: '需要加强练习', gradedAt: '2026-07-16' },
+  { id: 'g-4', studentId: 'stu-4', courseId: 'course-2', score: 80, semester: '2026年', comment: '良好', gradedAt: '2026-07-16' },
+  { id: 'g-5', studentId: 'stu-5', courseId: 'course-3', score: 85, semester: '2026年', comment: '设计感不错', gradedAt: '2026-07-17' },
+  { id: 'g-6', studentId: 'stu-8', courseId: 'course-5', score: 95, semester: '2026年', comment: '优秀学员', gradedAt: '2026-07-17' },
+  { id: 'g-7', studentId: 'stu-14', courseId: 'course-3', score: 70, semester: '2026年', comment: '继续努力', gradedAt: '2026-07-15' },
+  { id: 'g-8', studentId: 'stu-15', courseId: 'course-1', score: 90, semester: '2026年', comment: '很棒', gradedAt: '2026-07-16' },
+  { id: 'g-9', studentId: 'stu-1', courseId: 'course-14', score: 86, semester: '2026年', comment: '具备较好的应用理解能力', gradedAt: '2026-07-22' },
+  { id: 'g-10', studentId: 'stu-1', courseId: 'course-15', score: 91, semester: '2026年', comment: '数据分析能力突出', gradedAt: '2026-07-22' },
+  { id: 'g-11', studentId: 'stu-1', courseId: 'course-16', score: 78, semester: '2026年', comment: '表达较清晰，继续加强节奏控制', gradedAt: '2026-07-23' },
+  { id: 'g-12', studentId: 'stu-17', courseId: 'course-14', score: 82, semester: '2026年', comment: '应用能力较好，继续深入', gradedAt: '2026-07-25' },
+  { id: 'g-13', studentId: 'stu-19', courseId: 'course-3', score: 76, semester: '2026年', comment: '设计基础扎实', gradedAt: '2026-07-24' },
+  { id: 'g-14', studentId: 'stu-18', courseId: 'course-15', score: 88, semester: '2026年', comment: '数据分析能力出色', gradedAt: '2026-07-25' },
 ];
 
 // ========== 评价系统 Mock 数据 ==========
@@ -204,4 +204,30 @@ export const evaluations: import('@/types').Evaluation[] = [
   { id: 'ev-17', courseId: 'course-1', studentId: 'stu-5', sessionNumber: 1, type: 'intra_group', score: 70, evaluatorId: 'stu-6', evaluatorName: '孙明', createdAt: '2026-07-10' },
   { id: 'ev-18', courseId: 'course-1', studentId: 'stu-5', sessionNumber: 1, type: 'inter_group', score: 65, evaluatorId: 'stu-1', evaluatorName: '张明', createdAt: '2026-07-11' },
   { id: 'ev-19', courseId: 'course-1', studentId: 'stu-5', sessionNumber: 1, type: 'teacher', score: 72, evaluatorId: 't-1', evaluatorName: '王老师', comment: '与自评差异较大', createdAt: '2026-07-12' },
+];
+
+export const detailedGrades: import('@/types').DetailedGrade[] = [
+  // 张明 (stu-1)
+  { id: 'dg-1', studentId: 'stu-1', courseId: 'course-1', selfEvalScore: 88, peerReviewScore: 80, interGroupScore: 78, teacherScore: 84, mentorScore: 80, midtermExamScore: 85, midtermProjectScore: 82, finalExamScore: 90, finalProjectScore: 88, gradedAt: '2026-07-20' },
+  { id: 'dg-2', studentId: 'stu-1', courseId: 'course-14', selfEvalScore: 92, teacherScore: 86, mentorScore: 88, finalExamScore: 80, finalProjectScore: 85, gradedAt: '2026-07-22' },
+  { id: 'dg-3', studentId: 'stu-1', courseId: 'course-15', selfEvalScore: 90, teacherScore: 88, peerReviewScore: 85, finalExamScore: 92, finalProjectScore: 90, gradedAt: '2026-07-22' },
+  { id: 'dg-4', studentId: 'stu-1', courseId: 'course-16', selfEvalScore: 75, teacherScore: 78, peerReviewScore: 72, finalExamScore: 80, finalProjectScore: 76, gradedAt: '2026-07-23' },
+  // 李华 (stu-2)
+  { id: 'dg-5', studentId: 'stu-2', courseId: 'course-1', selfEvalScore: 85, peerReviewScore: 88, interGroupScore: 90, teacherScore: 92, mentorScore: 0, midtermExamScore: 88, midtermProjectScore: 90, finalExamScore: 94, finalProjectScore: 92, gradedAt: '2026-07-20' },
+  // 王芳 (stu-3)
+  { id: 'dg-6', studentId: 'stu-3', courseId: 'course-2', selfEvalScore: 70, peerReviewScore: 72, interGroupScore: 75, teacherScore: 75, finalExamScore: 78, finalProjectScore: 72, gradedAt: '2026-07-18' },
+  // 赵磊 (stu-4)
+  { id: 'dg-7', studentId: 'stu-4', courseId: 'course-2', selfEvalScore: 82, peerReviewScore: 78, interGroupScore: 80, teacherScore: 80, finalExamScore: 78, finalProjectScore: 82, gradedAt: '2026-07-18' },
+  // 陈静 (stu-5)
+  { id: 'dg-8', studentId: 'stu-5', courseId: 'course-3', selfEvalScore: 85, teacherScore: 85, midtermExamScore: 88, midtermProjectScore: 82, finalExamScore: 86, finalProjectScore: 84, gradedAt: '2026-07-19' },
+  // 刘洋 (stu-8)
+  { id: 'dg-9', studentId: 'stu-8', courseId: 'course-5', selfEvalScore: 90, teacherScore: 95, peerReviewScore: 92, finalExamScore: 96, finalProjectScore: 94, gradedAt: '2026-07-19' },
+  // 胡敏 (stu-15)
+  { id: 'dg-10', studentId: 'stu-15', courseId: 'course-1', selfEvalScore: 78, peerReviewScore: 85, interGroupScore: 88, teacherScore: 90, mentorScore: 0, midtermExamScore: 88, midtermProjectScore: 86, finalExamScore: 92, finalProjectScore: 90, gradedAt: '2026-07-18' },
+  // 高飞 (stu-17)
+  { id: 'dg-11', studentId: 'stu-17', courseId: 'course-14', selfEvalScore: 80, teacherScore: 82, mentorScore: 84, finalExamScore: 82, finalProjectScore: 80, gradedAt: '2026-07-25' },
+  // 周明 (stu-18)
+  { id: 'dg-12', studentId: 'stu-18', courseId: 'course-15', selfEvalScore: 86, teacherScore: 88, peerReviewScore: 90, finalExamScore: 88, finalProjectScore: 90, gradedAt: '2026-07-25' },
+  // 吴磊 (stu-19)
+  { id: 'dg-13', studentId: 'stu-19', courseId: 'course-3', selfEvalScore: 72, teacherScore: 76, finalExamScore: 78, finalProjectScore: 74, gradedAt: '2026-07-24' },
 ];

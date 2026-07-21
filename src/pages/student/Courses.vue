@@ -10,10 +10,15 @@
         v-for="enrollment in enrolledCourses"
         :key="enrollment.id"
         :to="`/student/courses/${enrollment.courseId}`"
-        class="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden relative"
+        :class="[
+          'group bg-white rounded-xl border shadow-sm transition-all duration-200 overflow-hidden relative',
+          isEnded(enrollment)
+            ? 'border-gray-200 opacity-60 hover:opacity-70'
+            : 'border-gray-100 hover:shadow-lg'
+        ]"
       >
         <!-- 待评价标记 -->
-        <div v-if="hasPendingEval(enrollment)" class="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-full text-xs text-amber-600 font-medium">
+        <div v-if="!isEnded(enrollment) && hasPendingEval(enrollment)" class="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-full text-xs text-amber-600 font-medium">
           <AlertCircle class="w-3 h-3" />
           <span>待评价</span>
         </div>
@@ -24,9 +29,17 @@
             v-if="getCourse(enrollment.courseId)?.cover"
             :src="getCourse(enrollment.courseId)?.cover"
             :alt="getCourse(enrollment.courseId)?.title"
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            :class="[
+              'w-full h-full object-cover transition-transform duration-300',
+              isEnded(enrollment) ? 'grayscale' : 'group-hover:scale-105'
+            ]"
           />
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+          <!-- 已结束水印 -->
+          <div v-if="isEnded(enrollment)" class="absolute inset-0 flex items-center justify-center">
+            <span class="text-white/50 text-lg font-bold tracking-widest -rotate-12 select-none">已结束</span>
+          </div>
           <div class="absolute bottom-3 left-4 right-4">
             <h3 class="text-white font-bold text-lg leading-tight truncate">
               {{ getCourse(enrollment.courseId)?.title }}
@@ -93,8 +106,9 @@
               {{ statusLabel(enrollment.status) }}
             </span>
 
-            <span class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 group-hover:text-blue-700 transition-colors">
-              进入学习
+            <span class="inline-flex items-center gap-1 text-xs font-medium transition-colors"
+              :class="isEnded(enrollment) ? 'text-gray-400' : 'text-blue-600 group-hover:text-blue-700'">
+              {{ isEnded(enrollment) ? '查看记录' : '进入学习' }}
               <ArrowRight class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
             </span>
           </div>
@@ -131,6 +145,11 @@ const getTeacherInfo = (teacherName: string) => store.teachers.find((t) => t.nam
 const getTeacherAvatar = (teacherName: string) => {
   const teacher = store.teachers.find((t) => t.name === teacherName)
   return teacher?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${teacherName}`
+}
+
+const isEnded = (enrollment: Enrollment) => {
+  const course = getCourse(enrollment.courseId)
+  return course?.status !== 'active' || enrollment.status === 'completed' || enrollment.status === 'dropped'
 }
 
 const hasPendingEval = (enrollment: Enrollment) => {

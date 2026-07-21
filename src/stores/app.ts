@@ -16,7 +16,8 @@ import {
   grades as mockGrades,
   evaluationConfigs as mockEvalConfigs,
   evaluations as mockEvaluations,
-  studentGroups as mockStudentGroups
+  studentGroups as mockStudentGroups,
+  detailedGrades as mockDetailedGrades
 } from '@/data/mockData'
 
 type UserRole = 'admin' | 'teacher' | 'student' | null
@@ -24,7 +25,11 @@ type UserRole = 'admin' | 'teacher' | 'student' | null
 const loadFromStorage = <T>(key: string, fallback: T): T => {
   try {
     const stored = localStorage.getItem(key)
-    return stored ? JSON.parse(stored) : fallback
+    if (!stored) return fallback
+    const parsed = JSON.parse(stored)
+    // 数组类型：如果 localStorage 存的是空数组，也用 fallback（防止 stale 空数组覆盖 mock 数据）
+    if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(fallback)) return fallback
+    return parsed
   } catch {
     return fallback
   }
@@ -52,11 +57,37 @@ export const useAppStore = defineStore('app', () => {
   const studentGroups = ref<StudentGroup[]>(loadFromStorage<StudentGroup[]>('studentGroups', mockStudentGroups))
   const evalReminders = ref<EvalReminder[]>(loadFromStorage<EvalReminder[]>('evalReminders', []))
   const gradeConfigs = ref<Record<string, GradeWeightConfig>>(loadFromStorage<Record<string, GradeWeightConfig>>('gradeConfigs', {}))
-  const detailedGrades = ref<DetailedGrade[]>(loadFromStorage<DetailedGrade[]>('detailedGrades', []))
+  const detailedGrades = ref<DetailedGrade[]>(loadFromStorage<DetailedGrade[]>('detailedGrades', mockDetailedGrades))
   const isLoggedIn = ref<boolean>(loadFromStorage<boolean>('isLoggedIn', false))
   const currentUser = ref<string | null>(loadFromStorage<string | null>('currentUser', null))
   const currentRole = ref<UserRole>(loadFromStorage<UserRole>('currentRole', null))
   const hasEvalReminders = ref<boolean>(false)
+
+  // 教师已提交的评价记录（string[]，key: `${courseId}||${studentId}||${session}||${type}`）
+  const teacherSubmittedEvals = ref<string[]>(
+    loadFromStorage<string[]>('teacherSubmittedEvals', [])
+  )
+
+  // 考试/项目成绩
+  const examScores = ref<import('@/types').ExamScore[]>(
+    loadFromStorage<import('@/types').ExamScore[]>('examScores', [])
+  )
+
+  // 考试/项目权重配置 (courseId → examName → weight)
+  const examWeights = ref<Record<string, Record<string, number>>>(
+    loadFromStorage<Record<string, Record<string, number>>>('examWeights', {})
+  )
+
+  // 配置完成标记（权重配置 / 评价方案配置）
+  const configCompleted = ref<Record<string, { weights: boolean; evalConfig: boolean }>>(
+    loadFromStorage<Record<string, { weights: boolean; evalConfig: boolean }>>('configCompleted', {})
+  )
+
+  // 已锁定的评价轮次（key: `${courseId}||${sessionNumber}`）
+  // 锁定后该轮次无法再修改评价
+  const lockedSessions = ref<string[]>(
+    loadFromStorage<string[]>('lockedSessions', [])
+  )
 
   // ====== Actions ======
 
@@ -172,8 +203,18 @@ export const useAppStore = defineStore('app', () => {
     saveToStorage('schedules', schedules.value)
   }
 
+  function addEnrollment(enrollment: Enrollment) {
+    enrollments.value = [...enrollments.value, enrollment]
+    saveToStorage('enrollments', enrollments.value)
+  }
+
   function updateEnrollment(id: string, data: Partial<Enrollment>) {
     enrollments.value = enrollments.value.map((e) => (e.id === id ? { ...e, ...data } : e))
+    saveToStorage('enrollments', enrollments.value)
+  }
+
+  function deleteEnrollment(id: string) {
+    enrollments.value = enrollments.value.filter((e) => e.id !== id)
     saveToStorage('enrollments', enrollments.value)
   }
 
@@ -305,6 +346,26 @@ export const useAppStore = defineStore('app', () => {
     saveToStorage('studentGroups', studentGroups.value)
   }
 
+  function addStudent(student: Student) {
+    students.value = [...students.value, student]
+    saveToStorage('students', students.value)
+  }
+
+  function updateStudent(id: string, data: Partial<Student>) {
+    students.value = students.value.map((s) => (s.id === id ? { ...s, ...data } : s))
+    saveToStorage('students', students.value)
+  }
+
+  function updateStudentGroup(id: string, data: Partial<StudentGroup>) {
+    studentGroups.value = studentGroups.value.map((g) => (g.id === id ? { ...g, ...data } : g))
+    saveToStorage('studentGroups', studentGroups.value)
+  }
+
+  function deleteStudentGroup(id: string) {
+    studentGroups.value = studentGroups.value.filter((g) => g.id !== id)
+    saveToStorage('studentGroups', studentGroups.value)
+  }
+
   function detectAnomalies(courseId: string, sessionNumber: number): EvalAnomaly[] {
     const course = courses.value.find((c) => c.id === courseId)
     if (!course) return []
@@ -342,6 +403,235 @@ export const useAppStore = defineStore('app', () => {
     return anomalies
   }
 
+  /** 教师提交评价（提交后锁定，学生端可见） */
+  function submitTeacherEval(courseId: string, studentId: string, session: number, type: string) {
+    const key = `${courseId}||${studentId}||${session}||${type}`
+    if (!teacherSubmittedEvals.value.includes(key)) {
+      teacherSubmittedEvals.value = [...teacherSubmittedEvals.value, key]
+      saveToStorage('teacherSubmittedEvals', teacherSubmittedEvals.value)
+    }
+  }
+
+  /** 检查某条教师评价是否已提交 */
+  function isTeacherEvalSubmitted(courseId: string, studentId: string, session: number, type: string): boolean {
+    const key = `${courseId}||${studentId}||${session}||${type}`
+    return teacherSubmittedEvals.value.includes(key)
+  }
+
+  /** 获取某学生当前可查看的教师最终评分 */
+  function getSubmittedTeacherScore(courseId: string, studentId: string, session: number, type: string): number | null {
+    if (!isTeacherEvalSubmitted(courseId, studentId, session, type)) return null
+    const ev = evaluations.value.find(
+      (e) => e.courseId === courseId && e.studentId === studentId && e.sessionNumber === session && e.type === type
+    )
+    return ev?.score ?? null
+  }
+
+  /** 考试/项目成绩操作 */
+  function addExamScore(score: import('@/types').ExamScore) {
+    examScores.value.push(score)
+    saveToStorage('examScores', examScores.value)
+  }
+
+  function updateExamScore(id: string, updates: Partial<import('@/types').ExamScore>) {
+    const idx = examScores.value.findIndex((s) => s.id === id)
+    if (idx !== -1) {
+      examScores.value[idx] = { ...examScores.value[idx], ...updates }
+      saveToStorage('examScores', examScores.value)
+    }
+  }
+
+  function submitExamScores(courseId: string, examName: string) {
+    examScores.value = examScores.value.map((s) => {
+      if (s.courseId === courseId && s.examName === examName && s.status === 'draft') {
+        return { ...s, status: 'submitted' as const, gradedAt: new Date().toISOString().split('T')[0] }
+      }
+      return s
+    })
+    saveToStorage('examScores', examScores.value)
+  }
+
+  function getExamScoresForCourse(courseId: string, examName?: string): import('@/types').ExamScore[] {
+    let result = examScores.value.filter((s) => s.courseId === courseId)
+    if (examName) result = result.filter((s) => s.examName === examName)
+    return result
+  }
+
+  /** 获取课程已定义的考试/项目名称列表 */
+  function getExamNames(courseId: string): string[] {
+    const names = new Set(examScores.value.filter((s) => s.courseId === courseId).map((s) => s.examName))
+    return Array.from(names).sort()
+  }
+
+  // ====== 考试/项目权重配置 ======
+
+  /** 设置某个考试/项目的权重 */
+  function setExamWeight(courseId: string, examName: string, weight: number) {
+    const courseWeights = { ...(examWeights.value[courseId] || {}) }
+    courseWeights[examName] = Math.min(100, Math.max(0, weight))
+    examWeights.value = { ...examWeights.value, [courseId]: courseWeights }
+    saveToStorage('examWeights', examWeights.value)
+  }
+
+  /** 获取某个考试/项目的权重 */
+  function getExamWeight(courseId: string, examName: string): number {
+    return examWeights.value[courseId]?.[examName] ?? 0
+  }
+
+  /** 获取课程所有考试/项目的权重配置 */
+  function getExamWeightsForCourse(courseId: string): Record<string, number> {
+    return examWeights.value[courseId] || {}
+  }
+
+  /** 检查课程是否有已提交的期末考试成绩（期末考试/期末项目） */
+  function hasFinalExamSubmitted(courseId: string): boolean {
+    return examScores.value.some(
+      (s) => s.courseId === courseId &&
+        (s.type === 'final_exam' || s.type === 'final_project') &&
+        s.status === 'submitted'
+    )
+  }
+
+  /** 评价方案是否可编辑（第一节课开始前可编辑，开始后锁定） */
+  function isEvalConfigEditable(courseId: string): boolean {
+    return !isFirstClassStarted(courseId)
+  }
+
+  /** 成绩权重是否可编辑（期末考试成绩录入前可编辑，录入后锁定） */
+  function isWeightConfigEditable(courseId: string): boolean {
+    return !hasFinalExamSubmitted(courseId)
+  }
+
+  // ====== 评价轮次锁定与时机 ======
+
+  /** 锁定某评价轮次（锁定后不可再修改评价） */
+  function lockSession(courseId: string, sessionNumber: number) {
+    const key = `${courseId}||${sessionNumber}`
+    if (!lockedSessions.value.includes(key)) {
+      lockedSessions.value = [...lockedSessions.value, key]
+      saveToStorage('lockedSessions', lockedSessions.value)
+    }
+  }
+
+  /** 检查某评价轮次是否已锁定 */
+  function isSessionLocked(courseId: string, sessionNumber: number): boolean {
+    return lockedSessions.value.includes(`${courseId}||${sessionNumber}`)
+  }
+
+  /** 
+   * 获取某评价轮次对应的课次结束日期
+   * 将课程的所有课次(startDate排序)按顺序映射到评价轮次
+   */
+  function getSessionEndDate(courseId: string, sessionNumber: number): Date | null {
+    const courseSchedules = schedules.value
+      .filter((s) => s.courseId === courseId)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    if (sessionNumber >= 1 && sessionNumber <= courseSchedules.length) {
+      return new Date(courseSchedules[sessionNumber - 1].endDate)
+    }
+    return null
+  }
+
+  /**
+   * 判断某评价轮次是否已到上课时间（上完课才能评价）
+   * 所有评价轮次统一以第二节课结束为起始时间
+   */
+  function isSessionTime(courseId: string, _sessionNumber: number): boolean {
+    const courseSchedules = schedules.value
+      .filter((s) => s.courseId === courseId)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    if (courseSchedules.length === 0) return true // 无法判断时默认可用
+    if (courseSchedules.length === 1) return new Date() >= new Date(courseSchedules[0].endDate) // 只有一节课时用第一节课
+    return new Date() >= new Date(courseSchedules[1].endDate)
+  }
+
+  /**
+   * 判断最终评价轮次是否已过3天截止期
+   * 最后一节课结束后3天内可评价，超过3天锁定
+   */
+  function isFinalSessionDeadlinePassed(courseId: string, totalSessions: number): boolean {
+    const endDate = getSessionEndDate(courseId, totalSessions)
+    if (!endDate) return false
+    const deadline = new Date(endDate)
+    deadline.setDate(deadline.getDate() + 3)
+    return new Date() > deadline
+  }
+
+  /**
+   * 自动锁定上一轮次并处理逾期
+   * 当教师开始评价第 N 轮时调用，锁定第 N-1 轮
+   */
+  function autoLockPreviousSession(courseId: string, currentSession: number) {
+    const prevSession = currentSession - 1
+    if (prevSession >= 1) {
+      // 先处理逾期评价（对未评价的学生自动走逾期规则）
+      processSessionOverdue(courseId, prevSession)
+      // 标记该轮次的所有提醒为已完成
+      markSessionEvalRemindersCompleted(courseId, prevSession)
+      // 锁定该轮次
+      lockSession(courseId, prevSession)
+    }
+  }
+
+  // ====== 评价待办提醒生成 ======
+
+  /** 
+   * 当某评价轮次可开始评价时，生成待办提醒（教师端和学生端）
+   */
+  function generateSessionReminders(courseId: string, sessionNumber: number) {
+    const course = courses.value.find((c) => c.id === courseId)
+    const config = evalConfigs.value.find((c) => c.courseId === courseId)
+    if (!course || !config) return
+
+    const enabledTypes = TEMPLATE_EVAL_TYPES[config.template] || ['self', 'teacher']
+    const courseEnrollments = enrollments.value.filter(
+      (e) => e.courseId === courseId && e.status !== 'dropped'
+    )
+    let newEvalReminders: EvalReminder[] = []
+
+    for (const enr of courseEnrollments) {
+      for (const type of enabledTypes) {
+        const targetIsTeacher = type === 'teacher' || type === 'mentor'
+        // 教师/导师评价 → 提醒对象是教师，自评/互评 → 提醒对象是学生
+        const targetId = targetIsTeacher ? course.teacher : enr.studentId
+        const reminderId = `session-reminder-${courseId}-${targetId}-${type}-${sessionNumber}`
+
+        // 已存在提醒则跳过
+        if (evalReminders.value.some((r) => r.id === reminderId)) continue
+
+        newEvalReminders.push({
+          id: reminderId,
+          courseId,
+          courseTitle: course.title,
+          studentId: targetId,
+          sessionNumber,
+          deadline: '',
+          status: 'pending',
+        })
+      }
+    }
+
+    if (newEvalReminders.length > 0) {
+      evalReminders.value = [...evalReminders.value, ...newEvalReminders]
+      saveToStorage('evalReminders', evalReminders.value)
+    }
+  }
+
+  /**
+   * 扫描所有活跃课程，为已到上课时间的轮次生成待办提醒
+   */
+  function checkAndGenerateSessionReminders() {
+    const activeCourses = courses.value.filter((c) => c.status === 'active')
+    for (const course of activeCourses) {
+      const totalSessions = getEvalSessions(course.id)
+      for (let s = 1; s <= totalSessions; s++) {
+        if (isSessionTime(course.id, s) && !isSessionLocked(course.id, s)) {
+          generateSessionReminders(course.id, s)
+        }
+      }
+    }
+  }
+
   function getEvalSessions(courseId: string): number {
     const course = courses.value.find((c) => c.id === courseId)
     if (!course) return 1
@@ -376,37 +666,38 @@ export const useAppStore = defineStore('app', () => {
     const startDate = new Date(course.createdAt || new Date())
     const reminders: EvalReminder[] = []
 
-    const enabledTypes = TEMPLATE_EVAL_TYPES[config.template] || []
+    const enabledTypes = TEMPLATE_EVAL_TYPES[config.template] || ['self', 'teacher']
 
     for (const enr of courseEnrollments) {
       for (let s = 1; s <= totalSessions; s++) {
-        // 检查学生是否已提交自评
-        const hasSelf = evaluations.value.some(
-          (e) => e.courseId === courseId && e.studentId === enr.studentId && e.sessionNumber === s && e.type === 'self'
-        )
-        if (hasSelf) continue
+        for (const type of enabledTypes) {
+          // 教师/导师评价的提醒对象是课程教师，自评/互评的提醒对象是学生
+          const targetIsTeacher = type === 'teacher' || type === 'mentor'
+          const hasEval = evaluations.value.some(
+            (e) => e.courseId === courseId && e.studentId === enr.studentId && e.sessionNumber === s && e.type === type
+          )
+          if (hasEval) continue
 
-        // 计算截止时间
-        const weekOffset = s * 2
-        const deadline = new Date(startDate)
-        deadline.setDate(deadline.getDate() + weekOffset * 7)
-        const deadlineStr = deadline.toISOString().split('T')[0]
+          const weekOffset = s * 2
+          const deadline = new Date(startDate)
+          deadline.setDate(deadline.getDate() + weekOffset * 7)
+          const deadlineStr = deadline.toISOString().split('T')[0]
 
-        // 检查是否已有提醒
-        const exists = evalReminders.value.some(
-          (r) => r.courseId === courseId && r.studentId === enr.studentId && r.sessionNumber === s
-        )
-        if (exists) continue
+          const targetId = targetIsTeacher ? course.teacher : enr.studentId
+          const reminderId = `reminder-${courseId}-${targetId}-${type}-${s}`
+          const exists = evalReminders.value.some((r) => r.id === reminderId)
+          if (exists) continue
 
-        reminders.push({
-          id: `reminder-${courseId}-${enr.studentId}-${s}`,
-          courseId,
-          courseTitle: course.title,
-          studentId: enr.studentId,
-          sessionNumber: s,
-          deadline: deadlineStr,
-          status: new Date(deadlineStr) < new Date() ? 'overdue' : 'pending',
-        })
+          reminders.push({
+            id: reminderId,
+            courseId,
+            courseTitle: course.title,
+            studentId: targetId,
+            sessionNumber: s,
+            deadline: deadlineStr,
+            status: new Date(deadlineStr) < new Date() ? 'overdue' : 'pending',
+          })
+        }
       }
     }
     if (reminders.length > 0) {
@@ -420,19 +711,30 @@ export const useAppStore = defineStore('app', () => {
     const oneWeekLater = new Date(now)
     oneWeekLater.setDate(oneWeekLater.getDate() + 7)
 
-    const student = students.value.find((s) => s.name === currentUser.value)
+    const isTeacher = currentRole.value === 'teacher'
+    const isStudent = currentRole.value === 'student'
+
     const pendingReminders = evalReminders.value.filter((r) => {
       if (r.status === 'completed') return false
-      if (student && r.studentId !== student.id) return false
-      const deadline = new Date(r.deadline)
-      return deadline >= now && deadline <= oneWeekLater
+      if (isTeacher && r.studentId === currentUser.value) {
+        const deadline = new Date(r.deadline)
+        return deadline >= now && deadline <= oneWeekLater
+      }
+      if (isStudent) {
+        const student = students.value.find((s) => s.name === currentUser.value)
+        if (student && r.studentId === student.id) {
+          const deadline = new Date(r.deadline)
+          return deadline >= now && deadline <= oneWeekLater
+        }
+      }
+      return false
     })
 
     const existingTodoKeys = new Set(todos.value.map((t) => t.title))
     let newCount = 0
 
     for (const r of pendingReminders) {
-      const todoTitle = `📋 ${r.courseTitle} 第${r.sessionNumber}次评价即将截止（${r.deadline}）`
+      const todoTitle = `📋 评价提醒：${r.courseTitle} 第${r.sessionNumber}次评价即将截止（${r.deadline}）`
       if (existingTodoKeys.has(todoTitle)) continue
       todos.value.push({
         id: `todo-eval-${Date.now()}-${r.id}`,
@@ -448,7 +750,6 @@ export const useAppStore = defineStore('app', () => {
 
     if (newCount > 0) {
       saveToStorage('todos', todos.value)
-      // trigger reactivity
       todos.value = [...todos.value]
     }
   }
@@ -494,6 +795,27 @@ export const useAppStore = defineStore('app', () => {
       evaluations.value = [...evaluations.value, ...newEvals]
       saveToStorage('evaluations', evaluations.value)
     }
+  }
+
+  function markEvalReminderCompleted(courseId: string, studentId: string, sessionNumber: number) {
+    evalReminders.value = evalReminders.value.map((r) => {
+      if (r.courseId === courseId && r.studentId === studentId && r.sessionNumber === sessionNumber) {
+        return { ...r, status: 'completed' as const }
+      }
+      return r
+    })
+    saveToStorage('evalReminders', evalReminders.value)
+  }
+
+  /** 标记某课程某轮次所有评价提醒为已完成 */
+  function markSessionEvalRemindersCompleted(courseId: string, sessionNumber: number) {
+    evalReminders.value = evalReminders.value.map((r) => {
+      if (r.courseId === courseId && r.sessionNumber === sessionNumber && r.status !== 'completed') {
+        return { ...r, status: 'completed' as const }
+      }
+      return r
+    })
+    saveToStorage('evalReminders', evalReminders.value)
   }
 
   function checkEvalReminders() {
@@ -561,6 +883,48 @@ export const useAppStore = defineStore('app', () => {
     return Math.round(regular * cfg.regularWeight / 100 + midterm * cfg.midtermWeight / 100 + final * cfg.finalWeight / 100)
   }
 
+  // ====== 配置提醒 ======
+
+  /** 第一节课是否已经开始（配置锁定期） */
+  function isFirstClassStarted(courseId: string): boolean {
+    const courseSchedules = schedules.value
+      .filter((s) => s.courseId === courseId)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    if (courseSchedules.length === 0) return false
+    return new Date() >= new Date(courseSchedules[0].endDate)
+  }
+
+  /** 标记某课程的某项配置已完成 */
+  function markConfigCompleted(courseId: string, type: 'weights' | 'evalConfig') {
+    configCompleted.value = {
+      ...configCompleted.value,
+      [courseId]: {
+        ...(configCompleted.value[courseId] || { weights: false, evalConfig: false }),
+        [type]: true,
+      },
+    }
+    saveToStorage('configCompleted', configCompleted.value)
+  }
+
+  /** 获取有未完成配置的课程列表（排除已锁定课程，仅当前教师自己的课程） */
+  function getPendingConfigCourses(): { courseId: string; courseTitle: string; missing: string[] }[] {
+    const activeCourses = courses.value.filter(
+      (c) => c.status === 'active' && c.teacher === currentUser.value
+    )
+    const result: { courseId: string; courseTitle: string; missing: string[] }[] = []
+    for (const course of activeCourses) {
+      if (isFirstClassStarted(course.id)) continue // 已锁定，不需要提醒
+      const done = configCompleted.value[course.id]
+      const missing: string[] = []
+      if (!done?.weights) missing.push('成绩权重')
+      if (!done?.evalConfig) missing.push('评价方案')
+      if (missing.length > 0) {
+        result.push({ courseId: course.id, courseTitle: course.title, missing })
+      }
+    }
+    return result
+  }
+
   return {
     // state
     courses, categories, students, schedules, enrollments, teachers, grades,
@@ -569,21 +933,32 @@ export const useAppStore = defineStore('app', () => {
     gradeConfigs, detailedGrades,
     isLoggedIn, currentUser, currentRole,
     hasEvalReminders,
+    examScores,
+    examWeights,
+    lockedSessions,
     // actions
     login, logout,
     addCourse, updateCourse, deleteCourse,
     addCategory, updateCategory, deleteCategory,
     addSchedule, updateSchedule, deleteSchedule,
-    updateEnrollment,
+    addEnrollment, updateEnrollment, deleteEnrollment,
     addGrade, updateGrade, deleteGrade,
     addCloudFile, deleteCloudFile,
     addTodo, updateTodo, deleteTodo,
     addOnlineDoc, updateOnlineDoc, deleteOnlineDoc,
     addNote, updateNote, deleteNote,
     addEvaluation, updateEvaluation, deleteEvaluation,
-    setEvalConfig, addStudentGroup,
+    setEvalConfig, addStudentGroup, addStudent, updateStudent, updateStudentGroup, deleteStudentGroup,
     detectAnomalies, getEvalSessions, hasGroups,
+    submitTeacherEval, isTeacherEvalSubmitted, getSubmittedTeacherScore,
+    addExamScore, updateExamScore, submitExamScores, getExamScoresForCourse, getExamNames,
+    setExamWeight, getExamWeight, getExamWeightsForCourse,
+    hasFinalExamSubmitted, isEvalConfigEditable, isWeightConfigEditable,
+    lockSession, isSessionLocked, getSessionEndDate, isSessionTime, isFinalSessionDeadlinePassed, autoLockPreviousSession,
+    generateSessionReminders, checkAndGenerateSessionReminders,
     generateEvalReminders, pushNearDeadlineEvalReminders, processSessionOverdue,
+    markEvalReminderCompleted, markSessionEvalRemindersCompleted,
+    isFirstClassStarted, markConfigCompleted, getPendingConfigCourses,
     checkEvalReminders,
     recalculateProgress,
     saveGradeConfig, getGradeConfig,

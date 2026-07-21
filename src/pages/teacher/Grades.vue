@@ -7,10 +7,6 @@
         <p class="text-gray-500 mt-1">按分项录入，系统自动按权重计算总分</p>
       </div>
       <div class="flex gap-3">
-        <button @click="configOpen = true" class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors text-sm font-medium">
-          <Settings class="w-4 h-4" />
-          权重配置
-        </button>
         <button @click="handleSave" class="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors shadow-lg shadow-emerald-500/25 text-sm font-medium">
           <Save class="w-5 h-5" />
           {{ saved ? '已保存' : '保存成绩' }}
@@ -162,21 +158,13 @@
       :cfg="detailTargetCfg"
       :total-score="detailTargetTotalScore"
     />
-
-    <!-- GradeConfig Modal -->
-    <GradeConfig v-if="activeCourseId"
-      :course-id="activeCourseId"
-      :open="configOpen"
-      :on-close="() => configOpen = false"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { Settings, Save, BarChart3, ChevronDown, ChevronUp } from 'lucide-vue-next'
-import GradeConfig from '@/components/GradeConfig.vue'
+import { Save, BarChart3, ChevronDown, ChevronUp } from 'lucide-vue-next'
 import ScoreDetail from '@/components/ScoreDetail.vue'
 import type { DetailedGrade, Enrollment } from '@/types'
 
@@ -222,7 +210,6 @@ const scores = ref<Record<string, Record<string, string>>>({})
 const saved = ref(false)
 const showStats = ref(true)
 const selectedSemester = ref('all')
-const configOpen = ref(false)
 const detailTarget = ref<{ studentName: string; courseTitle: string; courseId: string; studentId: string } | null>(null)
 
 // ====== Computed ======
@@ -289,9 +276,7 @@ const distribution = computed(() => {
 
 const selectedCourseTitle = computed(() => selectedCourse.value === 'all' ? '全部课程' : getCourseTitle(selectedCourse.value))
 
-const activeCourseId = computed(() => selectedCourse.value !== 'all' ? selectedCourse.value : myCourses.value[0]?.id)
-
-const currentCfg = computed(() => activeCourseId.value ? store.getGradeConfig(activeCourseId.value) : null)
+const currentCfg = computed(() => selectedCourse.value !== 'all' ? store.getGradeConfig(selectedCourse.value) : null)
 
 const knowledgePoints = computed(() => {
   if (selectedCourse.value === 'all') return []

@@ -9,10 +9,15 @@
   </div>
 </template>
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRouter } from 'vue-router'
 import Sidebar from './Sidebar.vue'
 const store = useAppStore()
 const router = useRouter()
 if (!store.isLoggedIn) router.replace('/login')
+
+onMounted(() => {
+  store.checkAndGenerateSessionReminders()
+})
 </script>

@@ -82,6 +82,7 @@ const finalSubTotal = computed(() => cfg.value.finalExamWeight + cfg.value.final
 
 const handleSave = () => {
   store.saveGradeConfig({ ...cfg.value, courseId: props.courseId })
+  store.markConfigCompleted(props.courseId, 'weights')
   props.onClose()
 }
 </script>
