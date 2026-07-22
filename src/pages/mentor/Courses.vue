@@ -16,12 +16,12 @@ const mentorCourseIds = computed(() => store.getMentorCourseIds(store.currentUse
 const myCourses = computed(() => store.courses.filter((c) => mentorCourseIds.value.includes(c.id)))
 
 const gradients = [
-  'linear-gradient(135deg, #4F46E5, #1E88E5)',
-  'linear-gradient(135deg, #1E88E5, #1E88E5)',
-  'linear-gradient(135deg, #1E88E5, #1E88E5)',
-  'linear-gradient(135deg, #DC2626, #1E88E5)',
-  'linear-gradient(135deg, #1E88E5, #1E88E5)',
-  'linear-gradient(135deg, #1E88E5, #1E88E5)',
+  'linear-gradient(135deg, #4F46E5, #429fc4)',
+  'linear-gradient(135deg, #429fc4, #429fc4)',
+  'linear-gradient(135deg, #429fc4, #429fc4)',
+  'linear-gradient(135deg, #DC2626, #429fc4)',
+  'linear-gradient(135deg, #429fc4, #429fc4)',
+  'linear-gradient(135deg, #429fc4, #429fc4)',
   'linear-gradient(135deg, #0891B2, #22D3EE)',
   'linear-gradient(135deg, #BE123C, #FB7185)',
 ]
@@ -51,8 +51,8 @@ function renderCourses(root: HTMLElement) {
 
   // 页面标题
   const headerDiv = container.append('div')
-  headerDiv.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text('我的课程')
-  headerDiv.append('p').attr('class', 'text-brand-400 mt-1').text('查看负责课程的学生评价')
+  headerDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text('我的课程')
+  headerDiv.append('p').attr('class', 'text-gray-400 mt-1').text('查看负责课程的学生评价')
 
   // 课程卡片网格
   const grid = container.append('div')
@@ -60,8 +60,8 @@ function renderCourses(root: HTMLElement) {
 
   if (courses.length === 0) {
     // 空状态
-    const emptyDiv = grid.append('div').attr('class', 'col-span-2 text-center py-16 text-brand-400')
-    renderIcon(emptyDiv, 'bookOpen').attr('class', 'w-12 h-12 mx-auto mb-4 text-brand-400/40')
+    const emptyDiv = grid.append('div').attr('class', 'col-span-2 text-center py-16 text-gray-400')
+    renderIcon(emptyDiv, 'bookOpen').attr('class', 'w-12 h-12 mx-auto mb-4 text-gray-400/40')
     emptyDiv.append('p').text('暂无课程')
     return
   }
@@ -96,7 +96,7 @@ function renderCourses(root: HTMLElement) {
 
     // 状态标签
     const statusBadge = coverDiv.append('span')
-      .attr('class', `absolute top-3 right-3 z-10 text-xs px-2.5 py-1 rounded-full font-medium ${isActive ? 'bg-brand-400/10 text-brand-800 backdrop-blur-sm' : 'bg-brand-400/10 text-brand-400 backdrop-blur-sm'}`)
+      .attr('class', `absolute top-3 right-3 z-10 text-xs px-2.5 py-1 rounded-full font-medium ${isActive ? 'bg-brand-400/10 text-gray-800 backdrop-blur-sm' : 'bg-brand-400/10 text-gray-400 backdrop-blur-sm'}`)
     statusBadge.append('span')
       .attr('class', `inline-block w-1.5 h-1.5 rounded-full mr-1 ${isActive ? 'bg-brand-600' : 'bg-gray-400'}`)
     statusBadge.append('span').text(isActive ? '进行中' : '已结束')
@@ -117,18 +117,18 @@ function renderCourses(root: HTMLElement) {
     // 卡片底部
     const cardBody = card.append('div').attr('class', 'p-4 space-y-3')
     const teacherDiv = cardBody.append('div')
-    teacherDiv.append('p').attr('class', 'text-xs font-semibold text-brand-400 uppercase tracking-wider mb-1').text('授课导师')
-    teacherDiv.append('p').attr('class', 'text-sm text-brand-800').text(course.teacher || '未知')
+    teacherDiv.append('p').attr('class', 'text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1').text('授课导师')
+    teacherDiv.append('p').attr('class', 'text-sm text-gray-800').text(course.teacher || '未知')
 
     const actionDiv = cardBody.append('div').attr('class', 'flex items-center justify-between pt-1')
 
     const statusTag = actionDiv.append('span')
-      .attr('class', `inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${isActive ? 'bg-brand-600/10 text-brand-600 border-brand-400' : 'bg-brand-400/10 text-brand-400 border-brand-400/30'}`)
+      .attr('class', `inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${isActive ? 'bg-brand-600/10 text-gray-600 border-brand-400' : 'bg-brand-400/10 text-gray-400 border-brand-400/30'}`)
     renderIcon(statusTag, 'bookOpen').attr('class', 'w-3.5 h-3.5')
     statusTag.append('span').text(isActive ? '进行中' : '已结束')
 
     const detailLink = actionDiv.append('span')
-      .attr('class', `inline-flex items-center gap-1 text-xs font-medium transition-colors ${isActive ? 'text-brand-600 group-hover:text-brand-800' : 'text-brand-400'}`)
+      .attr('class', `inline-flex items-center gap-1 text-xs font-medium transition-colors ${isActive ? 'text-gray-600 group-hover:text-gray-800' : 'text-gray-400'}`)
     detailLink.append('span').text('查看详情')
     const arrowIcon = detailLink.append('span').attr('class', 'inline-flex items-center')
     renderIcon(arrowIcon, 'arrowRight').attr('class', 'w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5')

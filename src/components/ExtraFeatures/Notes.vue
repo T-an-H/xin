@@ -26,7 +26,7 @@
         </div>
         <div v-else class="p-4 cursor-pointer hover:bg-brand-400/10 transition-colors h-full" @click="startEdit(note)">
           <div class="flex items-start justify-between mb-2">
-            <h4 class="font-medium text-brand-900">{{ note.title }}</h4>
+            <h4 class="font-medium text-gray-900">{{ note.title }}</h4>
             <button @click.stop="store.deleteNote(note.id)" class="p-1 rounded hover:bg-brand-600/10 text-red-400 transition-colors flex-shrink-0" title="删除">
               <Trash2 class="w-4 h-4" />
             </button>

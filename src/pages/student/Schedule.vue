@@ -82,14 +82,14 @@ interface CourseColor {
 }
 
 const PALETTE: CourseColor[] = [
-  { cellBg: '#e8edf3', cardBg: '#c8d2df', border: '#1E88E5', text: '#1b3255' },
-  { cellBg: '#dce5ef', cardBg: '#b3c2d6', border: '#1E88E5', text: '#1b3255' },
-  { cellBg: '#eef2f7', cardBg: '#c8d2df', border: '#1E88E5', text: '#2a4d7a' },
-  { cellBg: '#e8edf3', cardBg: '#b3c2d6', border: '#1E88E5', text: '#1b3255' },
-  { cellBg: '#dce5ef', cardBg: '#c8d2df', border: '#1E88E5', text: '#2a4d7a' },
-  { cellBg: '#eef2f7', cardBg: '#b3c2d6', border: '#1E88E5', text: '#1b3255' },
-  { cellBg: '#e8edf3', cardBg: '#c8d2df', border: '#1E88E5', text: '#2a4d7a' },
-  { cellBg: '#dce5ef', cardBg: '#b3c2d6', border: '#1E88E5', text: '#1b3255' },
+  { cellBg: '#bac9bd', cardBg: '#5eb6b9', border: '#429fc4', text: '#0f5073' },
+  { cellBg: '#80b8d7', cardBg: '#429fc4', border: '#429fc4', text: '#0f5073' },
+  { cellBg: '#bac9bd', cardBg: '#5eb6b9', border: '#429fc4', text: '#155ea0' },
+  { cellBg: '#bac9bd', cardBg: '#429fc4', border: '#429fc4', text: '#0f5073' },
+  { cellBg: '#80b8d7', cardBg: '#5eb6b9', border: '#429fc4', text: '#155ea0' },
+  { cellBg: '#bac9bd', cardBg: '#429fc4', border: '#429fc4', text: '#0f5073' },
+  { cellBg: '#bac9bd', cardBg: '#5eb6b9', border: '#429fc4', text: '#155ea0' },
+  { cellBg: '#80b8d7', cardBg: '#429fc4', border: '#429fc4', text: '#0f5073' },
 ]
 
 const courseColorMap = computed(() => {
@@ -160,7 +160,7 @@ function renderSchedule(root: HTMLElement) {
   // 头部：周导航
   const headerDiv = container.append('div').attr('class', 'flex items-center justify-between')
   const titleDiv = headerDiv.append('div')
-  titleDiv.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text('我的课表')
+  titleDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text('我的课表')
   const subtitle = titleDiv.append('p').attr('class', 'text-sm text-gray-500 mt-1 flex items-center gap-2')
   subtitle.append('span').text(weekRange.value)
   subtitle.append('span').attr('class', 'w-1 h-1 rounded-full bg-brand-400/60')
@@ -168,19 +168,19 @@ function renderSchedule(root: HTMLElement) {
 
   const navDiv = headerDiv.append('div').attr('class', 'flex items-center gap-1 bg-white rounded-lg border border-brand-400/30 shadow-sm p-0.5')
   const prevBtn = navDiv.append('button').attr('class', 'p-2 rounded-md hover:bg-brand-400/10 transition-colors').attr('title', '上一周').on('click', prevWeek)
-  renderIcon(prevBtn, 'chevronLeft').attr('class', 'w-4 h-4 text-brand-400')
-  const todayBtn = navDiv.append('button').attr('class', 'px-3 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-600/10 rounded-md transition-colors').on('click', todayFn).text('今天')
+  renderIcon(prevBtn, 'chevronLeft').attr('class', 'w-4 h-4 text-gray-400')
+  const todayBtn = navDiv.append('button').attr('class', 'px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-brand-600/10 rounded-md transition-colors').on('click', todayFn).text('今天')
   const nextBtn = navDiv.append('button').attr('class', 'p-2 rounded-md hover:bg-brand-400/10 transition-colors').attr('title', '下一周').on('click', nextWeek)
-  renderIcon(nextBtn, 'chevronRight').attr('class', 'w-4 h-4 text-brand-400')
+  renderIcon(nextBtn, 'chevronRight').attr('class', 'w-4 h-4 text-gray-400')
 
   if (cards.length === 0) {
     // 空状态
     const emptyDiv = container.append('div').attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm py-20 text-center')
     const iconWrap = emptyDiv.append('div').attr('class', 'inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-400/10 mb-4')
-    renderIcon(iconWrap, 'calendarDays').attr('class', 'w-8 h-8 text-brand-400/60')
-    emptyDiv.append('p').attr('class', 'text-brand-800 font-medium').text('本周暂无课程安排')
-    emptyDiv.append('p').attr('class', 'text-brand-400 text-sm mt-1').text(`${weekRange.value} 没有课程`)
-    const backBtn = emptyDiv.append('button').attr('class', 'mt-4 text-sm text-brand-600 hover:text-brand-600 font-medium inline-flex items-center gap-1').on('click', todayFn)
+    renderIcon(iconWrap, 'calendarDays').attr('class', 'w-8 h-8 text-gray-400/60')
+    emptyDiv.append('p').attr('class', 'text-gray-800 font-medium').text('本周暂无课程安排')
+    emptyDiv.append('p').attr('class', 'text-gray-400 text-sm mt-1').text(`${weekRange.value} 没有课程`)
+    const backBtn = emptyDiv.append('button').attr('class', 'mt-4 text-sm text-gray-600 hover:text-gray-600 font-medium inline-flex items-center gap-1').on('click', todayFn)
     renderIcon(backBtn, 'calendarDays').attr('class', 'w-4 h-4')
     backBtn.append('span').text('返回本周')
   } else {
@@ -192,7 +192,7 @@ function renderSchedule(root: HTMLElement) {
     // thead
     const thead = table.append('thead')
     const headRow = thead.append('tr')
-    headRow.append('th').attr('class', 'w-[64px] p-2 text-xs text-brand-400 font-normal text-center bg-brand-400/10 border-r border-b border-brand-400/20 border-t-0')
+    headRow.append('th').attr('class', 'w-[64px] p-2 text-xs text-gray-400 font-normal text-center bg-brand-400/10 border-r border-b border-brand-400/20 border-t-0')
     days.forEach((day) => {
       const th = headRow.append('th')
         .attr('class', 'p-2 text-center bg-brand-400/10 border-r border-b border-brand-400/20 last:border-r-0')
@@ -201,8 +201,8 @@ function renderSchedule(root: HTMLElement) {
       if (day.isToday) {
         innerDiv.append('span').attr('class', 'text-[9px] font-bold text-white bg-brand-600 px-1.5 rounded-b-sm leading-4 absolute -top-3').text('今')
       }
-      innerDiv.append('span').attr('class', `text-xs font-semibold ${day.isToday ? 'text-brand-600' : 'text-brand-600'}`).text(day.label)
-      innerDiv.append('span').attr('class', `text-[11px] mt-0.5 ${day.isToday ? 'text-brand-600 font-semibold' : 'text-brand-400'}`).text(day.dateStr)
+      innerDiv.append('span').attr('class', `text-xs font-semibold ${day.isToday ? 'text-gray-600' : 'text-gray-600'}`).text(day.label)
+      innerDiv.append('span').attr('class', `text-[11px] mt-0.5 ${day.isToday ? 'text-gray-600 font-semibold' : 'text-gray-400'}`).text(day.dateStr)
     })
 
     // tbody
@@ -210,7 +210,7 @@ function renderSchedule(root: HTMLElement) {
     slots.forEach((slot) => {
       const row = tbody.append('tr').attr('class', 'align-top')
       // 时间标签
-      row.append('td').attr('class', 'w-[64px] p-2 text-[10px] text-brand-400 text-center bg-white border-r border-b border-brand-400/20 align-top pt-3').text(slot.label)
+      row.append('td').attr('class', 'w-[64px] p-2 text-[10px] text-gray-400 text-center bg-white border-r border-b border-brand-400/20 align-top pt-3').text(slot.label)
 
       days.forEach((day) => {
         const dayCards = getCards(day.date, slot)

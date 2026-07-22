@@ -6,14 +6,14 @@
       </div>
       <span
         v-if="trend"
-        :class="`text-xs font-medium px-2 py-1 rounded-full ${trendUp ? 'bg-brand-600/10 text-brand-600' : 'bg-brand-600/10 text-brand-600'}`"
+        :class="`text-xs font-medium px-2 py-1 rounded-full ${trendUp ? 'bg-brand-600/10 text-gray-600' : 'bg-brand-600/10 text-gray-600'}`"
       >
         {{ trend }}
       </span>
     </div>
     <div class="mt-4">
-      <p class="text-sm text-brand-400">{{ label }}</p>
-      <p class="text-2xl font-bold text-brand-900 mt-1">{{ value }}</p>
+      <p class="text-sm text-gray-400">{{ label }}</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1">{{ value }}</p>
     </div>
   </div>
 </template>

@@ -221,7 +221,7 @@ const abilityAnalysis = computed(() => {
 function getScoreClass(score: number): string {
   if (score >= 90) return 'bg-emerald-100 text-emerald-700'
   if (score >= 80) return 'bg-blue-100 text-blue-700'
-  if (score >= 70) return 'bg-amber-100 text-brand-800'
+  if (score >= 70) return 'bg-amber-100 text-gray-800'
   if (score >= 60) return 'bg-brand-600/15 text-orange-700'
   return 'bg-brand-600/15 text-red-700'
 }
@@ -256,8 +256,8 @@ function renderProfile(root: HTMLElement) {
 
   // 页面标题
   const titleDiv = container.append('div')
-  titleDiv.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text('个人画像')
-  titleDiv.append('p').attr('class', 'text-brand-400 mt-1').text('查看个人信息与学习能力分析')
+  titleDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text('个人画像')
+  titleDiv.append('p').attr('class', 'text-gray-400 mt-1').text('查看个人信息与学习能力分析')
 
   // 个人信息卡片
   const infoCard = container.append('div').attr('class', 'bg-white rounded-xl p-6 border border-gray-100 shadow-sm')
@@ -269,7 +269,7 @@ function renderProfile(root: HTMLElement) {
 
   // 信息
   const infoContent = infoRow.append('div').attr('class', 'flex-1')
-  infoContent.append('h2').attr('class', 'text-xl font-bold text-brand-900').text(s?.name || store.currentUser || '未知用户')
+  infoContent.append('h2').attr('class', 'text-xl font-bold text-gray-900').text(s?.name || store.currentUser || '未知用户')
   const infoGrid = infoContent.append('div').attr('class', 'grid grid-cols-2 gap-x-8 gap-y-2 mt-3')
 
   const infoItems = [
@@ -279,7 +279,7 @@ function renderProfile(root: HTMLElement) {
     { icon: 'user' as const, text: `学号：${s?.id || '未知'}` },
   ]
   infoItems.forEach((item) => {
-    const span = infoGrid.append('span').attr('class', 'flex items-center gap-2 text-sm text-brand-400')
+    const span = infoGrid.append('span').attr('class', 'flex items-center gap-2 text-sm text-gray-400')
     renderIcon(span, item.icon).attr('class', 'w-4 h-4')
     span.append('span').text(item.text)
   })
@@ -294,7 +294,7 @@ function renderProfile(root: HTMLElement) {
   stats.forEach((st) => {
     const box = statsRow.append('div').attr('class', `text-center px-4 py-3 ${st.bg} rounded-lg`)
     box.append('p').attr('class', `text-2xl font-bold ${st.text}`).text(String(st.value))
-    box.append('p').attr('class', 'text-xs text-brand-400 mt-1').text(st.label)
+    box.append('p').attr('class', 'text-xs text-gray-400 mt-1').text(st.label)
   })
 
   // 能力雷达图 + 学习统计 两列布局
@@ -302,7 +302,7 @@ function renderProfile(root: HTMLElement) {
 
   // 雷达图卡片
   const radarCard = twoCol.append('div').attr('class', 'bg-white rounded-xl p-6 border border-gray-100 shadow-sm')
-  const radarTitle = radarCard.append('h3').attr('class', 'text-lg font-semibold text-brand-900 mb-4 flex items-center gap-2')
+  const radarTitle = radarCard.append('h3').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
   renderIcon(radarTitle, 'barChart3').attr('class', 'w-5 h-5 text-brand-600')
   radarTitle.append('span').text('课程成绩雷达图')
 
@@ -318,7 +318,7 @@ function renderProfile(root: HTMLElement) {
       svg.append('polygon')
         .attr('points', gridPoints(level))
         .attr('fill', 'none')
-        .attr('stroke', '#64B5F6')
+        .attr('stroke', '#5eb6b9')
         .attr('stroke-width', 1)
         .attr('stroke-opacity', 0.3)
     }
@@ -328,7 +328,7 @@ function renderProfile(root: HTMLElement) {
       svg.append('line')
         .attr('x1', 100).attr('y1', 100)
         .attr('x2', axisEndX(i)).attr('y2', axisEndY(i))
-        .attr('stroke', '#64B5F6')
+        .attr('stroke', '#5eb6b9')
         .attr('stroke-width', 1)
         .attr('stroke-opacity', 0.3)
     })
@@ -337,25 +337,25 @@ function renderProfile(root: HTMLElement) {
     svg.append('polygon')
       .attr('points', dataPolygonPoints.value)
       .attr('fill', 'rgba(65, 90, 119, 0.2)')
-      .attr('stroke', '#1E88E5')
+      .attr('stroke', '#429fc4')
       .attr('stroke-width', 2)
 
     // 数据点 + 标签
     rd.forEach((d, i) => {
       svg.append('circle')
         .attr('cx', dataPointX(i)).attr('cy', dataPointY(i))
-        .attr('r', 4).attr('fill', '#1E88E5')
+        .attr('r', 4).attr('fill', '#429fc4')
 
       svg.append('text')
         .attr('x', dataLabelX(i)).attr('y', dataLabelY(i))
         .attr('text-anchor', dataLabelAnchor(i))
-        .attr('font-size', 9).attr('fill', '#64B5F6')
+        .attr('font-size', 9).attr('fill', '#5eb6b9')
         .text(d.label)
 
       svg.append('text')
         .attr('x', dataLabelX(i)).attr('y', dataLabelY(i) + 12)
         .attr('text-anchor', dataLabelAnchor(i))
-        .attr('font-size', 9).attr('fill', '#1E88E5').attr('font-weight', 'bold')
+        .attr('font-size', 9).attr('fill', '#429fc4').attr('font-weight', 'bold')
         .text(`${d.value}分`)
     })
 
@@ -370,16 +370,16 @@ function renderProfile(root: HTMLElement) {
 
   // 学习统计
   const statCard = twoCol.append('div').attr('class', 'bg-white rounded-xl p-6 border border-gray-100 shadow-sm')
-  const statTitle = statCard.append('h3').attr('class', 'text-lg font-semibold text-brand-900 mb-4 flex items-center gap-2')
+  const statTitle = statCard.append('h3').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
   renderIcon(statTitle, 'trendingUp').attr('class', 'w-5 h-5 text-brand-600')
   statTitle.append('span').text('学习统计')
 
   const statItems = [
-    { label: '学习中课程', value: `${inProgress.value} 门`, color: 'text-brand-900' },
+    { label: '学习中课程', value: `${inProgress.value} 门`, color: 'text-gray-900' },
     { label: '已完成课程', value: `${completed.value} 门`, color: 'text-emerald-600' },
     { label: '总学分', value: `${totalCredits.value} 学分`, color: 'text-brand-600' },
     { label: '平均成绩', value: `${avgScore.value} 分`, color: 'text-amber-600' },
-    { label: '平均进度', value: `${avgProgress.value}%`, color: 'text-brand-900' },
+    { label: '平均进度', value: `${avgProgress.value}%`, color: 'text-gray-900' },
   ]
   const statBody = statCard.append('div').attr('class', 'space-y-4')
   statItems.forEach((item) => {
@@ -390,7 +390,7 @@ function renderProfile(root: HTMLElement) {
 
   // 学习轨迹
   const trackCard = container.append('div').attr('class', 'bg-white rounded-xl p-6 border border-brand-400/20 shadow-sm')
-  const trackTitle = trackCard.append('h3').attr('class', 'text-lg font-semibold text-brand-900 mb-4 flex items-center gap-2')
+  const trackTitle = trackCard.append('h3').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
   renderIcon(trackTitle, 'bookOpen').attr('class', 'w-5 h-5 text-brand-600')
   trackTitle.append('span').text('学习轨迹')
 
@@ -408,14 +408,14 @@ function renderProfile(root: HTMLElement) {
       item.append('div').attr('class', `w-4 h-4 rounded-full mt-1 flex-shrink-0 ${dotClass}`)
 
       const content = item.append('div').attr('class', 'flex-1')
-      content.append('p').attr('class', 'font-medium text-brand-900').text(getCourse(enr.courseId)?.title || '未知课程')
+      content.append('p').attr('class', 'font-medium text-gray-900').text(getCourse(enr.courseId)?.title || '未知课程')
 
       const statusText = enr.status === 'completed' ? '已完成' : enr.status === 'in_progress' ? '学习中' : '已报名'
-      content.append('p').attr('class', 'text-sm text-brand-400')
+      content.append('p').attr('class', 'text-sm text-gray-400')
         .text(`${enr.enrollDate} · 进度 ${enr.progress}% · ${statusText}`)
     })
   } else {
-    trackCard.append('p').attr('class', 'text-brand-400 text-center py-4').text('暂无学习记录')
+    trackCard.append('p').attr('class', 'text-gray-400 text-center py-4').text('暂无学习记录')
   }
 
   // 详情弹窗 (showDetailModal)
@@ -427,14 +427,14 @@ function renderProfile(root: HTMLElement) {
 
     // modal header
     const modalHeader = modalBox.append('div').attr('class', 'flex items-center justify-between p-6 border-b border-brand-400/20')
-    const modalHeaderTitle = modalHeader.append('h3').attr('class', 'text-xl font-bold text-brand-900 flex items-center gap-2')
+    const modalHeaderTitle = modalHeader.append('h3').attr('class', 'text-xl font-bold text-gray-900 flex items-center gap-2')
     renderIcon(modalHeaderTitle, 'barChart3').attr('class', 'w-6 h-6 text-brand-600')
     modalHeaderTitle.append('span').text('能力分析详情')
 
     const closeBtn = modalHeader.append('button')
       .attr('class', 'p-2 hover:bg-brand-400/10 rounded-lg transition-colors')
       .on('click', () => { showDetailModal.value = false; reRender() })
-    const closeSvg = closeBtn.append('svg').attr('class', 'w-6 h-6 text-brand-400')
+    const closeSvg = closeBtn.append('svg').attr('class', 'w-6 h-6 text-gray-400')
       .attr('fill', 'none').attr('stroke', 'currentColor').attr('viewBox', '0 0 24 24')
     closeSvg.append('path').attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
       .attr('stroke-width', '2').attr('d', 'M6 18L18 6M6 6l12 12')
@@ -455,7 +455,7 @@ function renderProfile(root: HTMLElement) {
 
     // 课程分析
     const courseAnalysisCol = modalGrid.append('div')
-    const courseAnalysisTitle = courseAnalysisCol.append('h4').attr('class', 'text-lg font-semibold text-brand-900 mb-4 flex items-center gap-2')
+    const courseAnalysisTitle = courseAnalysisCol.append('h4').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
     renderIcon(courseAnalysisTitle, 'bookOpen').attr('class', 'w-5 h-5 text-brand-600')
     courseAnalysisTitle.append('span').text('课程分析')
 
@@ -463,7 +463,7 @@ function renderProfile(root: HTMLElement) {
     rd.forEach((data) => {
       const item = courseList.append('div').attr('class', 'p-4 bg-brand-400/10 rounded-lg')
       const header = item.append('div').attr('class', 'flex items-center justify-between mb-2')
-      header.append('span').attr('class', 'font-medium text-brand-900').text(data.label)
+      header.append('span').attr('class', 'font-medium text-gray-900').text(data.label)
       header.append('span').attr('class', 'text-lg font-bold text-brand-600').text(`${data.value}分`)
 
       const barBg = item.append('div').attr('class', 'w-full bg-brand-400/10 rounded-full h-2')
@@ -478,7 +478,7 @@ function renderProfile(root: HTMLElement) {
 
     // 职业推荐
     const careerCol = modalGrid.append('div')
-    const careerTitle = careerCol.append('h4').attr('class', 'text-lg font-semibold text-brand-900 mb-4 flex items-center gap-2')
+    const careerTitle = careerCol.append('h4').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
     renderIcon(careerTitle, 'sparkles').attr('class', 'w-5 h-5 text-indigo-500')
     careerTitle.append('span').text('职业推荐')
 
@@ -488,18 +488,18 @@ function renderProfile(root: HTMLElement) {
         const card = careerList.append('div').attr('class', 'p-4 bg-gradient-to-br from-brand-400/5 to-brand-400/5 rounded-lg')
         const cardHeader = card.append('div').attr('class', 'flex items-center gap-2 mb-2')
         renderIcon(cardHeader, rec.icon as any).attr('class', 'w-5 h-5 text-brand-600')
-        cardHeader.append('span').attr('class', 'font-semibold text-brand-900').text(rec.title)
+        cardHeader.append('span').attr('class', 'font-semibold text-gray-900').text(rec.title)
         cardHeader.append('span').attr('class', 'ml-auto text-sm font-bold text-brand-600').text(`${rec.matchScore}%`)
 
         card.append('p').attr('class', 'text-sm text-gray-600 mb-3').text(rec.description)
 
         const tagRow = card.append('div').attr('class', 'flex flex-wrap gap-1')
         rec.tags.forEach((tag) => {
-          tagRow.append('span').attr('class', 'px-2 py-1 text-xs bg-brand-600/15 text-brand-800 rounded-full').text(tag)
+          tagRow.append('span').attr('class', 'px-2 py-1 text-xs bg-brand-600/15 text-gray-800 rounded-full').text(tag)
         })
       })
     } else {
-      careerList.append('div').attr('class', 'text-brand-400 text-center py-8').text('完成课程评价后，系统将生成职业推荐')
+      careerList.append('div').attr('class', 'text-gray-400 text-center py-8').text('完成课程评价后，系统将生成职业推荐')
     }
   }
 }

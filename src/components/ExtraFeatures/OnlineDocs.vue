@@ -7,7 +7,7 @@
       </button>
     </div>
 
-    <div v-if="myDocs.length === 0" class="text-center py-12 text-brand-400">
+    <div v-if="myDocs.length === 0" class="text-center py-12 text-gray-400">
       <FileText class="w-12 h-12 mx-auto mb-3 opacity-50" />
       <p>暂无文档，点击上方按钮新建</p>
     </div>
@@ -20,12 +20,12 @@
           <button @click="handleSave(doc.id)" class="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-800 text-white rounded-lg transition-colors text-sm">
             <Save class="w-4 h-4" /> 保存
           </button>
-          <button @click="editingId = null" class="px-4 py-2 bg-brand-400/10 hover:bg-brand-400/10 text-brand-600 rounded-lg transition-colors text-sm">取消</button>
+          <button @click="editingId = null" class="px-4 py-2 bg-brand-400/10 hover:bg-brand-400/10 text-gray-600 rounded-lg transition-colors text-sm">取消</button>
         </div>
       </div>
       <div v-else class="p-4">
         <div class="flex items-start justify-between mb-2">
-          <h4 class="font-medium text-brand-900">{{ doc.title }}</h4>
+          <h4 class="font-medium text-gray-900">{{ doc.title }}</h4>
           <div class="flex gap-1">
             <button @click="startEdit(doc)" class="p-1.5 rounded-lg hover:bg-brand-400/10 text-purple-500 transition-colors" title="编辑">
               <Edit3 class="w-4 h-4" />
@@ -35,8 +35,8 @@
             </button>
           </div>
         </div>
-        <p v-if="doc.content" class="text-sm text-brand-600 whitespace-pre-wrap mb-3 line-clamp-3">{{ doc.content }}</p>
-        <div class="flex items-center gap-3 text-xs text-brand-400">
+        <p v-if="doc.content" class="text-sm text-gray-600 whitespace-pre-wrap mb-3 line-clamp-3">{{ doc.content }}</p>
+        <div class="flex items-center gap-3 text-xs text-gray-400">
           <span>{{ doc.createdBy }}</span>
           <span>创建于 {{ formatDate(doc.createdAt) }}</span>
           <span>最后编辑 {{ formatDate(doc.lastEditedAt) }}</span>

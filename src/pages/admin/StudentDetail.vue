@@ -39,7 +39,7 @@ function renderStudentDetail(root: HTMLElement) {
 
   const s = student.value
   if (!s) {
-    container.append('div').attr('class', 'text-center py-12 text-brand-400').text('学生不存在')
+    container.append('div').attr('class', 'text-center py-12 text-gray-400').text('学生不存在')
     return
   }
 
@@ -51,23 +51,23 @@ function renderStudentDetail(root: HTMLElement) {
   const backBtn = headerRow.append('div')
     .attr('class', 'p-2 rounded-lg hover:bg-brand-400/10 transition-colors cursor-pointer')
     .on('click', () => router.push('/admin/students'))
-  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-brand-400')
+  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-gray-400')
 
   const titleArea = headerRow.append('div')
-  titleArea.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text(s.name)
-  titleArea.append('p').attr('class', 'text-brand-400 mt-1').text(`${s.studentId} · ${s.className}`)
+  titleArea.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text(s.name)
+  titleArea.append('p').attr('class', 'text-gray-400 mt-1').text(`${s.studentId} · ${s.className}`)
 
   // ---- 主体 ----
   const grid = wrapper.append('div').attr('class', 'grid grid-cols-1 lg:grid-cols-3 gap-6')
 
   // ---- 左侧: 已选课程 ----
   const leftCol = grid.append('div').attr('class', 'lg:col-span-2 space-y-4')
-  leftCol.append('h3').attr('class', 'text-sm font-semibold text-brand-800').text('已选课程')
+  leftCol.append('h3').attr('class', 'text-sm font-semibold text-gray-800').text('已选课程')
 
   const enrollments = enrolledCourses.value
 
   if (enrollments.length === 0) {
-    leftCol.append('div').attr('class', 'text-center py-8 text-brand-400').text('该学生尚未选课')
+    leftCol.append('div').attr('class', 'text-center py-8 text-gray-400').text('该学生尚未选课')
   }
 
   enrollments.forEach((enroll) => {
@@ -77,11 +77,11 @@ function renderStudentDetail(root: HTMLElement) {
     const topRow = card.append('div').attr('class', 'flex items-center justify-between mb-2')
 
     const leftFlex = topRow.append('div').attr('class', 'flex items-center gap-3')
-    renderIcon(leftFlex, 'bookOpen', 'w-5 h-5 text-brand-600')
-    leftFlex.append('span').attr('class', 'font-medium text-brand-900').text(getCourseName(enroll.courseId))
+    renderIcon(leftFlex, 'bookOpen', 'w-5 h-5 text-gray-600')
+    leftFlex.append('span').attr('class', 'font-medium text-gray-900').text(getCourseName(enroll.courseId))
 
     const progress = getCourseProgress(enroll.courseId)
-    topRow.append('span').attr('class', 'text-xs text-brand-400').text(`${progress}%`)
+    topRow.append('span').attr('class', 'text-xs text-gray-400').text(`${progress}%`)
 
     const barBg = card.append('div').attr('class', 'h-2 bg-brand-400/10 rounded-full overflow-hidden')
     barBg.append('div')
@@ -92,7 +92,7 @@ function renderStudentDetail(root: HTMLElement) {
   // ---- 右侧: 学习统计 ----
   const rightCol = grid.append('div')
     .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-4 h-fit')
-  rightCol.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('学习统计')
+  rightCol.append('h3').attr('class', 'text-sm font-semibold text-gray-800 mb-3').text('学习统计')
 
   const statsArea = rightCol.append('div').attr('class', 'space-y-3')
 
@@ -104,7 +104,7 @@ function renderStudentDetail(root: HTMLElement) {
 
   statItems.forEach((item) => {
     const row = statsArea.append('div').attr('class', 'flex justify-between text-sm')
-    row.append('span').attr('class', 'text-brand-600').text(item.label)
+    row.append('span').attr('class', 'text-gray-600').text(item.label)
     row.append('span').attr('class', 'font-medium').text(item.value)
   })
 }

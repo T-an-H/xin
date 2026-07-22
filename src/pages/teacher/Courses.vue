@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-2xl font-bold text-brand-900">我的课程</h1>
-      <p class="text-brand-400 mt-1">管理课程、查看学员进度和评价</p>
+      <h1 class="text-2xl font-bold text-gray-900">我的课程</h1>
+      <p class="text-gray-400 mt-1">管理课程、查看学员进度和评价</p>
     </div>
 
     <!-- 课程卡片网格：2 列 -->
@@ -39,8 +39,8 @@
           <!-- 状态标签 - 右上角叠加 -->
           <span :class="`absolute top-3 right-3 z-10 text-xs px-2.5 py-1 rounded-full font-medium ${
             course.status === 'active'
-              ? 'bg-brand-400/10 text-brand-800 backdrop-blur-sm'
-              : 'bg-brand-400/10 text-brand-400 backdrop-blur-sm'
+              ? 'bg-brand-400/10 text-gray-800 backdrop-blur-sm'
+              : 'bg-brand-400/10 text-gray-400 backdrop-blur-sm'
           }`">
             <span class="inline-block w-1.5 h-1.5 rounded-full mr-1" :class="course.status === 'active' ? 'bg-brand-600' : 'bg-brand-400'"></span>
             {{ course.status === 'active' ? '进行中' : '已结束' }}
@@ -65,8 +65,8 @@
         <div class="p-4 space-y-3">
           <!-- 课程简介 -->
           <div>
-            <p class="text-xs font-semibold text-brand-400 uppercase tracking-wider mb-1">课程简介</p>
-            <p class="text-sm text-brand-600 line-clamp-2 leading-relaxed">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">课程简介</p>
+            <p class="text-sm text-gray-600 line-clamp-2 leading-relaxed">
               {{ course.description || '暂无描述' }}
             </p>
           </div>
@@ -75,13 +75,13 @@
           <!-- 底部操作 -->
           <div class="flex items-center justify-between pt-1">
             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border"
-              :class="course.status === 'active' ? 'bg-brand-600/10 text-brand-600 border-brand-400' : 'bg-brand-400/10 text-brand-400 border-brand-400/30'">
+              :class="course.status === 'active' ? 'bg-brand-600/10 text-gray-600 border-brand-400' : 'bg-brand-400/10 text-gray-400 border-brand-400/30'">
               <BookOpen class="w-3.5 h-3.5" />
               {{ course.status === 'active' ? '教学进行中' : '课程已结束' }}
             </span>
 
             <span class="inline-flex items-center gap-1 text-xs font-medium transition-colors"
-              :class="course.status === 'active' ? 'text-brand-600 group-hover:text-brand-800' : 'text-brand-400'">
+              :class="course.status === 'active' ? 'text-gray-600 group-hover:text-gray-800' : 'text-gray-400'">
               {{ course.status === 'active' ? '管理课程' : '查看详情' }}
               <ArrowRight class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
             </span>
@@ -89,7 +89,7 @@
         </div>
       </div>
 
-      <div v-if="myCourses.length === 0" class="col-span-2 text-center py-16 text-brand-400">
+      <div v-if="myCourses.length === 0" class="col-span-2 text-center py-16 text-gray-400">
         <BookOpen class="w-12 h-12 mx-auto mb-4 text-gray-200" />
         <p>暂无课程</p>
       </div>
@@ -118,12 +118,12 @@ const myCourses = computed(() => {
 
 /** 根据课程 ID 分配不同的渐变配色 */
 const gradients = [
-  'linear-gradient(135deg, #4F46E5, #1E88E5)',
-  'linear-gradient(135deg, #1E88E5, #1E88E5)',
-  'linear-gradient(135deg, #1E88E5, #1E88E5)',
-  'linear-gradient(135deg, #DC2626, #1E88E5)',
-  'linear-gradient(135deg, #1E88E5, #1E88E5)',
-  'linear-gradient(135deg, #1E88E5, #1E88E5)',
+  'linear-gradient(135deg, #4F46E5, #429fc4)',
+  'linear-gradient(135deg, #429fc4, #429fc4)',
+  'linear-gradient(135deg, #429fc4, #429fc4)',
+  'linear-gradient(135deg, #DC2626, #429fc4)',
+  'linear-gradient(135deg, #429fc4, #429fc4)',
+  'linear-gradient(135deg, #429fc4, #429fc4)',
   'linear-gradient(135deg, #0891B2, #22D3EE)',
   'linear-gradient(135deg, #BE123C, #FB7185)',
 ]

@@ -3,11 +3,11 @@
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto" @click.stop>
       <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-brand-400/20">
         <div class="flex items-center gap-3">
-          <Settings class="w-5 h-5 text-brand-800" />
-          <h2 class="text-lg font-bold text-brand-900">成绩权重配置</h2>
+          <Settings class="w-5 h-5 text-gray-800" />
+          <h2 class="text-lg font-bold text-gray-900">成绩权重配置</h2>
         </div>
         <button @click="onClose" class="p-2 rounded-lg hover:bg-brand-400/10 transition-colors">
-          <X class="w-5 h-5 text-brand-400" />
+          <X class="w-5 h-5 text-gray-400" />
         </button>
       </div>
 
@@ -38,7 +38,7 @@
       </div>
 
       <div class="sticky bottom-0 bg-white border-t border-brand-400/20 p-4 flex justify-end gap-3">
-        <button @click="onClose" class="px-5 py-2.5 rounded-lg border border-brand-400/30 hover:bg-brand-400/10 text-brand-800 transition-colors text-sm font-medium">取消</button>
+        <button @click="onClose" class="px-5 py-2.5 rounded-lg border border-brand-400/30 hover:bg-brand-400/10 text-gray-800 transition-colors text-sm font-medium">取消</button>
         <button @click="handleSave" :disabled="mainTotal !== 100 || regularTotal !== 100 || midtermSubTotal !== 100 || finalSubTotal !== 100"
           class="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-brand-400 text-white rounded-lg transition-colors text-sm font-medium">
           <Save class="w-4 h-4" /> 保存配置

@@ -1,8 +1,8 @@
 <template>
   <div>
     <!-- 无配置 -->
-    <div v-if="!config" class="bg-brand-400/10 rounded-lg p-4 text-center text-sm text-brand-400">该课程尚未配置评价方案</div>
-    <div v-else-if="enabledTypes.length === 0" class="bg-brand-400/10 rounded-lg p-4 text-center text-sm text-brand-400">当前课程配置下无可用的评价类型</div>
+    <div v-if="!config" class="bg-brand-400/10 rounded-lg p-4 text-center text-sm text-gray-400">该课程尚未配置评价方案</div>
+    <div v-else-if="enabledTypes.length === 0" class="bg-brand-400/10 rounded-lg p-4 text-center text-sm text-gray-400">当前课程配置下无可用的评价类型</div>
     <div v-else class="space-y-3">
       <!-- 配置标签 -->
       <div class="flex items-center gap-2 flex-wrap mb-2">
@@ -11,27 +11,27 @@
           {{ EvalFrequencyLabels[config.frequency] }}
           <span class="ml-1 text-[10px] text-cyan-400">（共{{ totalSessions }}次）</span>
         </span>
-        <span v-if="!courseHasGroups" class="text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-brand-400">组内/组间互评自动隐藏（未分组）</span>
-        <span v-if="!config.hasMentor" class="text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-brand-400">企业导师评价自动隐藏（无企业参与）</span>
+        <span v-if="!courseHasGroups" class="text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-gray-400">组内/组间互评自动隐藏（未分组）</span>
+        <span v-if="!config.hasMentor" class="text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-gray-400">企业导师评价自动隐藏（无企业参与）</span>
       </div>
 
       <!-- 评价场次列表 -->
       <div v-for="session in totalSessions" :key="session" class="border rounded-lg overflow-hidden" :class="sessionReminders[session]?.status === 'overdue' ? 'border-brand-400' : 'border-brand-400/20'">
-        <button @click="sessionState(session).disabled ? null : openEvalModal(session)" :disabled="sessionState(session).disabled" class="w-full flex items-center justify-between px-4 py-3 text-sm transition-colors" :class="sessionState(session).disabled ? 'bg-brand-400/10 cursor-not-allowed text-brand-400' : 'hover:bg-brand-400/10 text-brand-800'">
+        <button @click="sessionState(session).disabled ? null : openEvalModal(session)" :disabled="sessionState(session).disabled" class="w-full flex items-center justify-between px-4 py-3 text-sm transition-colors" :class="sessionState(session).disabled ? 'bg-brand-400/10 cursor-not-allowed text-gray-400' : 'hover:bg-brand-400/10 text-gray-800'">
           <div class="flex items-center gap-3">
-            <span :class="sessionState(session).disabled ? 'text-brand-400' : 'font-medium text-brand-800'">第{{ session }}次评价</span>
-            <span v-if="sessionState(session).disabled && sessionState(session).reason" class="text-xs px-1.5 py-0.5 rounded-full bg-brand-400/10 text-brand-400">
+            <span :class="sessionState(session).disabled ? 'text-gray-400' : 'font-medium text-gray-800'">第{{ session }}次评价</span>
+            <span v-if="sessionState(session).disabled && sessionState(session).reason" class="text-xs px-1.5 py-0.5 rounded-full bg-brand-400/10 text-gray-400">
               {{ sessionState(session).reason }}
             </span>
-            <span v-else :class="`text-xs px-1.5 py-0.5 rounded-full ${sessionReminders[session]?.status === 'overdue' ? 'bg-brand-600/15 text-brand-600' : sessionReminders[session]?.status === 'pending' ? 'bg-brand-600/15 text-brand-600' : 'text-brand-400'}`">
+            <span v-else :class="`text-xs px-1.5 py-0.5 rounded-full ${sessionReminders[session]?.status === 'overdue' ? 'bg-brand-600/15 text-brand-600' : sessionReminders[session]?.status === 'pending' ? 'bg-brand-600/15 text-brand-600' : 'text-gray-400'}`">
               {{ sessionReminders[session]?.status === 'overdue' ? '已逾期' : sessionReminders[session]?.status === 'pending' ? '待评价' : '' }}
             </span>
-            <span class="text-xs" :class="sessionState(session).disabled ? 'text-brand-400/60' : 'text-brand-400'">{{ getSessionEvals(session).filter(e => e.record).length }}/{{ enabledTypes.length }} 项已评</span>
+            <span class="text-xs" :class="sessionState(session).disabled ? 'text-gray-400/60' : 'text-gray-400'">{{ getSessionEvals(session).filter(e => e.record).length }}/{{ enabledTypes.length }} 项已评</span>
           </div>
           <div class="flex items-center gap-2">
             <CheckCircle v-if="!sessionState(session).disabled && getSessionEvals(session).filter(e => e.record).length === enabledTypes.length" class="w-3.5 h-3.5 text-brand-600" />
-            <Lock v-else-if="sessionState(session).disabled" class="w-3.5 h-3.5 text-brand-400/60" />
-            <ChevronRight v-else class="w-4 h-4 text-brand-400" />
+            <Lock v-else-if="sessionState(session).disabled" class="w-3.5 h-3.5 text-gray-400/60" />
+            <ChevronRight v-else class="w-4 h-4 text-gray-400" />
           </div>
         </button>
       </div>
@@ -60,24 +60,24 @@
               <div class="flex items-center gap-3">
                 <input type="range" min="0" max="100" v-model.number="modalScores.self" class="flex-1 h-1.5 accent-blue-500" />
                 <span class="text-sm font-bold w-10 text-right" :class="scoreColorClass(modalScores.self)">{{ modalScores.self }}</span>
-                <span class="text-xs text-brand-400">分</span>
+                <span class="text-xs text-gray-400">分</span>
               </div>
               <p v-if="validationErrors.self" class="text-xs text-brand-600">{{ validationErrors.self }}</p>
             </div>
 
             <!-- 教师/导师评价：只读 -->
             <div v-else-if="type === 'teacher' || type === 'mentor'">
-              <span class="text-sm" :class="record ? 'font-bold' : 'text-brand-400'">
+              <span class="text-sm" :class="record ? 'font-bold' : 'text-gray-400'">
                 {{ record ? `${record.score}分` : '待教师评价' }}
               </span>
-              <span v-if="record" class="text-[10px] text-brand-400 ml-2">{{ record.createdAt }}</span>
+              <span v-if="record" class="text-[10px] text-gray-400 ml-2">{{ record.createdAt }}</span>
             </div>
 
             <!-- 组内/组间互评：目标列表 -->
             <div v-else class="space-y-1.5">
-              <div v-if="getPeerTargets(type).length === 0" class="text-xs text-brand-400">暂无互评目标</div>
+              <div v-if="getPeerTargets(type).length === 0" class="text-xs text-gray-400">暂无互评目标</div>
               <div v-for="target in getPeerTargets(type)" :key="target.key" class="flex items-center gap-2 px-2 py-1.5 bg-white/60 rounded border">
-                <span class="text-xs font-medium text-brand-800 min-w-[4em]">{{ target.label }}</span>
+                <span class="text-xs font-medium text-gray-800 min-w-[4em]">{{ target.label }}</span>
                 <template v-if="hasSubmittedPeerFor(target)">
                   <span class="text-xs text-brand-600 ml-auto">已评 {{ getSubmittedPeerScore(target) }}分</span>
                 </template>
