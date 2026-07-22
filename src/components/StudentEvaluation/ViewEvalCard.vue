@@ -6,7 +6,7 @@
       <div class="flex-1">
         <span class="text-sm font-bold">{{ record.score }}分</span>
         <span class="text-[10px] text-gray-400 ml-2">—— {{ record.evaluatorName }}</span>
-        <p v-if="record.comment" class="text-[11px] text-gray-500 mt-0.5">"{{ record.comment }}"</p>
+        <p v-if="record.comment" class="text-[11px] text-brand-400 mt-0.5">"{{ record.comment }}"</p>
       </div>
     </template>
     <span v-else class="text-xs text-gray-400">待评价</span>

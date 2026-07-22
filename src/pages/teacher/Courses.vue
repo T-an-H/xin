@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">我的课程</h1>
-      <p class="text-gray-500 mt-1">管理课程、查看学员进度和评价</p>
+      <h1 class="text-2xl font-bold text-brand-900">我的课程</h1>
+      <p class="text-brand-400 mt-1">管理课程、查看学员进度和评价</p>
     </div>
 
     <!-- 课程卡片网格：2 列 -->
@@ -13,8 +13,8 @@
         :class="[
           'group bg-white rounded-xl border shadow-sm transition-all duration-200 overflow-hidden cursor-pointer',
           course.status === 'active'
-            ? 'border-gray-100 hover:shadow-lg'
-            : 'border-gray-200 opacity-60 hover:opacity-70'
+            ? 'border-brand-400/20 hover:shadow-lg'
+            : 'border-brand-400/30 opacity-60 hover:opacity-70'
         ]"
       >
         <!-- 封面渐变区域 -->
@@ -39,10 +39,10 @@
           <!-- 状态标签 - 右上角叠加 -->
           <span :class="`absolute top-3 right-3 z-10 text-xs px-2.5 py-1 rounded-full font-medium ${
             course.status === 'active'
-              ? 'bg-emerald-50/90 text-emerald-700 backdrop-blur-sm'
-              : 'bg-gray-100/80 text-gray-500 backdrop-blur-sm'
+              ? 'bg-brand-400/10 text-brand-800 backdrop-blur-sm'
+              : 'bg-brand-400/10 text-brand-400 backdrop-blur-sm'
           }`">
-            <span class="inline-block w-1.5 h-1.5 rounded-full mr-1" :class="course.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400'"></span>
+            <span class="inline-block w-1.5 h-1.5 rounded-full mr-1" :class="course.status === 'active' ? 'bg-brand-600' : 'bg-brand-400'"></span>
             {{ course.status === 'active' ? '进行中' : '已结束' }}
           </span>
 
@@ -65,8 +65,8 @@
         <div class="p-4 space-y-3">
           <!-- 课程简介 -->
           <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">课程简介</p>
-            <p class="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+            <p class="text-xs font-semibold text-brand-400 uppercase tracking-wider mb-1">课程简介</p>
+            <p class="text-sm text-brand-600 line-clamp-2 leading-relaxed">
               {{ course.description || '暂无描述' }}
             </p>
           </div>
@@ -75,13 +75,13 @@
           <!-- 底部操作 -->
           <div class="flex items-center justify-between pt-1">
             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border"
-              :class="course.status === 'active' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-500 border-gray-200'">
+              :class="course.status === 'active' ? 'bg-brand-600/10 text-brand-600 border-brand-400' : 'bg-brand-400/10 text-brand-400 border-brand-400/30'">
               <BookOpen class="w-3.5 h-3.5" />
               {{ course.status === 'active' ? '教学进行中' : '课程已结束' }}
             </span>
 
             <span class="inline-flex items-center gap-1 text-xs font-medium transition-colors"
-              :class="course.status === 'active' ? 'text-blue-600 group-hover:text-blue-700' : 'text-gray-400'">
+              :class="course.status === 'active' ? 'text-brand-600 group-hover:text-brand-800' : 'text-brand-400'">
               {{ course.status === 'active' ? '管理课程' : '查看详情' }}
               <ArrowRight class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
             </span>
@@ -89,7 +89,7 @@
         </div>
       </div>
 
-      <div v-if="myCourses.length === 0" class="col-span-2 text-center py-16 text-gray-400">
+      <div v-if="myCourses.length === 0" class="col-span-2 text-center py-16 text-brand-400">
         <BookOpen class="w-12 h-12 mx-auto mb-4 text-gray-200" />
         <p>暂无课程</p>
       </div>
@@ -118,12 +118,12 @@ const myCourses = computed(() => {
 
 /** 根据课程 ID 分配不同的渐变配色 */
 const gradients = [
-  'linear-gradient(135deg, #4F46E5, #7C3AED)',
-  'linear-gradient(135deg, #059669, #10B981)',
-  'linear-gradient(135deg, #D97706, #F59E0B)',
-  'linear-gradient(135deg, #DC2626, #F87171)',
-  'linear-gradient(135deg, #2563EB, #60A5FA)',
-  'linear-gradient(135deg, #7C3AED, #A78BFA)',
+  'linear-gradient(135deg, #4F46E5, #415a77)',
+  'linear-gradient(135deg, #415a77, #415a77)',
+  'linear-gradient(135deg, #415a77, #415a77)',
+  'linear-gradient(135deg, #DC2626, #415a77)',
+  'linear-gradient(135deg, #415a77, #415a77)',
+  'linear-gradient(135deg, #415a77, #415a77)',
   'linear-gradient(135deg, #0891B2, #22D3EE)',
   'linear-gradient(135deg, #BE123C, #FB7185)',
 ]

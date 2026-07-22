@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div class="flex items-center gap-3">
       <input ref="fileInputRef" type="file" @change="handleUpload" class="hidden" />
-      <button @click="triggerUpload" class="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
+      <button @click="triggerUpload" class="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-800 text-white rounded-lg transition-colors text-sm font-medium">
         <Upload class="w-4 h-4" /> 上传文件
       </button>
       <span class="text-sm text-gray-400">已用 {{ myCloudFiles.length }} 个文件</span>
@@ -22,10 +22,10 @@
           <p class="text-sm font-medium text-gray-900 truncate">{{ f.name }}</p>
           <p class="text-xs text-gray-400">{{ formatSize(f.size) }} · {{ f.uploadedBy }} · {{ formatDate(f.uploadedAt) }}</p>
         </div>
-        <button @click="handleDownload(f)" class="p-2 rounded-lg hover:bg-blue-50 text-blue-500 transition-colors" title="下载">
+        <button @click="handleDownload(f)" class="p-2 rounded-lg hover:bg-brand-600/10 text-brand-600 transition-colors" title="下载">
           <Download class="w-4 h-4" />
         </button>
-        <button @click="store.deleteCloudFile(f.id)" class="p-2 rounded-lg hover:bg-red-50 text-red-400 transition-colors" title="删除">
+        <button @click="store.deleteCloudFile(f.id)" class="p-2 rounded-lg hover:bg-brand-600/10 text-red-400 transition-colors" title="删除">
           <Trash2 class="w-4 h-4" />
         </button>
       </div>
