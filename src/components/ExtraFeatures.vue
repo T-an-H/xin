@@ -47,7 +47,11 @@ const hasPendingReminders = computed(() => {
   if (store.currentRole === 'student') {
     const student = store.students.find((s) => s.name === user)
     if (!student) return false
-    return store.evalReminders.some((r) => r.studentId === student.id && r.status !== 'completed')
+    // 评价提醒
+    if (store.evalReminders.some((r) => r.studentId === student.id && r.status !== 'completed')) return true
+    // AI 分层测试待办
+    if (store.getPendingAITierTests(student.id).length > 0) return true
+    return false
   }
   if (store.currentRole === 'teacher') {
     return store.evalReminders.some((r) => r.studentId === user && r.status !== 'completed')
@@ -68,7 +72,7 @@ onMounted(() => {
   store.pushNearDeadlineEvalReminders()
   // 扫描所有课程，为已到时间的评价轮次生成待办提醒
   store.checkAndGenerateSessionReminders()
-  // 如果有未完成的评价代办，默认切换到待办 tab
+  // 如果有未完成的评价代办或 AI 分层测试待办，默认切换到待办 tab
   const user = store.currentUser
   if (!user) return
   let hasPending = false
@@ -78,6 +82,7 @@ onMounted(() => {
       hasPending = store.evalReminders.some(
         (r) => r.studentId === student.id && r.status !== 'completed'
       )
+      hasPending = hasPending || store.getPendingAITierTests(student.id).length > 0
     }
   } else if (store.currentRole === 'teacher') {
     hasPending = store.evalReminders.some(

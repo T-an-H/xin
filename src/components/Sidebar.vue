@@ -13,11 +13,8 @@ const route = useRoute()
 const router = useRouter()
 
 const adminNavItems = [
-  { to: '/admin/courses', icon: 'bookOpen' as const, label: '课程管理' },
-  { to: '/admin/categories', icon: 'barChart3' as const, label: '分类管理' },
-  { to: '/admin/schedule', icon: 'calendar' as const, label: '排课管理' },
-  { to: '/admin/students', icon: 'users' as const, label: '学员管理' },
-  { to: '/admin/statistics', icon: 'barChart3' as const, label: '成绩管理' },
+  { to: '/admin/categories', icon: BarChart3, label: '分类管理' },
+  { to: '/admin/students', icon: Users, label: '学员管理' },
 ]
 
 const teacherNavItems = [
@@ -27,11 +24,11 @@ const teacherNavItems = [
 ]
 
 const studentNavItems = [
-  { to: '/student/profile', icon: 'user' as const, label: '个人画像' },
-  { to: '/student/courses', icon: 'bookOpen' as const, label: '我的课程' },
-  { to: '/student/schedule', icon: 'calendar' as const, label: '我的课表' },
-  { to: '/student/grades', icon: 'award' as const, label: '成绩管理' },
-  { to: '/student/extra', icon: 'lightbulb' as const, label: '额外功能' },
+  { to: '/student/profile', icon: User, label: '个人画像' },
+  { to: '/student/schedule', icon: Calendar, label: '我的课表' },
+  { to: '/student/courses', icon: BookOpen, label: '我的课程' },
+  { to: '/student/grades', icon: Award, label: '成绩管理' },
+  { to: '/student/extra', icon: Lightbulb, label: '额外功能' },
 ]
 
 const mentorNavItems = [
@@ -80,6 +77,11 @@ const showExtraBadge = (item: { to: string; label: string }) => {
   if (item.label !== '额外功能') return false
   if (hasPendingEvalTodos.value) return true
   if (store.currentRole === 'teacher' && store.getPendingConfigCourses().length > 0) return true
+  // AI 分层测试待办红点（学生端）
+  if (store.currentRole === 'student') {
+    const student = store.students.find((s) => s.name === store.currentUser)
+    if (student && store.getPendingAITierTests(student.id).length > 0) return true
+  }
   return false
 }
 

@@ -1,93 +1,478 @@
 <template>
   <div id="student-course-learn-root"></div>
 
-  <!-- AI 分层测试弹窗 -->
-  <Modal :is-open="aiTestOpen" :on-close="closeAITest" title="AI 分层测试" max-width="max-w-2xl">
-    <template v-if="!testSubmitted">
-      <div class="space-y-6">
-        <!-- 进度 -->
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-brand-400">已答 {{ answeredCount }}/{{ totalQuestions }} 题</span>
-          <span class="text-xs text-brand-400">每题 10 分，满分 {{ totalQuestions * 10 }} 分</span>
-        </div>
-        <div class="w-full h-1.5 bg-brand-400/10 rounded-full overflow-hidden">
-          <div class="h-full bg-brand-600 rounded-full transition-all"
-            :style="{ width: (answeredCount / totalQuestions * 100) + '%' }"></div>
-        </div>
 
-        <!-- 题目列表 -->
-        <div v-for="(q, i) in testQuestions" :key="q.id"
-          class="p-4 rounded-lg border"
-          :class="testAnswers[q.id] !== undefined ? 'border-brand-400 bg-brand-600/10' : 'border-brand-400/20'">
-          <p class="text-sm font-medium text-brand-900 mb-3">
-            <span class="text-brand-600 font-bold">{{ i + 1 }}.</span>
-            {{ q.question }}
-            <span class="ml-1 text-[10px] text-brand-400">({{ q.type === 'true_false' ? '判断题' : '单选题' }})</span>
-          </p>
-          <div class="space-y-1.5">
-            <button v-for="(opt, oi) in q.options" :key="oi"
-              @click="selectAnswer(q.id, q.type === 'true_false' ? (oi === 0) : oi)"
-              class="w-full text-left px-3 py-2 rounded-lg text-sm border transition-all"
-              :class="testAnswers[q.id] === (q.type === 'true_false' ? (oi === 0) : oi)
-                ? 'border-brand-600 bg-brand-600/15 text-brand-800 font-medium'
-                : 'border-brand-400/30 hover:border-brand-400 text-brand-800'">
-              {{ opt }}
-            </button>
+    <!-- 已结束只读提示 -->
+    <div v-if="isReadOnly" class="flex items-center gap-2 px-4 py-3 bg-brand-400/5 border border-brand-400/30 rounded-xl text-sm text-brand-400">
+      <Eye class="w-4 h-4 text-brand-400" />
+      <span>该课程已结束，当前为<strong>只读查看</strong>模式</span>
+    </div>
+
+    <div class="flex gap-1 bg-brand-400/10 p-1 rounded-xl overflow-x-auto">
+      <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
+        :class="`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-brand-900 shadow-sm' : 'text-brand-400 hover:text-brand-800'}`">
+        <component :is="tab.icon" class="w-4 h-4" />
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-xl border border-brand-400/20 shadow-sm p-6">
+          <!-- ===== AI 分层 ===== -->
+          <div v-if="activeTab === 'ai_tier'" class="space-y-6">
+            <!-- 未到开始条件 -->
+            <div v-if="!firstClassEnded" class="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
+              <Layers class="w-12 h-12 mx-auto mb-3 text-amber-400" />
+              <h3 class="text-lg font-semibold text-amber-700 mb-2">AI 分层测试</h3>
+              <p class="text-sm text-amber-600">第一节课尚未结束，AI 分层测试将在第一节课结束后开启</p>
+              <p class="text-xs text-amber-400 mt-1">届时将根据第一节课内容生成 10 道测试题，依据得分判定学习层级</p>
+            </div>
+
+            <!-- 测试窗口期（第一节课后～第二节课前） -->
+            <div v-else-if="firstClassEnded && !secondClassStarted && !tierFinalized" class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-8 text-center">
+              <Sparkles class="w-12 h-12 mx-auto mb-3 text-blue-500" />
+              <h3 class="text-lg font-semibold text-blue-800 mb-2">AI 分层测试已开放</h3>
+              <p class="text-sm text-blue-600 mb-2">完成 10 道测试题（单选+判断），系统将根据得分判定你的学习层级</p>
+              <p class="text-xs text-amber-500 mb-6">⚠ 测试窗口：第一节课结束后 ~ 第二节课开始前，逾期将自动分配到基础层</p>
+              <button @click="openAITest"
+                class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-500/25 inline-flex items-center gap-2">
+                <HelpCircle class="w-5 h-5" />
+                开始 AI 分层测试
+              </button>
+            </div>
+
+            <!-- 逾期未测，自动分配基础层 -->
+            <div v-else-if="secondClassStarted && !tierFinalized" class="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+              <XCircle class="w-12 h-12 mx-auto mb-3 text-red-400" />
+              <h3 class="text-lg font-semibold text-red-700 mb-2">测试窗口已关闭</h3>
+              <p class="text-sm text-red-600 mb-4">第二节课已开始，AI 分层测试逾期未完成，已自动分配到基础层</p>
+              <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+                <Layers class="w-4 h-4 text-amber-500" />
+                <span class="text-sm font-bold text-brand-800">基础层</span>
+              </div>
+              <p class="text-xs text-brand-400 mt-4">本学期不可修改，后续任务、资源、作业将根据基础层进行适配</p>
+            </div>
+
+            <!-- 已分层 → 永久锁定展示 -->
+            <div v-else>
+              <!-- 当前层级 -->
+              <div>
+                <h3 class="text-sm font-semibold text-brand-800 mb-3">AI 学习层级评估</h3>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <p class="text-xs text-brand-400 mb-1">当前学习层级</p>
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
+                        :class="tierBadgeClass">
+                        <Layers class="w-4 h-4" />
+                        {{ tierLabel }}
+                        <span v-if="isAutoAssigned" class="text-[10px] opacity-75">(自动分配)</span>
+                      </span>
+                      <span class="ml-2 text-[10px] text-brand-400">已锁定 · 该学期不可修改</span>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-xs text-brand-400">分层测试得分</p>
+                      <p class="text-2xl font-bold text-blue-600">{{ myTierScore }}</p>
+                      <p class="text-xs text-brand-400">/ {{ totalQuestions * 10 }}分</p>
+                    </div>
+                  </div>
+
+                  <!-- 锁定提示 -->
+                  <div class="mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10/80 rounded-lg text-xs text-brand-400">
+                    <Lock class="w-3.5 h-3.5" />
+                    <span>AI 分层结果已锁定，本学期不可更改。后续任务、资源、作业将根据 {{ tierLabel }} 进行适配</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- AI 学习建议 -->
+              <div>
+                <h3 class="text-sm font-semibold text-brand-800 mb-3">AI 学习建议</h3>
+                <div class="space-y-3">
+                  <div v-for="(tip, i) in aiTips" :key="i"
+                    class="flex items-start gap-3 p-3 rounded-lg border border-brand-400/20 bg-brand-400/5">
+                    <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span class="text-xs font-bold text-blue-600">{{ i + 1 }}</span>
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-brand-900">{{ tip.title }}</p>
+                      <p class="text-xs text-brand-400 mt-0.5">{{ tip.desc }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 分层对比 -->
+              <div>
+                <h3 class="text-sm font-semibold text-brand-800 mb-3">层级对照</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div v-for="ct in tierComparison" :key="ct.level"
+                    class="p-3 rounded-lg border"
+                    :class="ct.level === myTier ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200' : 'border-brand-400/20'">
+                    <p class="text-xs font-semibold mb-1" :class="ct.color">{{ ct.label }}</p>
+                    <p class="text-xs text-brand-400">{{ ct.desc }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI 分层测试弹窗 -->
+          <Modal :is-open="aiTestOpen" :on-close="closeAITest"
+            title="AI 分层测试" max-width="max-w-2xl">
+            <template v-if="!testSubmitted">
+              <div class="space-y-6">
+                <!-- 进度 -->
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-brand-400">已答 {{ answeredCount }}/{{ totalQuestions }} 题</span>
+                  <span class="text-xs text-brand-400">每题 10 分，满分 {{ totalQuestions * 10 }} 分</span>
+                </div>
+                <div class="w-full h-1.5 bg-brand-400/10 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-500 rounded-full transition-all"
+                    :style="{ width: (answeredCount / totalQuestions * 100) + '%' }" />
+                </div>
+
+                <!-- 题目列表 -->
+                <div v-for="(q, i) in testQuestions" :key="q.id"
+                  class="p-4 rounded-lg border"
+                  :class="testAnswers[q.id] !== undefined ? 'border-blue-200 bg-blue-50/30' : 'border-brand-400/20'">
+                  <p class="text-sm font-medium text-brand-900 mb-3">
+                    <span class="text-blue-600 font-bold">{{ i + 1 }}.</span>
+                    {{ q.question }}
+                    <span class="ml-1 text-[10px] text-brand-400">({{ q.type === 'true_false' ? '判断题' : '单选题' }})</span>
+                  </p>
+                  <div class="space-y-1.5">
+                    <button v-for="(opt, oi) in q.options" :key="oi"
+                      @click="selectAnswer(q.id, q.type === 'true_false' ? (oi === 0) : oi)"
+                      class="w-full text-left px-3 py-2 rounded-lg text-sm border transition-all"
+                      :class="testAnswers[q.id] === (q.type === 'true_false' ? (oi === 0) : oi)
+                        ? 'border-blue-400 bg-blue-100 text-blue-700 font-medium'
+                        : 'border-brand-400/30 hover:border-brand-400/60 text-brand-800'">
+                      {{ opt }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between mt-6 pt-4 border-t border-brand-400/20">
+                <span v-if="!allAnswered" class="text-xs text-amber-500">请完成所有题目后再提交</span>
+                <span v-else class="text-xs text-emerald-500">所有题目已作答</span>
+                <button @click="submitAITest" :disabled="!allAnswered"
+                  class="px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+                  :class="allAnswered ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-brand-400/10 text-brand-400 cursor-not-allowed'">
+                  提交并判定层级
+                </button>
+              </div>
+            </template>
+
+            <!-- 结果展示 -->
+            <template v-else>
+              <div class="text-center py-6 space-y-4">
+                <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center"
+                  :class="testScore >= 80 ? 'bg-emerald-100' : testScore >= 60 ? 'bg-blue-100' : 'bg-amber-100'">
+                  <Award class="w-10 h-10" :class="testScore >= 80 ? 'text-emerald-500' : testScore >= 60 ? 'text-blue-500' : 'text-amber-500'" />
+                </div>
+                <div>
+                  <p class="text-4xl font-bold text-brand-900">{{ testScore }}<span class="text-lg text-brand-400">/{{ totalQuestions * 10 }}</span></p>
+                  <p class="text-sm text-brand-400 mt-1">得分</p>
+                </div>
+                <div>
+                  <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-base font-bold"
+                    :class="tierBadgeClass">
+                    <Layers class="w-5 h-5" />
+                    {{ store.determineTier(testScore) === 'excellent' ? '卓越层' : store.determineTier(testScore) === 'advanced' ? '进阶层' : '基础层' }}
+                  </span>
+                </div>
+                <p class="text-xs text-brand-400">本次分层结果已在系统中锁定，本学期不可修改</p>
+                <button @click="closeAITest"
+                  class="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors inline-flex items-center gap-2">
+                  <CheckCircle class="w-4 h-4" />
+                  确认并查看
+                </button>
+              </div>
+            </template>
+          </Modal>
+
+          <!-- ===== 知识图谱 (泡泡图) ===== -->
+          <div v-if="activeTab === 'knowledge_graph'" class="space-y-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-base font-semibold text-brand-800">知识点掌握图谱</h3>
+                <p class="text-xs text-brand-400">基于学习进度与评价数据自动生成 · 泡泡越大表示知识越重要 · 颜色越深表示掌握度越高</p>
+              </div>
+              <span class="text-xs text-brand-400">点击泡泡查看详情</span>
+            </div>
+
+            <!-- 泡泡视图 -->
+            <!-- 分类图例 + 关联图例 -->
+              <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-brand-400 items-center">
+                <span v-for="cat in categoryColors" :key="cat.key" class="flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded-full" :style="{ background: cat.mid }" />
+                  {{ cat.label }}
+                </span>
+                <span class="text-brand-400/60">|</span>
+                <span v-for="rel in relationLegend" :key="rel.key" class="flex items-center gap-1.5">
+                  <svg width="20" height="4" class="overflow-visible"><line x1="0" y1="2" x2="20" y2="2" :stroke="rel.color" stroke-width="2" :stroke-dasharray="rel.dash" /></svg>
+                  {{ rel.label }}
+                </span>
+              </div>
+
+              <!-- SVG 知识图谱 -->
+              <div class="relative bg-white rounded-xl border border-brand-400/20 overflow-hidden">
+                <svg :viewBox="`0 0 ${SVG_W} ${SVG_H}`" class="w-full" style="min-height: 780px">
+                  <!-- 背景网格 -->
+                  <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f1f5f9" stroke-width="0.5" />
+                    </pattern>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid)" />
+
+                  <!-- 分类环带 -->
+                  <g v-for="(ring, ri) in categoryRings" :key="ri">
+                    <ellipse :cx="SVG_CX" :cy="SVG_CY" :rx="ring.rx" :ry="ring.ry"
+                      fill="none" :stroke="ring.color" stroke-width="1" stroke-dasharray="4,4" stroke-opacity="0.3" />
+                    <text :x="SVG_CX + ring.rx - 4" :y="SVG_CY - ring.ry + 16" font-size="10" :fill="ring.color" fill-opacity="0.5" text-anchor="end">{{ ring.label }}</text>
+                  </g>
+
+                  <!-- 关联连线 -->
+                  <g v-for="(edge, ei) in renderedEdges" :key="'edge-' + ei">
+                    <path :d="edge.path" fill="none"
+                      :stroke="edge.color" :stroke-width="edge.width" :stroke-dasharray="edge.dash"
+                      stroke-linecap="round" opacity="0.5"
+                      class="transition-all duration-300"
+                      :class="{ 'opacity-100': selectedBubble && (edge.source === selectedBubble || edge.target === selectedBubble) }" />
+                    <!-- 箭头标记 -->
+                    <polygon :points="edge.arrow" :fill="edge.color" opacity="0.5"
+                      :class="{ 'opacity-100': selectedBubble && (edge.source === selectedBubble || edge.target === selectedBubble) }" />
+                    <!-- 关系标签（连线中间） -->
+                    <text :x="edge.midX" :y="edge.midY" font-size="8" :fill="edge.color"
+                      text-anchor="middle" dominant-baseline="middle" opacity="0.6"
+                      class="pointer-events-none select-none">
+                      {{ edge.label }}
+                    </text>
+                  </g>
+
+                  <!-- 知识点节点 -->
+                  <g v-for="pn in positionedNodes" :key="pn.node.id"
+                    @click="selectedBubble = selectedBubble === pn.node.id ? null : pn.node.id"
+                    class="cursor-pointer"
+                    :class="{ 'selected-node': selectedBubble === pn.node.id }">
+                    <!-- hover 提示 -->
+                    <title>{{ pn.node.label }} - {{ pn.node.mastery }}% ({{ pn.node.chapter }})</title>
+                    <!-- 阴影光晕（选中/大掌握度） -->
+                    <circle v-if="pn.node.mastery >= 75" :cx="pn.x" :cy="pn.y" :r="pn.r + 6"
+                      :fill="pn.fill" opacity="0.15" filter="url(#glow)" />
+                    <!-- 外圈（选中时高亮） -->
+                    <circle :cx="pn.x" :cy="pn.y" :r="pn.r + 3"
+                      fill="none" :stroke="pn.fill" stroke-width="2"
+                      :class="selectedBubble === pn.node.id ? 'opacity-100' : 'opacity-0'"
+                      class="transition-opacity duration-200" />
+                    <!-- 主体圆 -->
+                    <circle :cx="pn.x" :cy="pn.y" :r="pn.r"
+                      :fill="pn.fill" stroke="white" stroke-width="2"
+                      class="transition-all duration-200 hover:brightness-110"
+                      :style="{ filter: pn.node.mastery >= 80 ? 'drop-shadow(0 2px 6px ' + pn.fill + '66)' : 'none' }" />
+                    <!-- 文字 - 知识点名称（圆内居中，根据泡泡大小自适应字号） -->
+                    <text :x="pn.x" :y="pn.y + 1" :font-size="bubbleFontSize(pn.r)" font-weight="700"
+                      fill="white" text-anchor="middle" dominant-baseline="central"
+                      class="pointer-events-none select-none">
+                      {{ pn.node.label }}
+                    </text>
+                  </g>
+
+                  <!-- 无节点提示 -->
+                  <text v-if="positionedNodes.length === 0" x="50%" y="50%" font-size="14" fill="#9ca3af" text-anchor="middle" dominant-baseline="middle">暂无知识点数据</text>
+                </svg>
+              </div>
+
+              <!-- 选中节点的详情 -->
+              <div v-if="selectedBubble && bubbleNode(selectedBubble)" class="bg-brand-400/5 rounded-xl p-4 border border-brand-400/30 space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full" :style="{ background: bubbleColor(bubbleNode(selectedBubble)?.mastery ?? 50, bubbleNode(selectedBubble)?.category ?? 'foundation') }" />
+                  <p class="text-sm font-bold text-brand-800">{{ bubbleNode(selectedBubble)?.label }}</p>
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-brand-400/10 text-brand-600">{{ bubbleNode(selectedBubble)?.chapter }}</span>
+                </div>
+                <p class="text-xs text-brand-400">{{ bubbleNode(selectedBubble)?.description }}</p>
+                <div class="flex items-center gap-3 text-xs">
+                  <span class="text-brand-400">掌握度</span>
+                  <div class="flex-1 h-2 bg-brand-400/10 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full" :style="{ width: (bubbleNode(selectedBubble)?.mastery ?? 0) + '%', background: bubbleColor(bubbleNode(selectedBubble)?.mastery ?? 50, bubbleNode(selectedBubble)?.category ?? 'foundation') }" />
+                  </div>
+                  <span class="font-bold" :style="{ color: bubbleColor(bubbleNode(selectedBubble)?.mastery ?? 50, bubbleNode(selectedBubble)?.category ?? 'foundation') }">{{ bubbleNode(selectedBubble)?.mastery }}%</span>
+                </div>
+                <!-- 选中节点的关联 -->
+                <div v-if="bubbleEdges(selectedBubble).length > 0" class="pt-1 border-t border-brand-400/30">
+                  <p class="text-[11px] text-brand-400 mb-1">关联关系</p>
+                  <div v-for="edge in bubbleEdges(selectedBubble)" :key="edge.source + edge.target"
+                    class="text-xs text-brand-600 flex items-center gap-1.5">
+                    <span :class="edge.source === selectedBubble ? 'font-semibold' : ''">{{ nodeLabel(edge.source) }}</span>
+                    <ArrowRight class="w-3 h-3 text-brand-400" />
+                    <span class="px-1 py-0.5 rounded text-[10px]" :class="relationChipClass(edge.relation)">{{ edge.label }}</span>
+                    <ArrowRight class="w-3 h-3 text-brand-400" />
+                    <span :class="edge.target === selectedBubble ? 'font-semibold' : ''">{{ nodeLabel(edge.target) }}</span>
+                  </div>
+                </div>
+              </div>
+
+
+          </div>
+
+          <!-- ===== 任务 ===== -->
+          <div v-if="activeTab === 'tasks'" class="space-y-4">
+            <h3 class="text-sm font-semibold text-brand-800">课程任务</h3>
+            <div class="space-y-2">
+              <div v-for="task in courseTasks" :key="task.id"
+                class="flex items-center justify-between p-3 rounded-lg border border-brand-400/20 hover:bg-brand-400/5">
+                <div class="flex items-center gap-3">
+                  <CheckCircle v-if="task.completed" class="w-5 h-5 text-emerald-500" />
+                  <Circle v-else class="w-5 h-5 text-brand-400/60" />
+                  <div>
+                    <p class="text-sm font-medium text-brand-900">{{ task.title }}</p>
+                    <p v-if="task.dueDate" class="text-xs text-brand-400">截止：{{ task.dueDate }}</p>
+                  </div>
+                </div>
+                <span v-if="task.score !== undefined" class="text-sm font-bold text-blue-600">{{ task.score }}分</span>
+              </div>
+              <div v-if="courseTasks.length === 0" class="text-center py-8 text-brand-400">暂无任务</div>
+            </div>
+          </div>
+
+          <!-- ===== 资源 ===== -->
+          <div v-if="activeTab === 'resources'" class="space-y-4">
+            <h3 class="text-sm font-semibold text-brand-800">课程资源</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div v-for="res in courseResources" :key="res.id"
+                class="flex items-center gap-3 p-3 rounded-lg border border-brand-400/20 hover:bg-brand-400/5">
+                <div class="w-10 h-10 rounded-lg bg-brand-400/5 flex items-center justify-center">
+                  <FileText class="w-5 h-5 text-brand-400" />
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-brand-900">{{ res.title }}</p>
+                  <p class="text-xs text-brand-400">{{ res.type }} · {{ res.size }}</p>
+                </div>
+              </div>
+              <div v-if="courseResources.length === 0" class="col-span-full text-center py-8 text-brand-400">暂无资源</div>
+            </div>
+          </div>
+
+          <!-- ===== 作业 ===== -->
+          <div v-if="activeTab === 'homework'" class="space-y-4">
+            <h3 class="text-sm font-semibold text-brand-800">课程作业</h3>
+            <div class="space-y-2">
+              <div v-for="hw in courseHomework" :key="hw.id"
+                class="flex items-center justify-between p-3 rounded-lg border border-brand-400/20 hover:bg-brand-400/5">
+                <div class="flex items-center gap-3">
+                  <FileText class="w-5 h-5 text-blue-500" />
+                  <div>
+                    <p class="text-sm font-medium text-brand-900">{{ hw.title }}</p>
+                    <p class="text-xs text-brand-400">截止：{{ hw.dueDate }}</p>
+                  </div>
+                </div>
+                <span v-if="hw.submitted" class="text-xs text-emerald-500">已提交</span>
+                <span v-else class="text-xs text-amber-500">未提交</span>
+              </div>
+              <div v-if="courseHomework.length === 0" class="text-center py-8 text-brand-400">暂无作业</div>
+            </div>
+          </div>
+
+          <!-- ===== 评价填写 ===== -->
+          <div v-if="activeTab === 'evaluations'" class="space-y-4">
+            <h3 class="text-sm font-semibold text-brand-800">课程评价</h3>
+            <div v-if="isReadOnly" class="bg-brand-400/5 border border-brand-400/30 rounded-xl p-6 text-center text-sm text-brand-400">
+              <Eye class="w-8 h-8 mx-auto mb-2 text-brand-400/60" />
+              <p>课程已结束，评价填写功能已关闭</p>
+              <p class="text-xs mt-1">如需查看评价记录，请在"综合评价"中查看</p>
+            </div>
+            <StudentEvaluation v-else :course-id="courseId" :student-id="myStudent?.id || ''"
+              :student-name="myStudent?.name || store.currentUser || ''" />
+          </div>
+
+          <!-- ===== 综合评价 ===== -->
+          <div v-if="activeTab === 'eval_overview'" class="space-y-6">
+            <!-- 综合成绩卡片 -->
+            <div>
+              <h3 class="text-sm font-semibold text-brand-800 mb-3">综合评价</h3>
+              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <p class="text-xs text-brand-400 mb-1">课程总评</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ totalScore ?? '-' }}<span class="text-base text-brand-400">分</span></p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xs text-brand-400">班级平均</p>
+                    <p class="text-xl font-semibold text-brand-600">{{ classAvgScore }}分</p>
+                  </div>
+                </div>
+                <!-- 分数条对比 -->
+                <div class="relative h-3 bg-brand-400/10 rounded-full overflow-hidden">
+                  <div class="absolute top-0 h-full w-0.5 bg-red-400 z-10" :style="{ left: classAvgScore + '%' }" />
+                  <div v-if="totalScore" class="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all"
+                    :style="{ width: Math.min(totalScore, 100) + '%' }" />
+                </div>
+                <div class="flex justify-between text-xs text-brand-400 mt-1">
+                  <span>0</span>
+                  <span class="text-red-400">平均{{ classAvgScore }}</span>
+                  <span>100</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 评价细分 -->
+            <div>
+              <h3 class="text-sm font-semibold text-brand-800 mb-3">评价维度细分</h3>
+              <div class="space-y-3">
+                <div v-for="dim in evalDimensions" :key="dim.label"
+                  class="flex items-center gap-3 p-3 rounded-lg border border-brand-400/20">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    :class="dim.iconBg">
+                    <component :is="dim.icon" class="w-4 h-4" :class="dim.iconColor" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-brand-900">{{ dim.label }}</p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <div class="flex-1 bg-brand-400/10 rounded-full h-2 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-500" :class="dim.barColor"
+                          :style="{ width: (dim.score / (dim.maxScore || 100) * 100) + '%' }" />
+                      </div>
+                      <span class="text-xs font-medium text-brand-600 w-12 text-right">
+                        {{ dim.score }}<span class="text-brand-400">/{{ dim.maxScore || 100 }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="evalDimensions.length === 0" class="text-center py-6 text-brand-400">暂无评价数据</div>
+              </div>
+            </div>
+
+            <!-- 成绩权重说明 -->
+            <div v-if="currentCfg" class="bg-amber-50 rounded-xl p-4 border border-amber-200 text-sm text-amber-800">
+              <p class="font-medium mb-1">成绩构成</p>
+              <p>总成绩 = 平时成绩({{ currentCfg.regularWeight }}%) + 期中成绩({{ currentCfg.midtermWeight }}%) + 期末成绩({{ currentCfg.finalWeight }}%)</p>
+              <p class="text-xs text-amber-600 mt-1">
+                平时成绩构成：自评({{ currentCfg.selfEvalWeight }}%) + 互评({{ currentCfg.peerReviewWeight }}%) + 组间评({{ currentCfg.interGroupEvalWeight }}%) + 教师({{ currentCfg.teacherScoreWeight }}%) + 导师({{ currentCfg.mentorScoreWeight }}%)
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="flex items-center justify-between mt-6 pt-4 border-t border-brand-400/20">
-        <span v-if="!allAnswered" class="text-xs text-brand-600">请完成所有题目后再提交</span>
-        <span v-else class="text-xs text-brand-600">所有题目已作答</span>
-        <button @click="submitAITest" :disabled="!allAnswered"
-          class="px-6 py-2 rounded-lg text-sm font-medium transition-colors"
-          :class="allAnswered ? 'bg-brand-600 hover:bg-brand-800 text-white' : 'bg-brand-400/10 text-brand-400 cursor-not-allowed'">
-          提交并判定层级
-        </button>
-      </div>
-    </template>
-
-    <!-- 结果展示 -->
-    <template v-else>
-      <div class="text-center py-6 space-y-4">
-        <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center"
-          :class="testScore >= 80 ? 'bg-brand-600/10' : testScore >= 60 ? 'bg-brand-600/15' : 'bg-brand-400/10'">
-          <Award class="w-10 h-10" :class="testScore >= 80 ? 'text-brand-600' : testScore >= 60 ? 'text-brand-600' : 'text-brand-600'" />
-        </div>
-        <div>
-          <p class="text-4xl font-bold text-brand-900">{{ testScore }}<span class="text-lg text-brand-400">/{{ totalQuestions * 10 }}</span></p>
-          <p class="text-sm text-brand-400 mt-1">得分</p>
-        </div>
-        <div>
-          <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-base font-bold"
-            :class="tierBadgeClass">
-            <Layers class="w-5 h-5" />
-            {{ store.determineTier(testScore) === 'excellent' ? '卓越层' : store.determineTier(testScore) === 'advanced' ? '进阶层' : '基础层' }}
-          </span>
-        </div>
-        <p class="text-xs text-brand-400">本次分层结果已在系统中锁定，本学期不可修改</p>
-        <button @click="closeAITest"
-          class="px-8 py-2.5 bg-brand-600 hover:bg-brand-800 text-white font-medium rounded-lg transition-colors inline-flex items-center gap-2">
-          <CheckCircle class="w-4 h-4" />
-          确认并查看
-        </button>
-      </div>
-    </template>
-  </Modal>
-
-  <!-- StudentEvaluation 子组件 -->
-  <div v-if="activeTab === 'evaluations' && !isReadOnly" style="display: none;">
-    <StudentEvaluation :course-id="courseId" :student-id="myStudent?.id || ''"
-      :student-name="myStudent?.name || store.currentUser || ''" />
-  </div>
+      <!-- ===== 右侧栏 ===== -->
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { Award, CheckCircle, Layers } from 'lucide-vue-next'
+import {
+  ArrowLeft, BookOpen, FileText, ClipboardCheck, Edit3,
+  CheckCircle, Circle, Layers, GitBranch, Award, Sparkles, UserCheck, Users, MessageSquare, ArrowRight, Eye, HelpCircle, Lock, XCircle
+} from 'lucide-vue-next'
 import StudentEvaluation from '@/components/StudentEvaluation.vue'
 import type { AITierQuestion, LearningTier } from '@/types'
 import Modal from '@/components/Modal.vue'
@@ -103,8 +488,10 @@ const activeTab = ref('knowledge_graph')
 
 onMounted(() => {
   store.pushNearDeadlineEvalReminders()
-  const el = document.getElementById('student-course-learn-root')
-  if (el) renderCourseLearn(el)
+  // 逾期自动分配基础层
+  if (myStudent.value) {
+    store.autoAssignOverdueBasicTier(courseId, myStudent.value.id)
+  }
 })
 
 const tabs = [
@@ -214,6 +601,11 @@ const myTier = computed<LearningTier>(() => tierRecord.value?.tier ?? 'basic')
 const myTierScore = computed(() => tierRecord.value?.score ?? 0)
 const tierFinalized = computed(() => tierRecord.value !== null)
 const firstClassEnded = computed(() => store.isFirstClassStarted(courseId))
+const secondClassStarted = computed(() => store.isSecondClassStarted(courseId))
+// 是否逾期自动分配（score=0 且第二节课已开始）
+const isAutoAssigned = computed(() =>
+  tierFinalized.value && secondClassStarted.value && myTierScore.value === 0
+)
 
 const tierLabel = computed(() => {
   const map = { basic: '基础层', advanced: '进阶层', excellent: '卓越层' }
@@ -1404,19 +1796,4 @@ function renderBubbleDetail(container: d3.Selection<any, any, any, any>) {
   }
 }
 
-// ===== 重渲染函数 =====
-function reRender() {
-  const el = document.getElementById('student-course-learn-root')
-  if (el) renderCourseLearn(el)
-}
-
-onMounted(() => {
-  const el = document.getElementById('student-course-learn-root')
-  if (el) renderCourseLearn(el)
-})
-
-watch([activeTab, course, myEnrollment, myGrade, knowledgeGraphData], () => {
-  const el = document.getElementById('student-course-learn-root')
-  if (el) renderCourseLearn(el)
-}, { deep: true })
 </script>

@@ -12,27 +12,12 @@ const router = createRouter({
     {
       path: '/admin',
       component: Layout,
-      redirect: '/',
+      redirect: 'categories',
       children: [
-        {
-          path: 'courses',
-          name: 'AdminCourses',
-          component: () => import('@/pages/admin/Courses.vue'),
-        },
-        {
-          path: 'statistics',
-          name: 'AdminStatistics',
-          component: () => import('@/pages/admin/Statistics.vue'),
-        },
         {
           path: 'categories',
           name: 'AdminCategories',
           component: () => import('@/pages/admin/Categories.vue'),
-        },
-        {
-          path: 'schedule',
-          name: 'AdminSchedule',
-          component: () => import('@/pages/admin/Schedule.vue'),
         },
         {
           path: 'students',

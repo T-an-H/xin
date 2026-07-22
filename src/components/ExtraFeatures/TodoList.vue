@@ -48,6 +48,30 @@
       </div>
     </div>
 
+    <!-- AI 分层测试提醒（学生端） -->
+    <div v-if="pendingAITierTests.length > 0 && store.currentRole === 'student'" class="space-y-1.5">
+      <p class="text-xs font-medium text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        AI 分层测试待办
+        <span class="text-xs font-normal text-gray-400">（{{ pendingAITierTests.length }}门课程待测试）</span>
+      </p>
+      <div v-for="item in pendingAITierTests" :key="item.courseId"
+        class="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg border border-indigo-200 shadow-sm group">
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+          <Layers class="w-4 h-4 text-indigo-600" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-indigo-900 truncate">{{ item.courseTitle }}</p>
+          <p class="text-xs text-indigo-600">截止：第二节课前（{{ item.deadline }}）</p>
+        </div>
+        <router-link :to="`/student/courses`"
+          class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+          <ArrowRight class="w-3 h-3" />
+          去测试
+        </router-link>
+      </div>
+    </div>
+
     <!-- 手动添加待办 -->
     <div class="flex items-center gap-3">
       <input type="text" v-model="title" @keydown.enter="handleAdd" placeholder="添加待办事项..." class="flex-1 px-4 py-2.5 rounded-lg border border-brand-400/30 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm" />
@@ -84,7 +108,7 @@
       </div>
     </div>
 
-    <div v-if="myTodos.length === 0 && pendingEvalReminders.length === 0" class="text-center py-12 text-brand-400">
+    <div v-if="myTodos.length === 0 && pendingEvalReminders.length === 0 && pendingAITierTests.length === 0" class="text-center py-12 text-brand-400">
       <CheckCircle class="w-12 h-12 mx-auto mb-3 opacity-50" />
       <p>暂无待办事项</p>
     </div>
@@ -93,7 +117,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Circle, CheckCircle, X, ClipboardCheck, ArrowRight, Settings } from 'lucide-vue-next'
+import { Plus, Circle, CheckCircle, X, ClipboardCheck, ArrowRight, Settings, Layers } from 'lucide-vue-next'
 import { useAppStore } from '@/stores/app'
 import { EvalTypeLabels } from '@/types'
 
@@ -127,7 +151,15 @@ const pendingEvalReminders = computed(() => {
   return []
 })
 
-/** 按课程+轮次分组，生成描述和跳转链接 */
+/** 当前学生待完成的 AI 分层测试 */
+const pendingAITierTests = computed(() => {
+  if (store.currentRole !== 'student' || !store.currentUser) return []
+  const student = store.students.find((s) => s.name === store.currentUser)
+  if (!student) return []
+  return store.getPendingAITierTests(student.id)
+})
+
+/** 当前用户各评价提醒的分组 */
 const evalReminderGroups = computed(() => {
   const groups = new Map<string, { courseTitle: string; session: number; types: string[]; key: string }>()
   for (const r of pendingEvalReminders.value) {

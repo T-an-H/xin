@@ -47,7 +47,7 @@ const handleLogin = () => {
   switch (selectedRole.value) {
     case 'admin': {
       store.login(username.value, 'admin')
-      router.push('/admin/courses')
+      router.push('/admin/categories')
       break
     }
     case 'teacher': {

@@ -225,16 +225,21 @@ export const useAppStore = defineStore('app', () => {
   function addSchedule(schedule: Schedule) {
     schedules.value = [...schedules.value, schedule]
     saveToStorage('schedules', schedules.value)
+    recalculateProgress(schedule.courseId)
   }
 
   function updateSchedule(id: string, data: Partial<Schedule>) {
+    const old = schedules.value.find((s) => s.id === id)
     schedules.value = schedules.value.map((s) => (s.id === id ? { ...s, ...data } : s))
     saveToStorage('schedules', schedules.value)
+    if (old) recalculateProgress(old.courseId)
   }
 
   function deleteSchedule(id: string) {
+    const old = schedules.value.find((s) => s.id === id)
     schedules.value = schedules.value.filter((s) => s.id !== id)
     saveToStorage('schedules', schedules.value)
+    if (old) recalculateProgress(old.courseId)
   }
 
   function addEnrollment(enrollment: Enrollment) {
@@ -1019,16 +1024,22 @@ export const useAppStore = defineStore('app', () => {
     hasEvalReminders.value = hasUpcoming
   }
 
-  function recalculateProgress(courseId: string, studentId: string) {
-    const courseSchedules = schedules.value.filter((s) => s.courseId === courseId)
+  function recalculateProgress(courseId: string) {
+    const courseSchedules = schedules.value
+      .filter((s) => s.courseId === courseId)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     const now = new Date()
-    const pastSchedules = courseSchedules.filter((s) => new Date(s.startDate) < now).length
     const totalSchedules = courseSchedules.length
-    const timeElapsedRatio = totalSchedules > 0 ? Math.round((pastSchedules / totalSchedules) * 100) : 0
+    if (totalSchedules === 0) return
 
+    // 已开始的课程数（startDate < now）
+    const startedSchedules = courseSchedules.filter((s) => new Date(s.startDate) < now).length
+    // 进度 = 已上课数 / 总课数（百分比）
+    const newProgress = Math.round((startedSchedules / totalSchedules) * 100)
+
+    // 统一更新该课程所有学生的进度
     enrollments.value = enrollments.value.map((e) => {
-      if (e.courseId === courseId && e.studentId === studentId) {
-        const newProgress = Math.round((timeElapsedRatio + e.progress) / 2)
+      if (e.courseId === courseId) {
         return { ...e, progress: newProgress }
       }
       return e
@@ -1083,6 +1094,54 @@ export const useAppStore = defineStore('app', () => {
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     if (courseSchedules.length === 0) return false
     return new Date() >= new Date(courseSchedules[0].endDate)
+  }
+
+  /** 第二节课是否已经开始（AI 分层测试截止点） */
+  function isSecondClassStarted(courseId: string): boolean {
+    const courseSchedules = schedules.value
+      .filter((s) => s.courseId === courseId)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    // 有至少两节课才判定第二节课开始
+    if (courseSchedules.length < 2) return false
+    return new Date() >= new Date(courseSchedules[1].startDate)
+  }
+
+  /** 获取某学生所有未完成的 AI 分层测试（测试窗口已开但未超时） */
+  function getPendingAITierTests(studentId: string): { courseId: string; courseTitle: string; deadline: string }[] {
+    const result: { courseId: string; courseTitle: string; deadline: string }[] = []
+    const myEnrollments = enrollments.value.filter((e) => e.studentId === studentId)
+    for (const enr of myEnrollments) {
+      const course = courses.value.find((c) => c.id === enr.courseId)
+      if (!course || course.status !== 'active') continue
+      const tierKey = `${enr.courseId}||${studentId}`
+      if (studentTiers.value[tierKey]) continue // 已测试
+      if (!isFirstClassStarted(enr.courseId)) continue // 第一节课未结束
+      if (isSecondClassStarted(enr.courseId)) continue // 第二节课已开始（已超时）
+      // 计算截止日：第二节的 endDate
+      const courseSchedules = schedules.value
+        .filter((s) => s.courseId === enr.courseId)
+        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+      const deadline = courseSchedules.length >= 2 ? courseSchedules[1].startDate : ''
+      result.push({ courseId: enr.courseId, courseTitle: course.title, deadline })
+    }
+    return result
+  }
+
+  /** 逾期未测自动分配到基础层 */
+  function autoAssignOverdueBasicTier(courseId: string, studentId: string) {
+    const key = `${courseId}||${studentId}`
+    if (studentTiers.value[key]) return // 已有记录，跳过
+    if (!isFirstClassStarted(courseId)) return // 第一节课未结束
+    if (!isSecondClassStarted(courseId)) return // 第二节课还未开始，未逾期
+    const record: StudentTierRecord = {
+      courseId,
+      studentId,
+      tier: 'basic',
+      score: 0,
+      createdAt: new Date().toISOString().split('T')[0],
+    }
+    studentTiers.value = { ...studentTiers.value, [key]: record }
+    saveToStorage('studentTiers', studentTiers.value)
   }
 
   /** 标记某课程的某项配置已完成 */
@@ -1181,6 +1240,10 @@ export const useAppStore = defineStore('app', () => {
     return record
   }
 
+  // 初始化：根据排课自动重算所有课程的进度
+  const courseIds = [...new Set(schedules.value.map((s) => s.courseId))]
+  courseIds.forEach((cid) => recalculateProgress(cid))
+
   return {
     // state
     courses, categories, students, schedules, enrollments, teachers, grades,
@@ -1224,5 +1287,6 @@ export const useAppStore = defineStore('app', () => {
     calcTotalScore,
     getMentorCourseIds, getLeaderCourses, getLeaderStudents,
     getStudentTier, determineTier, submitAITierTest,
+    isSecondClassStarted, getPendingAITierTests, autoAssignOverdueBasicTier,
   }
 })
