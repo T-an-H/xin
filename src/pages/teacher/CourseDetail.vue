@@ -612,15 +612,88 @@
       </Teleport>
     </div>
 
-    <!-- Tab: 学生管理（统一视图 - 以组为单位） -->
+    <!-- Tab: 学生管理（班级 → 学生两级视图） -->
     <div v-if="activeTab === 'students'" class="space-y-6">
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <!-- 工具栏 -->
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <Users class="w-5 h-5 text-gray-400" />
-            <h2 class="font-semibold text-gray-900">学生管理</h2>
-            <span class="text-xs text-gray-400">{{ enrolledStudents.length }}名学生 · {{ store.studentGroups.filter(g => g.courseId === courseId).length }}个组</span>
+      <!-- ====== Level 1: 班级列表 ====== -->
+      <template v-if="!selectedGroupId">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">班级管理</h1>
+            <p class="text-gray-500 mt-1">{{ enrolledStudents.length }}名学生 · {{ store.studentGroups.filter(g => g.courseId === courseId).length }}个班级</p>
+          </div>
+          <div v-if="!isMentor" class="flex items-center gap-2">
+            <input ref="groupExcelInput" type="file" accept=".xlsx,.xls" class="hidden" @change="handleImportGroupsExcel" />
+            <button @click="groupExcelInput?.click()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+              <FileSpreadsheet class="w-3.5 h-3.5" />
+              导入班级
+            </button>
+            <button @click="openNewGroupModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+              <Plus class="w-3.5 h-3.5" />
+              新建班级
+            </button>
+          </div>
+          <span v-if="isMentor" class="text-xs text-gray-400 italic">导师仅可查看，如需操作请联系授课教师</span>
+        </div>
+
+        <!-- 班级卡片网格 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            v-for="group in courseGroups"
+            :key="group.id"
+            @click="selectedGroupId = group.id"
+            class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow cursor-pointer group"
+          >
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <Users class="w-5 h-5 text-indigo-600" />
+              </div>
+              <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button @click.stop="openEditGroupModal(group)" class="text-xs px-2 py-1 text-blue-500 hover:bg-blue-50 rounded transition-colors">编辑</button>
+                <button @click.stop="handleDeleteGroup(group.id)" class="text-xs px-2 py-1 text-red-400 hover:bg-red-50 rounded transition-colors">删除</button>
+              </div>
+            </div>
+            <h3 class="font-semibold text-gray-900">{{ group.name }}</h3>
+            <p class="text-xs text-gray-400 mt-1">{{ group.memberIds.length }} 名学生</p>
+          </div>
+
+          <!-- 未分组学生卡片 -->
+          <div
+            v-if="ungroupedStudents.length > 0"
+            @click="selectedGroupId = '__ungrouped__'"
+            class="bg-white rounded-xl border border-dashed border-gray-300 shadow-sm p-5 hover:shadow-md transition-shadow cursor-pointer"
+          >
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                <Users class="w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+            <h3 class="font-semibold text-gray-500">未分班学生</h3>
+            <p class="text-xs text-gray-400 mt-1">{{ ungroupedStudents.length }} 名学生</p>
+          </div>
+
+          <div v-if="courseGroups.length === 0 && ungroupedStudents.length === 0" class="col-span-full text-center py-16 text-gray-400">
+            <Users class="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p>暂无班级，请先新建班级并导入学生</p>
+          </div>
+        </div>
+      </template>
+
+      <!-- ====== Level 2: 班级学生详情 ====== -->
+      <template v-else>
+        <!-- 返回按钮 -->
+        <button @click="selectedGroupId = null; studentSearch = ''" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+          <ArrowLeft class="w-4 h-4" /> 返回班级列表
+        </button>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+              <Users class="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900">{{ selectedGroupName }}</h1>
+              <p class="text-gray-500 mt-1">{{ selectedGroupStudents.length }} 名学生</p>
+            </div>
           </div>
           <div v-if="!isMentor" class="flex items-center gap-2">
             <input ref="studentExcelInput" type="file" accept=".xlsx,.xls" class="hidden" @change="handleImportStudentsExcel" />
@@ -628,115 +701,89 @@
               <FileSpreadsheet class="w-3.5 h-3.5" />
               导入学生
             </button>
-            <input ref="groupExcelInput" type="file" accept=".xlsx,.xls" class="hidden" @change="handleImportGroupsExcel" />
-            <button @click="groupExcelInput?.click()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
-              <FileSpreadsheet class="w-3.5 h-3.5" />
-              导入分组
-            </button>
             <button @click="showAddStudentModal = true" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
               <Plus class="w-3.5 h-3.5" />
               添加学生
             </button>
-            <button @click="openNewGroupModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-              <Users class="w-3.5 h-3.5" />
-              新建分组
+            <button v-if="selectedGroupId !== '__ungrouped__'" @click="openEditGroupModal(store.studentGroups.find(g => g.id === selectedGroupId)!)" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+              <Edit3 class="w-3.5 h-3.5" />
+              编辑班级
+            </button>
+            <button v-if="selectedGroupId !== '__ungrouped__'" @click="handleDeleteGroup(selectedGroupId); selectedGroupId = null" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+              <Trash2 class="w-3.5 h-3.5" />
+              删除班级
             </button>
           </div>
           <span v-if="isMentor" class="text-xs text-gray-400 italic">导师仅可查看，如需操作请联系授课教师</span>
         </div>
 
         <!-- 搜索 -->
-        <div class="mb-3">
-          <div class="relative max-w-xs">
-            <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input v-model="studentSearch" type="text" placeholder="搜索学生姓名或学号..."
-              class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none" />
-          </div>
+        <div class="relative max-w-xs">
+          <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input v-model="studentSearch" type="text" placeholder="搜索学生姓名或学号..."
+            class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none" />
         </div>
 
-        <!-- 以组为单位的学生列表 -->
-        <div class="overflow-x-auto">
+        <!-- 学生表格 -->
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <table class="w-full text-sm">
             <thead>
-              <tr class="border-b border-gray-100">
+              <tr class="bg-gray-50 border-b border-gray-100">
                 <th class="text-left py-2.5 px-3 text-gray-500 font-medium">学生</th>
                 <th class="text-left py-2.5 px-3 text-gray-500 font-medium">学号</th>
                 <th class="text-center py-2.5 px-2 w-32 text-gray-500 font-medium">操作</th>
               </tr>
             </thead>
             <tbody>
-              <template v-for="(section, si) in studentSections" :key="si">
-                <!-- 组标题行 -->
-                <tr class="bg-gray-50 border-b border-gray-100">
-                  <td colspan="3" class="py-2 px-3">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-2">
-                        <Users class="w-4 h-4 text-gray-400" />
-                        <span class="text-sm font-semibold text-gray-700">{{ section.groupName }}</span>
-                        <span class="text-xs text-gray-400">{{ section.students.length }}人</span>
-                      </div>
-                      <div v-if="section.groupId" class="flex items-center gap-1">
-                        <button @click="openEditGroupModal(store.studentGroups.find(g => g.id === section.groupId)!)"
-                          class="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 px-2 py-1 rounded hover:bg-white/60 transition-colors">
-                          <Edit3 class="w-3.5 h-3.5" />
-                          编辑组
-                        </button>
-                        <button @click="handleDeleteGroup(section.groupId)"
-                          class="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-white/60 transition-colors">
-                          <Trash2 class="w-3.5 h-3.5" />
-                          删除组
-                        </button>
-                      </div>
+              <tr v-for="item in filteredSelectedGroupStudents" :key="item.student.id"
+                class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                <td class="py-2.5 px-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <span class="text-xs font-medium text-emerald-600">{{ item.student.name.charAt(0) }}</span>
                     </div>
-                  </td>
-                </tr>
-                <!-- 学生行 -->
-                <tr v-for="item in section.students" :key="item.student.id"
-                  class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td class="py-2.5 px-3">
-                    <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                        <span class="text-xs font-medium text-emerald-600">{{ item.student.name.charAt(0) }}</span>
-                      </div>
-                      <span class="font-medium text-gray-900 text-sm">{{ item.student.name }}</span>
-                    </div>
-                  </td>
-                  <td class="py-2.5 px-3">
-                    <span class="text-sm text-gray-500">{{ item.student.id }}</span>
-                  </td>
-                  <td class="py-2.5 px-3">
-                    <div class="flex items-center justify-center gap-1">
-                      <button @click="handleEditStudent(item.student)"
-                        class="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors">
-                        <Edit3 class="w-3.5 h-3.5" />
-                        编辑
-                      </button>
-                      <button v-if="section.groupId"
-                        @click="handleRemoveStudentFromGroup(item.student.id)"
-                        class="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-700 px-2 py-1 rounded hover:bg-orange-50 transition-colors">
-                        移出组
-                      </button>
-                      <button @click="handleRemoveStudent(item.student.id)"
-                        class="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                        <Trash2 class="w-3.5 h-3.5" />
-                        删除
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </template>
+                    <span class="font-medium text-gray-900 text-sm">{{ item.student.name }}</span>
+                  </div>
+                </td>
+                <td class="py-2.5 px-3">
+                  <span class="text-sm text-gray-500">{{ item.student.id }}</span>
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="flex items-center justify-center gap-1">
+                    <button @click="handleEditStudent(item.student)"
+                      class="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors">
+                      <Edit3 class="w-3.5 h-3.5" />
+                      编辑
+                    </button>
+                    <button v-if="selectedGroupId !== '__ungrouped__'"
+                      @click="handleRemoveStudentFromGroup(item.student.id)"
+                      class="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-700 px-2 py-1 rounded hover:bg-orange-50 transition-colors">
+                      移出班
+                    </button>
+                    <button @click="handleRemoveStudent(item.student.id)"
+                      class="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                      <Trash2 class="w-3.5 h-3.5" />
+                      删除
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="filteredSelectedGroupStudents.length === 0">
+                <td colspan="3" class="px-4 py-12 text-center text-gray-400">
+                  {{ studentSearch ? '未找到匹配的学生' : '该班级暂无学生，请导入或添加学生' }}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
-        <div v-if="studentSections.length === 0 || studentSections.every(s => s.students.length === 0)" class="text-center py-8 text-gray-400">暂无学生数据，请导入学生或添加学生</div>
-      </div>
+      </template>
 
       <!-- 添加学生弹窗 -->
       <Teleport to="body">
         <div v-if="showAddStudentModal" class="fixed inset-0 z-50 flex items-center justify-center">
           <div class="absolute inset-0 bg-black/50" @click="showAddStudentModal = false" />
           <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">添加学生到课程</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">添加学生到{{ selectedGroupId !== '__ungrouped__' ? '班级' : '课程' }}</h3>
             <div class="space-y-3">
               <div>
                 <label class="text-sm text-gray-600 block mb-1">学生姓名</label>
@@ -762,11 +809,11 @@
         <div v-if="showGroupModal" class="fixed inset-0 z-50 flex items-center justify-center">
           <div class="absolute inset-0 bg-black/50" @click="showGroupModal = false" />
           <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ editingGroup ? '编辑分组' : '新建分组' }}</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ editingGroup ? '编辑班级' : '新建班级' }}</h3>
             <div class="space-y-3">
               <div>
-                <label class="text-sm text-gray-600 block mb-1">组名</label>
-                <input v-model="groupFormName" type="text" placeholder="输入组名"
+                <label class="text-sm text-gray-600 block mb-1">班级名称</label>
+                <input v-model="groupFormName" type="text" placeholder="输入班级名称"
                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none" />
               </div>
               <div>
@@ -809,10 +856,10 @@
                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none" />
               </div>
               <div>
-                <label class="text-sm text-gray-600 block mb-1">归属分组</label>
+                <label class="text-sm text-gray-600 block mb-1">归属班级</label>
                 <select v-model="editStudentGroupId"
                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none">
-                  <option value="">-- 不分组 --</option>
+                  <option value="">-- 不分班 --</option>
                   <option v-for="g in store.studentGroups.filter(g => g.courseId === courseId)" :key="g.id" :value="g.id">
                     {{ g.name }}
                   </option>
@@ -952,6 +999,8 @@ const showAddStudentModal = ref(false)
 const newStudentName = ref('')
 const newStudentId = ref('')
 const studentExcelInput = ref<HTMLInputElement | null>(null)
+// 班级选择
+const selectedGroupId = ref<string | null>(null)
 // 分组管理
 const showGroupModal = ref(false)
 const editingGroup = ref<import('@/types').StudentGroup | null>(null)
@@ -1612,6 +1661,46 @@ const studentSections = computed(() => {
   return sections
 })
 
+/** 当前课程的班级列表 */
+const courseGroups = computed(() => {
+  if (!courseId.value) return []
+  return store.studentGroups.filter((g) => g.courseId === courseId.value)
+})
+
+/** 未分班的学生 */
+const ungroupedStudents = computed(() => {
+  const allGroupMemberIds = new Set<string>()
+  for (const g of courseGroups.value) {
+    for (const mid of g.memberIds) allGroupMemberIds.add(mid)
+  }
+  return enrolledStudents.value.filter(({ student }) => student && !allGroupMemberIds.has(student.id))
+})
+
+/** 选中的班级名称 */
+const selectedGroupName = computed(() => {
+  if (selectedGroupId.value === '__ungrouped__') return '未分班学生'
+  const group = store.studentGroups.find((g) => g.id === selectedGroupId.value)
+  return group?.name || ''
+})
+
+/** 选中班级的学生列表 */
+const selectedGroupStudents = computed(() => {
+  if (selectedGroupId.value === '__ungrouped__') return ungroupedStudents.value
+  const group = store.studentGroups.find((g) => g.id === selectedGroupId.value)
+  if (!group) return []
+  const memberSet = new Set(group.memberIds)
+  return enrolledStudents.value.filter(({ student }) => student && memberSet.has(student.id))
+})
+
+/** 搜索过滤后的选中班级学生 */
+const filteredSelectedGroupStudents = computed(() => {
+  const search = studentSearch.value.trim().toLowerCase()
+  if (!search) return selectedGroupStudents.value
+  return selectedGroupStudents.value.filter(({ student }) =>
+    student && (student.name.toLowerCase().includes(search) || student.id.toLowerCase().includes(search))
+  )
+})
+
 // ---- 评价数据 ----
 function getStudentEvals(studentId: string, sessionNumber?: number, type?: EvalType): Evaluation[] {
   return store.evaluations.filter((e) => {
@@ -2051,6 +2140,13 @@ function handleAddSingleStudent() {
     progress: 0,
     enrollDate: new Date().toISOString().split('T')[0],
   })
+  // 如果当前在某个班级中，自动将学生加入该班级
+  if (selectedGroupId.value && selectedGroupId.value !== '__ungrouped__') {
+    const group = store.studentGroups.find((g) => g.id === selectedGroupId.value)
+    if (group && !group.memberIds.includes(student!.id)) {
+      store.updateStudentGroup(group.id, { memberIds: [...group.memberIds, student!.id] })
+    }
+  }
   showAddStudentModal.value = false
   newStudentName.value = ''
   newStudentId.value = ''

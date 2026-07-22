@@ -1,48 +1,180 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">分类管理</h1>
-        <p class="text-gray-500 mt-1">管理课程分类信息</p>
+    <!-- ====== Level 1: Category Grid ====== -->
+    <template v-if="!selectedCategory">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">分类管理</h1>
+          <p class="text-gray-500 mt-1">管理课程分类信息，点击分类查看课程</p>
+        </div>
+        <button @click="openCategoryModal(null)" class="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
+          <Plus class="w-4 h-4" /> 新建分类
+        </button>
       </div>
-      <button @click="showModal = true; editingCat = null; form = { name: '', color: '#3b82f6' }" class="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
-        <Plus class="w-4 h-4" /> 新建分类
-      </button>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div v-for="cat in store.categories" :key="cat.id" class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
-        <div class="flex items-start justify-between mb-3">
-          <div :class="`w-10 h-10 rounded-lg flex items-center justify-center`" :style="{ backgroundColor: cat.color }">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          v-for="cat in store.categories"
+          :key="cat.id"
+          class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow cursor-pointer group"
+          @click="selectCategory(cat)"
+        >
+          <div class="flex items-start justify-between mb-3">
+            <div :class="'w-10 h-10 rounded-lg flex items-center justify-center'" :style="{ backgroundColor: cat.color }">
+              <BookOpen class="w-5 h-5 text-white" />
+            </div>
+            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button @click.stop="openCategoryModal(cat)" class="text-xs px-2 py-1 text-blue-500 hover:bg-blue-50 rounded transition-colors">编辑</button>
+              <button @click.stop="handleDeleteCategory(cat)" class="text-xs px-2 py-1 text-red-400 hover:bg-red-50 rounded transition-colors">删除</button>
+            </div>
+          </div>
+          <h3 class="font-semibold text-gray-900">{{ cat.name }}</h3>
+          <p class="text-xs text-gray-400 mt-1">{{ getCourseCount(cat.id) }} 门课程</p>
+        </div>
+        <div v-if="store.categories.length === 0" class="col-span-full text-center py-20 text-gray-400">
+          <BookOpen class="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>暂无分类，点击上方按钮新建</p>
+        </div>
+      </div>
+    </template>
+
+    <!-- ====== Level 2: Filtered Course List ====== -->
+    <template v-else>
+      <!-- Back + Title -->
+      <div class="flex items-center gap-3 mb-2">
+        <button @click="selectedCategory = null" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+          <ArrowLeft class="w-4 h-4" /> 返回分类列表
+        </button>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div :class="'w-10 h-10 rounded-lg flex items-center justify-center'" :style="{ backgroundColor: selectedCategory.color }">
             <BookOpen class="w-5 h-5 text-white" />
           </div>
-          <button @click="handleEdit(cat)" class="text-xs text-blue-500 hover:underline">编辑</button>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">{{ selectedCategory.name }}</h1>
+            <p class="text-gray-500 mt-1">{{ filteredCourses.length }} 门课程</p>
+          </div>
         </div>
-        <h3 class="font-semibold text-gray-900">{{ cat.name }}</h3>
-        <p class="text-xs text-gray-400 mt-1">{{ store.courses.filter(c => c.categoryId === cat.id).length }} 门课程</p>
+        <div class="flex items-center gap-2">
+          <button @click="openCategoryModal(selectedCategory)" class="flex items-center gap-1 px-3 py-2 text-sm text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+            <PenLine class="w-4 h-4" /> 编辑分类
+          </button>
+          <button @click="handleDeleteCategory(selectedCategory)" class="flex items-center gap-1 px-3 py-2 text-sm text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+            <Trash2 class="w-4 h-4" /> 删除分类
+          </button>
+          <button @click="openCourseModal(null)" class="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
+            <Plus class="w-4 h-4" /> 新建课程
+          </button>
+        </div>
       </div>
-    </div>
 
+      <!-- Search -->
+      <div class="relative">
+        <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input v-model="searchText" type="text" placeholder="搜索课程名称..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm" />
+      </div>
+
+      <!-- Course Table -->
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-100">
+              <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">课程名称</th>
+              <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">教师</th>
+              <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">状态</th>
+              <th class="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="course in filteredCourses" :key="course.id" class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <div :class="'w-8 h-8 rounded-lg flex items-center justify-center'" :style="{ backgroundColor: selectedCategory.color }">
+                    <BookOpen class="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ course.title }}</p>
+                    <p class="text-xs text-gray-400">{{ course.id }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-600">{{ course.teacher }}</td>
+              <td class="px-4 py-3">
+                <span :class="'text-xs px-2 py-1 rounded-full ' + (course.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500')">
+                  {{ course.status === 'active' ? '进行中' : '已结束' }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <button @click="openCourseModal(course)" class="text-xs text-blue-500 hover:underline mr-3">编辑</button>
+                <button @click="store.deleteCourse(course.id)" class="text-xs text-red-400 hover:underline">删除</button>
+              </td>
+            </tr>
+            <tr v-if="filteredCourses.length === 0">
+              <td colspan="4" class="px-4 py-12 text-center text-gray-400">暂无课程数据</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
+
+    <!-- ====== Category Create/Edit Modal ====== -->
     <Teleport to="body">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/50" @click="showModal = false" />
+      <div v-if="showCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showCategoryModal = false" />
         <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ editingCat ? '编辑分类' : '新建分类' }}</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ editingCategory ? '编辑分类' : '新建分类' }}</h3>
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">分类名称</label>
-              <input v-model="form.name" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm" />
+              <input v-model="categoryForm.name" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">颜色</label>
               <div class="flex gap-2">
-                <input v-model="form.color" type="color" class="w-10 h-10 rounded cursor-pointer" />
-                <span class="text-sm text-gray-500 self-center">{{ form.color }}</span>
+                <input v-model="categoryForm.color" type="color" class="w-10 h-10 rounded cursor-pointer" />
+                <span class="text-sm text-gray-500 self-center">{{ categoryForm.color }}</span>
               </div>
             </div>
             <div class="flex gap-3 pt-2">
-              <button @click="handleSave" class="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">保存</button>
-              <button @click="showModal = false" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-colors">取消</button>
+              <button @click="handleSaveCategory" class="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">保存</button>
+              <button @click="showCategoryModal = false" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-colors">取消</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- ====== Course Create/Edit Modal ====== -->
+    <Teleport to="body">
+      <div v-if="showCourseModal" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showCourseModal = false" />
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ editingCourse ? '编辑课程' : '新建课程' }}</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">课程名称</label>
+              <input v-model="courseForm.title" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">课程描述</label>
+              <textarea v-model="courseForm.description" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">分类</label>
+              <select v-model="courseForm.categoryId" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm">
+                <option v-for="cat in store.categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">教师</label>
+              <select v-model="courseForm.teacher" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm">
+                <option v-for="t in store.teachers" :key="t.id" :value="t.name">{{ t.name }}</option>
+              </select>
+            </div>
+            <div class="flex gap-3 pt-2">
+              <button @click="handleSaveCourse" class="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">保存</button>
+              <button @click="showCourseModal = false" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-colors">取消</button>
             </div>
           </div>
         </div>
@@ -50,28 +182,114 @@
     </Teleport>
   </div>
 </template>
+
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { Plus, BookOpen } from 'lucide-vue-next'
+import { Plus, Search, BookOpen, ArrowLeft, PenLine, Trash2 } from 'lucide-vue-next'
+import type { Category, Course } from '@/types'
 
 const store = useAppStore()
-const showModal = ref(false)
-const editingCat = ref<any>(null)
-const form = ref({ name: '', color: '#3b82f6' })
 
-const handleEdit = (cat: any) => {
-  editingCat.value = cat
-  form.value = { name: cat.name, color: cat.color }
-  showModal.value = true
+// ====== Level state ======
+const selectedCategory = ref<Category | null>(null)
+const searchText = ref('')
+
+// ====== Category modal state ======
+const showCategoryModal = ref(false)
+const editingCategory = ref<Category | null>(null)
+const categoryForm = ref({ name: '', color: '#3b82f6' })
+
+// ====== Course modal state ======
+const showCourseModal = ref(false)
+const editingCourse = ref<Course | null>(null)
+const courseForm = ref({ title: '', description: '', categoryId: '', teacher: '' })
+
+// ====== Computed ======
+const filteredCourses = computed(() => {
+  if (!selectedCategory.value) return []
+  return store.courses.filter((c) => {
+    if (c.categoryId !== selectedCategory.value!.id) return false
+    if (searchText.value && !c.title.includes(searchText.value)) return false
+    return true
+  })
+})
+
+const getCourseCount = (catId: string) => store.courses.filter((c) => c.categoryId === catId).length
+
+// ====== Category actions ======
+function selectCategory(cat: Category) {
+  selectedCategory.value = cat
+  searchText.value = ''
 }
 
-const handleSave = () => {
-  if (editingCat.value) {
-    store.updateCategory(editingCat.value.id, { name: form.value.name, color: form.value.color })
+function openCategoryModal(cat: Category | null) {
+  editingCategory.value = cat
+  if (cat) {
+    categoryForm.value = { name: cat.name, color: cat.color }
   } else {
-    store.addCategory({ id: Date.now().toString(), name: form.value.name, color: form.value.color, courseCount: 0 })
+    categoryForm.value = { name: '', color: '#3b82f6' }
   }
-  showModal.value = false
+  showCategoryModal.value = true
+}
+
+function handleSaveCategory() {
+  if (editingCategory.value) {
+    store.updateCategory(editingCategory.value.id, { name: categoryForm.value.name, color: categoryForm.value.color })
+    // If editing the currently selected category, update the reference
+    if (selectedCategory.value?.id === editingCategory.value.id) {
+      const updated = store.categories.find((c) => c.id === editingCategory.value!.id)
+      if (updated) selectedCategory.value = updated
+    }
+  } else {
+    store.addCategory({ id: Date.now().toString(), name: categoryForm.value.name, color: categoryForm.value.color, courseCount: 0 })
+  }
+  showCategoryModal.value = false
+}
+
+function handleDeleteCategory(cat: Category) {
+  if (!confirm(`确定要删除分类"${cat.name}"吗？该分类下的课程不会被删除。`)) return
+  store.deleteCategory(cat.id)
+  if (selectedCategory.value?.id === cat.id) {
+    selectedCategory.value = null
+  }
+}
+
+// ====== Course actions ======
+function openCourseModal(course: Course | null) {
+  editingCourse.value = course
+  if (course) {
+    courseForm.value = { title: course.title, description: course.description, categoryId: course.categoryId, teacher: course.teacher }
+  } else {
+    courseForm.value = { title: '', description: '', categoryId: selectedCategory.value?.id || '', teacher: '' }
+  }
+  showCourseModal.value = true
+}
+
+function handleSaveCourse() {
+  if (editingCourse.value) {
+    store.updateCourse(editingCourse.value.id, {
+      title: courseForm.value.title,
+      description: courseForm.value.description,
+      categoryId: courseForm.value.categoryId,
+      teacher: courseForm.value.teacher,
+    })
+  } else {
+    store.addCourse({
+      id: Date.now().toString(),
+      title: courseForm.value.title,
+      description: courseForm.value.description,
+      categoryId: courseForm.value.categoryId,
+      teacher: courseForm.value.teacher,
+      cover: '',
+      credits: 0,
+      duration: 0,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    })
+  }
+  showCourseModal.value = false
+  editingCourse.value = null
+  courseForm.value = { title: '', description: '', categoryId: selectedCategory.value?.id || '', teacher: '' }
 }
 </script>

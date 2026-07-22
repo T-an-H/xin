@@ -80,11 +80,8 @@ const route = useRoute()
 const router = useRouter()
 
 const adminNavItems = [
-  { to: '/admin/courses', icon: BookOpen, label: '课程管理' },
   { to: '/admin/categories', icon: BarChart3, label: '分类管理' },
-  { to: '/admin/schedule', icon: Calendar, label: '排课管理' },
   { to: '/admin/students', icon: Users, label: '学员管理' },
-  { to: '/admin/statistics', icon: BarChart3, label: '成绩管理' },
 ]
 
 const teacherNavItems = [
@@ -95,8 +92,8 @@ const teacherNavItems = [
 
 const studentNavItems = [
   { to: '/student/profile', icon: User, label: '个人画像' },
-  { to: '/student/courses', icon: BookOpen, label: '我的课程' },
   { to: '/student/schedule', icon: Calendar, label: '我的课表' },
+  { to: '/student/courses', icon: BookOpen, label: '我的课程' },
   { to: '/student/grades', icon: Award, label: '成绩管理' },
   { to: '/student/extra', icon: Lightbulb, label: '额外功能' },
 ]
