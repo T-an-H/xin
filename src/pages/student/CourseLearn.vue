@@ -516,7 +516,7 @@ const SVG_CY = 460
 const categoryRings = computed(() => {
   const rings: { rx: number; ry: number; color: string; label: string }[] = []
   const radii = [145, 240, 330, 415]
-  const ringColors = ['#778da9', '#778da9', '#778da9', '#778da9']
+  const ringColors = ['#64B5F6', '#64B5F6', '#64B5F6', '#64B5F6']
   const ringLabels = ['基础知识', '核心知识', '进阶能力', '综合能力']
   for (let i = 0; i < radii.length; i++) {
     rings.push({ rx: radii[i], ry: radii[i] * 0.78, color: ringColors[i], label: ringLabels[i] })
@@ -525,17 +525,17 @@ const categoryRings = computed(() => {
 })
 
 const relationLegend = [
-  { key: 'prerequisite', label: '前置依赖', color: '#415a77', dash: '' },
-  { key: 'related_to', label: '相关联', color: '#778da9', dash: '5,4' },
-  { key: 'extends', label: '拓展延伸', color: '#415a77', dash: '3,5' },
-  { key: 'part_of', label: '组成关系', color: '#415a77', dash: '7,4' },
+  { key: 'prerequisite', label: '前置依赖', color: '#1E88E5', dash: '' },
+  { key: 'related_to', label: '相关联', color: '#64B5F6', dash: '5,4' },
+  { key: 'extends', label: '拓展延伸', color: '#1E88E5', dash: '3,5' },
+  { key: 'part_of', label: '组成关系', color: '#1E88E5', dash: '7,4' },
 ]
 
 const categoryColors = [
-  { key: 'foundation', label: '基础知识', light: '#9bb2cc', mid: '#778da9', deep: '#415a77' },
-  { key: 'core', label: '核心知识', light: '#9bb2cc', mid: '#778da9', deep: '#415a77' },
-  { key: 'advanced', label: '进阶能力', light: '#9bb2cc', mid: '#778da9', deep: '#415a77' },
-  { key: 'comprehensive', label: '综合能力', light: '#9bb2cc', mid: '#778da9', deep: '#415a77' },
+  { key: 'foundation', label: '基础知识', light: '#aac4dd', mid: '#64B5F6', deep: '#1E88E5' },
+  { key: 'core', label: '核心知识', light: '#aac4dd', mid: '#64B5F6', deep: '#1E88E5' },
+  { key: 'advanced', label: '进阶能力', light: '#aac4dd', mid: '#64B5F6', deep: '#1E88E5' },
+  { key: 'comprehensive', label: '综合能力', light: '#aac4dd', mid: '#64B5F6', deep: '#1E88E5' },
 ]
 
 function categoryColorMap(cat: string): { light: string; mid: string; deep: string } {
@@ -659,10 +659,10 @@ const renderedEdges = computed<RenderedEdge[]>(() => {
   }
 
   const edgeStyles: Record<string, { color: string; dash: string; width: number }> = {
-    prerequisite: { color: '#415a77', dash: '', width: 2 },
-    related_to: { color: '#778da9', dash: '5,3', width: 1.5 },
-    extends: { color: '#415a77', dash: '3,4', width: 1.5 },
-    part_of: { color: '#415a77', dash: '7,3', width: 1.5 },
+    prerequisite: { color: '#1E88E5', dash: '', width: 2 },
+    related_to: { color: '#64B5F6', dash: '5,3', width: 1.5 },
+    extends: { color: '#1E88E5', dash: '3,4', width: 1.5 },
+    part_of: { color: '#1E88E5', dash: '7,3', width: 1.5 },
   }
 
   const result: RenderedEdge[] = []
@@ -890,7 +890,7 @@ function renderEvalOverviewContent(container: d3.Selection<any, any, any, any>) 
   }
   const barLabels = scoreCard.append('div').attr('class', 'flex justify-between text-xs text-brand-400 mt-1')
   barLabels.append('span').text('0')
-  barLabels.append('span').style('color', '#415a77').text(`平均${classAvgScore.value}`)
+  barLabels.append('span').style('color', '#1E88E5').text(`平均${classAvgScore.value}`)
   barLabels.append('span').text('100')
 
   // 评价维度细分
@@ -917,7 +917,7 @@ function renderEvalOverviewContent(container: d3.Selection<any, any, any, any>) 
       const barBg = progressRow.append('div').attr('class', 'flex-1 bg-brand-400/10 rounded-full h-2 overflow-hidden')
       barBg.append('div').attr('class', 'h-full rounded-full transition-all duration-500')
         .style('width', `${pct}%`)
-        .style('background', '#415a77')
+        .style('background', '#1E88E5')
       progressRow.append('span').attr('class', 'text-xs font-medium text-brand-600 w-12 text-right')
         .text(`${dim.score}/${dim.maxScore || 100}`)
     })
@@ -956,7 +956,7 @@ function renderSidebar(container: d3.Selection<any, any, any, any>) {
   completeLabel.append('span').attr('class', 'text-brand-400').text('预习完成度')
   completeLabel.append('span').attr('class', 'font-medium').text(`${pp.previewComplete}%`)
   completeRow.append('div').attr('class', 'h-2 bg-brand-400/10 rounded-full overflow-hidden')
-    .append('div').attr('class', 'h-full rounded-full').style('width', `${pp.previewComplete}%`).style('background', '#415a77')
+    .append('div').attr('class', 'h-full rounded-full').style('width', `${pp.previewComplete}%`).style('background', '#1E88E5')
 
   // 知识点掌握
   const masteryRow = profileContent.append('div')
@@ -964,7 +964,7 @@ function renderSidebar(container: d3.Selection<any, any, any, any>) {
   masteryLabel.append('span').attr('class', 'text-brand-400').text('知识点掌握')
   masteryLabel.append('span').attr('class', 'font-medium').text(`${pp.knowledgeMastery}%`)
   masteryRow.append('div').attr('class', 'h-2 bg-brand-400/10 rounded-full overflow-hidden')
-    .append('div').attr('class', 'h-full rounded-full').style('width', `${pp.knowledgeMastery}%`).style('background', '#415a77')
+    .append('div').attr('class', 'h-full rounded-full').style('width', `${pp.knowledgeMastery}%`).style('background', '#1E88E5')
 
   // 学习时长
   const hoursRow = profileContent.append('div')
@@ -1257,7 +1257,7 @@ function renderGraphSVG(container: d3.Selection<any, any, any, any>) {
     .attr('patternUnits', 'userSpaceOnUse')
     .append('path')
     .attr('d', 'M 40 0 L 0 0 0 40')
-    .attr('fill', 'none').attr('stroke', '#778da9').attr('stroke-width', 0.5).attr('stroke-opacity', 0.3)
+    .attr('fill', 'none').attr('stroke', '#64B5F6').attr('stroke-width', 0.5).attr('stroke-opacity', 0.3)
 
   defs.append('filter').attr('id', 'kg-glow')
     .append('feGaussianBlur').attr('stdDeviation', 3)
@@ -1355,7 +1355,7 @@ function renderGraphSVG(container: d3.Selection<any, any, any, any>) {
   if (positionedNodes.value.length === 0) {
     svg.append('text')
       .attr('x', '50%').attr('y', '50%')
-      .attr('font-size', 14).attr('fill', '#778da9')
+      .attr('font-size', 14).attr('fill', '#64B5F6')
       .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
       .text('暂无知识点数据')
   }

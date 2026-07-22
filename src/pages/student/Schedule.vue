@@ -82,14 +82,14 @@ interface CourseColor {
 }
 
 const PALETTE: CourseColor[] = [
-  { cellBg: '#e8edf3', cardBg: '#c8d2df', border: '#415a77', text: '#0d1b2a' },
-  { cellBg: '#dce5ef', cardBg: '#b3c2d6', border: '#415a77', text: '#0d1b2a' },
-  { cellBg: '#eef2f7', cardBg: '#c8d2df', border: '#415a77', text: '#1b263b' },
-  { cellBg: '#e8edf3', cardBg: '#b3c2d6', border: '#415a77', text: '#0d1b2a' },
-  { cellBg: '#dce5ef', cardBg: '#c8d2df', border: '#415a77', text: '#1b263b' },
-  { cellBg: '#eef2f7', cardBg: '#b3c2d6', border: '#415a77', text: '#0d1b2a' },
-  { cellBg: '#e8edf3', cardBg: '#c8d2df', border: '#415a77', text: '#1b263b' },
-  { cellBg: '#dce5ef', cardBg: '#b3c2d6', border: '#415a77', text: '#0d1b2a' },
+  { cellBg: '#e8edf3', cardBg: '#c8d2df', border: '#1E88E5', text: '#1b3255' },
+  { cellBg: '#dce5ef', cardBg: '#b3c2d6', border: '#1E88E5', text: '#1b3255' },
+  { cellBg: '#eef2f7', cardBg: '#c8d2df', border: '#1E88E5', text: '#2a4d7a' },
+  { cellBg: '#e8edf3', cardBg: '#b3c2d6', border: '#1E88E5', text: '#1b3255' },
+  { cellBg: '#dce5ef', cardBg: '#c8d2df', border: '#1E88E5', text: '#2a4d7a' },
+  { cellBg: '#eef2f7', cardBg: '#b3c2d6', border: '#1E88E5', text: '#1b3255' },
+  { cellBg: '#e8edf3', cardBg: '#c8d2df', border: '#1E88E5', text: '#2a4d7a' },
+  { cellBg: '#dce5ef', cardBg: '#b3c2d6', border: '#1E88E5', text: '#1b3255' },
 ]
 
 const courseColorMap = computed(() => {

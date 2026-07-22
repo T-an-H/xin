@@ -15,7 +15,7 @@ const getCourseAvg = (courseId: string) => {
 }
 
 const getChartColor = (courseId: string) => {
-  const colors = ['#415a77', '#415a77', '#415a77', '#ef4444', '#415a77', '#ec4899', '#415a77', '#84cc16']
+  const colors = ['#1E88E5', '#1E88E5', '#1E88E5', '#ef4444', '#1E88E5', '#ec4899', '#1E88E5', '#84cc16']
   const idx = store.courses.findIndex((c) => c.id === courseId)
   return colors[idx % colors.length]
 }
@@ -23,9 +23,9 @@ const getChartColor = (courseId: string) => {
 const gradeRanges = computed(() => {
   const all = store.grades.map((g) => g.totalScore)
   const ranges = [
-    { label: '90-100', color: '#415a77', count: 0, percent: 0 },
-    { label: '80-89', color: '#415a77', count: 0, percent: 0 },
-    { label: '70-79', color: '#415a77', count: 0, percent: 0 },
+    { label: '90-100', color: '#1E88E5', count: 0, percent: 0 },
+    { label: '80-89', color: '#1E88E5', count: 0, percent: 0 },
+    { label: '70-79', color: '#1E88E5', count: 0, percent: 0 },
     { label: '60-69', color: '#f97316', count: 0, percent: 0 },
     { label: '<60', color: '#ef4444', count: 0, percent: 0 },
   ]

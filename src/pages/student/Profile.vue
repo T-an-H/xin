@@ -318,7 +318,7 @@ function renderProfile(root: HTMLElement) {
       svg.append('polygon')
         .attr('points', gridPoints(level))
         .attr('fill', 'none')
-        .attr('stroke', '#778da9')
+        .attr('stroke', '#64B5F6')
         .attr('stroke-width', 1)
         .attr('stroke-opacity', 0.3)
     }
@@ -328,7 +328,7 @@ function renderProfile(root: HTMLElement) {
       svg.append('line')
         .attr('x1', 100).attr('y1', 100)
         .attr('x2', axisEndX(i)).attr('y2', axisEndY(i))
-        .attr('stroke', '#778da9')
+        .attr('stroke', '#64B5F6')
         .attr('stroke-width', 1)
         .attr('stroke-opacity', 0.3)
     })
@@ -337,25 +337,25 @@ function renderProfile(root: HTMLElement) {
     svg.append('polygon')
       .attr('points', dataPolygonPoints.value)
       .attr('fill', 'rgba(65, 90, 119, 0.2)')
-      .attr('stroke', '#415a77')
+      .attr('stroke', '#1E88E5')
       .attr('stroke-width', 2)
 
     // 数据点 + 标签
     rd.forEach((d, i) => {
       svg.append('circle')
         .attr('cx', dataPointX(i)).attr('cy', dataPointY(i))
-        .attr('r', 4).attr('fill', '#415a77')
+        .attr('r', 4).attr('fill', '#1E88E5')
 
       svg.append('text')
         .attr('x', dataLabelX(i)).attr('y', dataLabelY(i))
         .attr('text-anchor', dataLabelAnchor(i))
-        .attr('font-size', 9).attr('fill', '#778da9')
+        .attr('font-size', 9).attr('fill', '#64B5F6')
         .text(d.label)
 
       svg.append('text')
         .attr('x', dataLabelX(i)).attr('y', dataLabelY(i) + 12)
         .attr('text-anchor', dataLabelAnchor(i))
-        .attr('font-size', 9).attr('fill', '#415a77').attr('font-weight', 'bold')
+        .attr('font-size', 9).attr('fill', '#1E88E5').attr('font-weight', 'bold')
         .text(`${d.value}分`)
     })
 

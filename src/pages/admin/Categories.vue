@@ -35,7 +35,7 @@ import { renderIcon } from '@/utils/d3-renderer'
 const store = useAppStore()
 const showModal = ref(false)
 const editingCat = ref<any>(null)
-const form = ref({ name: '', color: '#415a77' })
+const form = ref({ name: '', color: '#1E88E5' })
 
 const handleEdit = (cat: any) => {
   editingCat.value = cat
@@ -67,7 +67,7 @@ function renderAdminCategories(root: HTMLElement) {
     .attr('class', 'flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-800 text-white rounded-lg transition-colors text-sm font-medium')
     .on('click', () => {
       editingCat.value = null
-      form.value = { name: '', color: '#415a77' }
+      form.value = { name: '', color: '#1E88E5' }
       showModal.value = true
     })
   renderIcon(newBtn, 'plus', 'w-4 h-4')

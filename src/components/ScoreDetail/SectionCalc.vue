@@ -9,7 +9,7 @@
       <div v-for="item in items" :key="item.label" class="flex items-center gap-2">
         <span class="text-xs text-brand-400 w-20 flex-shrink-0">{{ item.label }} ({{ item.weight }}%)</span>
         <div class="flex-1 h-2 bg-brand-400/10 rounded-full overflow-hidden">
-          <div class="h-full rounded-full transition-all duration-300" :style="{ width: `${item.score ?? 0}%`, backgroundColor: item.score != null ? '#415a77' : '#778da9' }" />
+          <div class="h-full rounded-full transition-all duration-300" :style="{ width: `${item.score ?? 0}%`, backgroundColor: item.score != null ? '#1E88E5' : '#64B5F6' }" />
         </div>
         <span class="text-xs font-medium text-brand-800 w-8 text-right">{{ item.score ?? '-' }}</span>
       </div>

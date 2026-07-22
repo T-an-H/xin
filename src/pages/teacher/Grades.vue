@@ -392,7 +392,7 @@ function handlePrintGrades() {
     <style>
       table { width: 100%; border-collapse: collapse; font-size: 14px; }
       th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #d1d9e6; }
-      th { background: #e8edf3; font-weight: 600; color: #415a77; }
+      th { background: #e8edf3; font-weight: 600; color: #1E88E5; }
     </style>
   `
   const win = window.open('', '_blank')

@@ -118,12 +118,12 @@ const myCourses = computed(() => {
 
 /** 根据课程 ID 分配不同的渐变配色 */
 const gradients = [
-  'linear-gradient(135deg, #4F46E5, #415a77)',
-  'linear-gradient(135deg, #415a77, #415a77)',
-  'linear-gradient(135deg, #415a77, #415a77)',
-  'linear-gradient(135deg, #DC2626, #415a77)',
-  'linear-gradient(135deg, #415a77, #415a77)',
-  'linear-gradient(135deg, #415a77, #415a77)',
+  'linear-gradient(135deg, #4F46E5, #1E88E5)',
+  'linear-gradient(135deg, #1E88E5, #1E88E5)',
+  'linear-gradient(135deg, #1E88E5, #1E88E5)',
+  'linear-gradient(135deg, #DC2626, #1E88E5)',
+  'linear-gradient(135deg, #1E88E5, #1E88E5)',
+  'linear-gradient(135deg, #1E88E5, #1E88E5)',
   'linear-gradient(135deg, #0891B2, #22D3EE)',
   'linear-gradient(135deg, #BE123C, #FB7185)',
 ]

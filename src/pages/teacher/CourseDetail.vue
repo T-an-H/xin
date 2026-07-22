@@ -730,9 +730,9 @@ function getStudentTotalAvg(studentId: string): string {
 function totalScoreColor(val: string | number): string {
   if (val === '-') return '#9ca3af'
   const n = parseInt(String(val))
-  if (n >= 85) return '#415a77'
-  if (n >= 60) return '#415a77'
-  return '#415a77'
+  if (n >= 85) return '#1E88E5'
+  if (n >= 60) return '#1E88E5'
+  return '#1E88E5'
 }
 
 function getEnrollStatus(studentId: string): { label: string; color: string; progress: number } {
