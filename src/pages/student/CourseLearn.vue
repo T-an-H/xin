@@ -40,16 +40,29 @@
               <p class="text-xs text-amber-400 mt-1">届时将根据第一节课内容生成 10 道测试题，依据得分判定学习层级</p>
             </div>
 
-            <!-- 条件已满足但未测试 -->
-            <div v-else-if="firstClassEnded && !tierFinalized" class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-8 text-center">
+            <!-- 测试窗口期（第一节课后～第二节课前） -->
+            <div v-else-if="firstClassEnded && !secondClassStarted && !tierFinalized" class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-8 text-center">
               <Sparkles class="w-12 h-12 mx-auto mb-3 text-blue-500" />
               <h3 class="text-lg font-semibold text-blue-800 mb-2">AI 分层测试已开放</h3>
-              <p class="text-sm text-blue-600 mb-6">完成 10 道测试题（单选+判断），系统将根据得分判定你的学习层级</p>
+              <p class="text-sm text-blue-600 mb-2">完成 10 道测试题（单选+判断），系统将根据得分判定你的学习层级</p>
+              <p class="text-xs text-amber-500 mb-6">⚠ 测试窗口：第一节课结束后 ~ 第二节课开始前，逾期将自动分配到基础层</p>
               <button @click="openAITest"
                 class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-500/25 inline-flex items-center gap-2">
                 <HelpCircle class="w-5 h-5" />
                 开始 AI 分层测试
               </button>
+            </div>
+
+            <!-- 逾期未测，自动分配基础层 -->
+            <div v-else-if="secondClassStarted && !tierFinalized" class="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+              <XCircle class="w-12 h-12 mx-auto mb-3 text-red-400" />
+              <h3 class="text-lg font-semibold text-red-700 mb-2">测试窗口已关闭</h3>
+              <p class="text-sm text-red-600 mb-4">第二节课已开始，AI 分层测试逾期未完成，已自动分配到基础层</p>
+              <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+                <Layers class="w-4 h-4 text-amber-500" />
+                <span class="text-sm font-bold text-gray-700">基础层</span>
+              </div>
+              <p class="text-xs text-gray-400 mt-4">本学期不可修改，后续任务、资源、作业将根据基础层进行适配</p>
             </div>
 
             <!-- 已分层 → 永久锁定展示 -->
@@ -65,6 +78,7 @@
                         :class="tierBadgeClass">
                         <Layers class="w-4 h-4" />
                         {{ tierLabel }}
+                        <span v-if="isAutoAssigned" class="text-[10px] opacity-75">(自动分配)</span>
                       </span>
                       <span class="ml-2 text-[10px] text-gray-400">已锁定 · 该学期不可修改</span>
                     </div>
@@ -503,7 +517,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import {
   ArrowLeft, BookOpen, FileText, ClipboardCheck, Edit3,
-  CheckCircle, Circle, Layers, GitBranch, Award, Sparkles, UserCheck, Users, MessageSquare, ArrowRight, Eye, HelpCircle, Lock
+  CheckCircle, Circle, Layers, GitBranch, Award, Sparkles, UserCheck, Users, MessageSquare, ArrowRight, Eye, HelpCircle, Lock, XCircle
 } from 'lucide-vue-next'
 import StudentEvaluation from '@/components/StudentEvaluation.vue'
 import type { Evaluation, AITierQuestion, LearningTier } from '@/types'
@@ -518,6 +532,10 @@ const activeTab = ref('knowledge_graph')
 
 onMounted(() => {
   store.pushNearDeadlineEvalReminders()
+  // 逾期自动分配基础层
+  if (myStudent.value) {
+    store.autoAssignOverdueBasicTier(courseId, myStudent.value.id)
+  }
 })
 
 const tabs = [
@@ -628,6 +646,11 @@ const myTier = computed<LearningTier>(() => tierRecord.value?.tier ?? 'basic')
 const myTierScore = computed(() => tierRecord.value?.score ?? 0)
 const tierFinalized = computed(() => tierRecord.value !== null)
 const firstClassEnded = computed(() => store.isFirstClassStarted(courseId))
+const secondClassStarted = computed(() => store.isSecondClassStarted(courseId))
+// 是否逾期自动分配（score=0 且第二节课已开始）
+const isAutoAssigned = computed(() =>
+  tierFinalized.value && secondClassStarted.value && myTierScore.value === 0
+)
 
 const tierLabel = computed(() => {
   const map = { basic: '基础层', advanced: '进阶层', excellent: '卓越层' }
