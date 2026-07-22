@@ -196,16 +196,13 @@
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="text-base font-semibold text-gray-800">知识点掌握图谱</h3>
-                <p class="text-xs text-gray-400">基于学习进度与评价数据自动生成 · 泡泡越大、颜色越深表示掌握度越高</p>
+                <p class="text-xs text-gray-400">基于学习进度与评价数据自动生成 · 泡泡越大表示知识越重要 · 颜色越深表示掌握度越高</p>
               </div>
-              <button @click="toggleGraphView" class="text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                {{ graphViewMode === 'bubble' ? '查看 JSON' : '泡泡视图' }}
-              </button>
+              <span class="text-xs text-gray-400">点击泡泡查看详情</span>
             </div>
 
             <!-- 泡泡视图 -->
-            <template v-if="graphViewMode === 'bubble'">
-              <!-- 分类图例 + 关联图例 -->
+            <!-- 分类图例 + 关联图例 -->
               <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-500 items-center">
                 <span v-for="cat in categoryColors" :key="cat.key" class="flex items-center gap-1.5">
                   <span class="w-3 h-3 rounded-full" :style="{ background: cat.mid }" />
@@ -220,7 +217,7 @@
 
               <!-- SVG 知识图谱 -->
               <div class="relative bg-white rounded-xl border border-gray-100 overflow-hidden">
-                <svg :viewBox="`0 0 ${SVG_W} ${SVG_H}`" class="w-full" style="min-height: 480px">
+                <svg :viewBox="`0 0 ${SVG_W} ${SVG_H}`" class="w-full" style="min-height: 780px">
                   <!-- 背景网格 -->
                   <defs>
                     <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -263,6 +260,8 @@
                     @click="selectedBubble = selectedBubble === pn.node.id ? null : pn.node.id"
                     class="cursor-pointer"
                     :class="{ 'selected-node': selectedBubble === pn.node.id }">
+                    <!-- hover 提示 -->
+                    <title>{{ pn.node.label }} - {{ pn.node.mastery }}% ({{ pn.node.chapter }})</title>
                     <!-- 阴影光晕（选中/大掌握度） -->
                     <circle v-if="pn.node.mastery >= 75" :cx="pn.x" :cy="pn.y" :r="pn.r + 6"
                       :fill="pn.fill" opacity="0.15" filter="url(#glow)" />
@@ -276,17 +275,11 @@
                       :fill="pn.fill" stroke="white" stroke-width="2"
                       class="transition-all duration-200 hover:brightness-110"
                       :style="{ filter: pn.node.mastery >= 80 ? 'drop-shadow(0 2px 6px ' + pn.fill + '66)' : 'none' }" />
-                    <!-- 文字 - 标签 -->
-                    <text :x="pn.x" :y="pn.y - (pn.r > 30 ? 0 : 0)" font-size="11" font-weight="700"
+                    <!-- 文字 - 知识点名称（圆内居中，根据泡泡大小自适应字号） -->
+                    <text :x="pn.x" :y="pn.y + 1" :font-size="bubbleFontSize(pn.r)" font-weight="700"
                       fill="white" text-anchor="middle" dominant-baseline="central"
                       class="pointer-events-none select-none">
-                      {{ pn.node.label.length > (pn.r > 30 ? 5 : 3) ? pn.node.label.slice(0, pn.r > 30 ? 4 : 2) : pn.node.label }}
-                    </text>
-                    <!-- 文字 - 掌握度 -->
-                    <text :x="pn.x" :y="pn.y + (pn.r > 25 ? 11 : 0)" font-size="9"
-                      fill="white" fill-opacity="0.9" text-anchor="middle" dominant-baseline="central"
-                      class="pointer-events-none select-none">
-                      {{ pn.node.mastery }}%
+                      {{ pn.node.label }}
                     </text>
                   </g>
 
@@ -325,11 +318,6 @@
               </div>
 
 
-            </template>
-
-            <!-- JSON 视图 -->
-            <pre v-if="graphViewMode === 'json'"
-              class="bg-gray-900 text-gray-100 rounded-xl p-4 text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap font-mono">{{ knowledgeGraphJson }}</pre>
           </div>
 
           <!-- ===== 任务 ===== -->
@@ -515,7 +503,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import {
   ArrowLeft, BookOpen, FileText, ClipboardCheck, Edit3,
-  CheckCircle, Circle, Layers, GitBranch, BarChart3, Award, Sparkles, UserCheck, Users, MessageSquare, ArrowRight, Eye, HelpCircle, X, Lock
+  CheckCircle, Circle, Layers, GitBranch, Award, Sparkles, UserCheck, Users, MessageSquare, ArrowRight, Eye, HelpCircle, Lock
 } from 'lucide-vue-next'
 import StudentEvaluation from '@/components/StudentEvaluation.vue'
 import type { Evaluation, AITierQuestion, LearningTier } from '@/types'
@@ -526,7 +514,7 @@ const router = useRouter()
 const store = useAppStore()
 const courseId = route.params.id as string
 const myStudent = computed(() => store.students.find((s) => s.name === store.currentUser))
-const activeTab = ref('tasks')
+const activeTab = ref('knowledge_graph')
 
 onMounted(() => {
   store.pushNearDeadlineEvalReminders()
@@ -764,6 +752,7 @@ interface KnowledgeNode {
   id: string
   label: string
   mastery: number
+  importance: number // 1=普通 2=重要 3=核心
   category: 'foundation' | 'core' | 'advanced' | 'comprehensive'
   chapter: string
   description: string
@@ -897,15 +886,35 @@ function generateKnowledgeGraph(courseId: string, studentId: string): KnowledgeG
   const defaultGraph = graphs['course-1']
   const courseGraph = graphs[courseId] || defaultGraph
 
-  const nodes: KnowledgeNode[] = courseGraph.nodes.map((n) => ({
-    ...n,
-    mastery: masteryFor(
-      n.category === 'foundation' ? 70 + Math.floor(Math.random() * 20) :
-      n.category === 'core' ? 50 + Math.floor(Math.random() * 30) :
-      n.category === 'advanced' ? 30 + Math.floor(Math.random() * 35) :
-      20 + Math.floor(Math.random() * 50)
-    ),
-  }))
+  // 按分类分组，用于分配重要度
+  const catGroups: Record<string, typeof courseGraph.nodes> = {}
+  for (const n of courseGraph.nodes) {
+    if (!catGroups[n.category]) catGroups[n.category] = []
+    catGroups[n.category].push(n)
+  }
+  const catIdx: Record<string, number> = {}
+
+  const nodes: KnowledgeNode[] = courseGraph.nodes.map((n) => {
+    const ci = catIdx[n.category] ?? 0
+    catIdx[n.category] = ci + 1
+
+    // 重要度：基础知识/综合能力=3, 核心知识前2个=3其余=2, 进阶能力第1个=2其余=1
+    let importance = 2
+    if (n.category === 'foundation' || n.category === 'comprehensive') importance = 3
+    else if (n.category === 'core') importance = ci < 2 ? 3 : 2
+    else if (n.category === 'advanced') importance = ci < 1 ? 2 : 1
+
+    return {
+      ...n,
+      mastery: masteryFor(
+        n.category === 'foundation' ? 70 + Math.floor(Math.random() * 20) :
+        n.category === 'core' ? 50 + Math.floor(Math.random() * 30) :
+        n.category === 'advanced' ? 30 + Math.floor(Math.random() * 35) :
+        20 + Math.floor(Math.random() * 50)
+      ),
+      importance,
+    }
+  })
 
   return { nodes, edges: courseGraph.edges }
 }
@@ -916,32 +925,27 @@ const knowledgeGraphData = computed<KnowledgeGraph>(() =>
 )
 
 // ===== 知识图谱 SVG 可视化 =====
-const graphViewMode = ref<'bubble' | 'json'>('bubble')
-
-function toggleGraphView() {
-  graphViewMode.value = graphViewMode.value === 'bubble' ? 'json' : 'bubble'
-}
 
 function nodeLabel(id: string): string {
   const n = knowledgeGraphData.value.nodes.find((n) => n.id === id)
   return n ? n.label : id
 }
 
-// SVG 画布尺寸（增大画布避免拥挤）
-const SVG_W = 800
-const SVG_H = 540
+// SVG 画布尺寸（放大画布并下移内容，容纳更大的泡泡）
+const SVG_W = 900
+const SVG_H = 800
 const SVG_CX = SVG_W / 2
-const SVG_CY = SVG_H / 2
+const SVG_CY = 460 // 下移，让顶部和底部都有留白
 
-// 分类环带配置（增大环间距，防止不同层节点重叠）
+// 分类环带配置（增大环间距，为更大的泡泡留足空间）
 const categoryRings = computed(() => {
   const rings: { rx: number; ry: number; color: string; label: string }[] = []
-  const radii = [100, 160, 220, 280]
+  const radii = [145, 240, 330, 415]
   // 与分类颜色统一，半透明描边
   const ringColors = ['#93c5fd', '#67e8f9', '#a5b4fc', '#c4b5fd']
   const ringLabels = ['基础知识', '核心知识', '进阶能力', '综合能力']
   for (let i = 0; i < radii.length; i++) {
-    rings.push({ rx: radii[i], ry: radii[i] * 0.82, color: ringColors[i], label: ringLabels[i] })
+    rings.push({ rx: radii[i], ry: radii[i] * 0.78, color: ringColors[i], label: ringLabels[i] })
   }
   return rings
 })
@@ -974,9 +978,14 @@ function bubbleColor(mastery: number, category: string): string {
   return cc.light
 }
 
-// 泡泡尺寸：直径 30px ~ 70px（基于掌握度）
-function bubbleSize(mastery: number): number {
-  return 30 + (mastery / 100) * 40
+// 泡泡尺寸：基于重要度（核心→55px, 重要→42px, 普通→30px）
+function bubbleSize(importance: number): number {
+  return importance === 3 ? 55 : importance === 2 ? 42 : 30
+}
+
+// 泡泡内的文字大小：根据泡泡半径自适应
+function bubbleFontSize(r: number): number {
+  return r >= 50 ? 14 : r >= 38 ? 12 : 10
 }
 
 interface PositionedNode {
@@ -992,17 +1001,17 @@ interface PositionedNode {
 const positionedNodes = computed<PositionedNode[]>(() => {
   const nodes = knowledgeGraphData.value.nodes
   const categoryRadius: Record<string, number> = {
-    foundation: 100,
-    core: 160,
-    advanced: 220,
-    comprehensive: 280,
+    foundation: 145,
+    core: 240,
+    advanced: 330,
+    comprehensive: 415,
   }
   // 每层偏移角度（度），让各层节点交错分布，防止重叠
   const ringAngleOffsets: Record<string, number> = {
     foundation: 0,
-    core: 20,
-    advanced: -15,
-    comprehensive: 10,
+    core: 30,
+    advanced: -25,
+    comprehensive: 20,
   }
 
   // 按类别分组
@@ -1025,7 +1034,7 @@ const positionedNodes = computed<PositionedNode[]>(() => {
 
     catNodes.forEach((node, i) => {
       const angle = startAngle + step * i
-      const radius = bubbleSize(node.mastery) / 2
+      const radius = bubbleSize(node.importance)
       const fill = bubbleColor(node.mastery, cat)
       result.push({
         x: SVG_CX + r * Math.cos(angle),
@@ -1038,7 +1047,7 @@ const positionedNodes = computed<PositionedNode[]>(() => {
   }
 
   // 二次碰撞检测：如果同层或跨层节点距离太近，轻微推开
-  const MIN_GAP = 4 // 节点间最小间距
+  const MIN_GAP = 14 // 节点间最小间距（为标签留空间）
   for (let iter = 0; iter < 3; iter++) {
     let moved = false
     for (let i = 0; i < result.length; i++) {
@@ -1167,37 +1176,6 @@ function relationChipClass(relation: string): string {
     part_of: 'bg-amber-50 text-amber-600',
   }
   return map[relation] || 'bg-gray-50 text-gray-500'
-}
-
-const copied = ref(false)
-
-const knowledgeGraphJson = computed(() => {
-  const course = store.courses.find((c) => c.id === courseId)
-  const data = {
-    course: { id: courseId, title: course?.title || '未知课程' },
-    student: { id: myStudent.value?.id || '', name: myStudent.value?.name || store.currentUser },
-    generatedAt: new Date().toISOString().split('T')[0],
-    graph: knowledgeGraphData.value,
-  }
-  return JSON.stringify(data, null, 2)
-})
-
-async function copyKnowledgeGraphJson() {
-  try {
-    await navigator.clipboard.writeText(knowledgeGraphJson.value)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
-  } catch {
-    // fallback
-    const ta = document.createElement('textarea')
-    ta.value = knowledgeGraphJson.value
-    document.body.appendChild(ta)
-    ta.select()
-    document.execCommand('copy')
-    document.body.removeChild(ta)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
-  }
 }
 // ===== 综合评价 =====
 const totalScore = computed(() => myGrade.value?.score ?? null)
