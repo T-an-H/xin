@@ -33,21 +33,21 @@
     <div v-if="activeTab === 'comments'" class="space-y-6">
       <!-- 评价方案配置 -->
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <button @click="evalConfigLocked ? null : (showSettings = !showSettings)" class="w-full flex items-center justify-between">
+        <button @click="(isReadOnly || evalConfigLocked || isMentor) ? null : (showSettings = !showSettings)" class="w-full flex items-center justify-between">
           <div class="flex items-center gap-2">
             <Settings class="w-5 h-5 text-gray-400" />
             <h2 class="font-semibold text-gray-900">评价方案配置</h2>
           </div>
           <div class="flex items-center gap-3">
-            <span v-if="evalConfigLocked" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 border border-gray-200">
-              <Lock class="w-3 h-3 inline mr-0.5" />已锁定
+            <span v-if="evalConfigLocked || isMentor" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 border border-gray-200">
+              <Lock class="w-3 h-3 inline mr-0.5" />仅查看
             </span>
             <span class="text-xs text-gray-400">
               {{ selectedConfig ? EvalTemplateLabels[selectedConfig.template] : '默认方案' }} ·
               {{ selectedConfig ? EvalFrequencyLabels[selectedConfig.frequency] : '默认频率' }}
             </span>
-            <span v-if="!isReadOnly && !evalConfigLocked" class="text-xs text-gray-400 hover:text-gray-600">{{ showSettings ? '收起 ▲' : '展开 ▼' }}</span>
-            <span v-if="isReadOnly || evalConfigLocked" class="text-xs text-gray-300">仅查看</span>
+            <span v-if="!isReadOnly && !evalConfigLocked && !isMentor" class="text-xs text-gray-400 hover:text-gray-600">{{ showSettings ? '收起 ▲' : '展开 ▼' }}</span>
+            <span v-if="isReadOnly || evalConfigLocked || isMentor" class="text-xs text-gray-300">仅查看</span>
           </div>
         </button>
 
@@ -76,7 +76,7 @@
           </template>
         </div>
 
-        <template v-if="showSettings && !isReadOnly && !evalConfigLocked">
+        <template v-if="showSettings && !isReadOnly && !evalConfigLocked && !isMentor">
           <div class="border-t border-gray-100 mt-3 pt-4 space-y-4">
             <div>
               <p class="text-sm font-medium text-gray-700 mb-2">评价模板</p>
@@ -151,7 +151,7 @@
             <h2 class="font-semibold text-gray-900">评价管理</h2>
             <span class="text-xs text-gray-400">{{ enrolledStudents.length }}名学生</span>
           </div>
-          <button @click="handleProcessOverdue" class="text-xs flex items-center gap-1 px-3 py-1.5 bg-purple-50 text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-100">
+          <button v-if="!isMentor" @click="handleProcessOverdue" class="text-xs flex items-center gap-1 px-3 py-1.5 bg-purple-50 text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-100">
             <RefreshCw class="w-3 h-3" />
             处理逾期自评
           </button>
@@ -330,7 +330,7 @@
             <h2 class="font-semibold text-gray-900">考试/项目成绩管理</h2>
             <span class="text-xs text-gray-400">{{ enrolledStudents.length }}名学生</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div v-if="!isMentor" class="flex items-center gap-2">
             <!-- 权重配置 -->
             <button @click="showGradeConfig = true" :disabled="isReadOnly || isWeightLocked"
               :class="`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${isWeightLocked ? 'bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100'}`"
@@ -357,6 +357,7 @@
               下载模板
             </button>
           </div>
+          <span v-if="isMentor" class="text-xs text-gray-400 italic">导师仅可查看，如需操作请联系授课教师</span>
         </div>
 
         <!-- 权重锁定提示 -->
@@ -403,7 +404,7 @@
                       :value="getExamWeightFromConfig(name)"
                       @change="(e) => handleWeightChange(name, parseInt((e.target as HTMLInputElement).value) || 0)"
                       class="w-12 px-1 py-0.5 border border-gray-200 rounded text-xs text-center focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
-                      :disabled="isReadOnly || isWeightLocked" />
+                      :disabled="isReadOnly || isWeightLocked || isMentor" />
                     <span class="text-xs text-gray-400">%</span>
                   </div>
                 </div>
@@ -487,7 +488,7 @@
         </div>
 
         <!-- 底部操作（保存/提交） -->
-        <div v-if="selectedExam && !isReadOnly" class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+        <div v-if="selectedExam && !isReadOnly && !isMentor" class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="text-xs text-gray-500">共 {{ enrolledStudents.length }} 名学生，已提交 {{ submittedExamCount }} 人</span>
           </div>
@@ -621,7 +622,7 @@
             <h2 class="font-semibold text-gray-900">学生管理</h2>
             <span class="text-xs text-gray-400">{{ enrolledStudents.length }}名学生 · {{ store.studentGroups.filter(g => g.courseId === courseId).length }}个组</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div v-if="!isMentor" class="flex items-center gap-2">
             <input ref="studentExcelInput" type="file" accept=".xlsx,.xls" class="hidden" @change="handleImportStudentsExcel" />
             <button @click="studentExcelInput?.click()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
               <FileSpreadsheet class="w-3.5 h-3.5" />
@@ -641,6 +642,7 @@
               新建分组
             </button>
           </div>
+          <span v-if="isMentor" class="text-xs text-gray-400 italic">导师仅可查看，如需操作请联系授课教师</span>
         </div>
 
         <!-- 搜索 -->
@@ -898,6 +900,7 @@ const store = useAppStore()
 const courseId = computed(() => route.params.id as string)
 const course = computed(() => store.courses.find((c) => c.id === courseId.value))
 const isReadOnly = computed(() => course.value?.status !== 'active')
+const isMentor = computed(() => store.currentRole === 'mentor')
 
 // ---- Tab 配置 ----
 const tabList = [
@@ -1079,9 +1082,10 @@ const evalTableSections = computed(() => {
       if (found.length === 0) return null
       return Math.round(found.reduce((a, e) => a + e.score, 0) / found.length)
     }
+    const evalTypeForMentor: EvalType = 'mentor'
     const submitted = store.isSessionLocked(courseId.value || '', session) ||
-      store.isTeacherEvalSubmitted(courseId.value || '', student.id, session, 'teacher')
-    const draftEvals = evals.filter((e) => e.type === 'teacher')
+      store.isTeacherEvalSubmitted(courseId.value || '', student.id, session, isMentor.value ? evalTypeForMentor : 'teacher')
+    const draftEvals = evals.filter((e) => e.type === (isMentor.value ? evalTypeForMentor : 'teacher'))
     return {
       student,
       selfScore: getScore('self'),
@@ -1091,7 +1095,7 @@ const evalTableSections = computed(() => {
       mentorScore: getScore('mentor'),
       submitted,
       hasDraft: !submitted && draftEvals.length > 0,
-      finalScore: store.getSubmittedTeacherScore(courseId.value || '', student.id, session, 'teacher') ?? '-',
+      finalScore: store.getSubmittedTeacherScore(courseId.value || '', student.id, session, isMentor.value ? evalTypeForMentor : 'teacher') ?? '-',
     }
   }
 
@@ -1696,7 +1700,7 @@ const handleBatchEval = (level: string) => {
   if (!range) return
   const score = Math.round((range[0] + range[1]) / 2)
   const session = selectedBatchSession.value
-  const type: EvalType = 'teacher'
+  const type: EvalType = isMentor.value ? 'mentor' : 'teacher'
 
   // 只给选中的学生批量打分（跳过已提交的）
   selectedStudentIds.value.forEach((studentId) => {
@@ -1712,8 +1716,8 @@ const handleBatchEval = (level: string) => {
       sessionNumber: session,
       type,
       score,
-      evaluatorId: store.currentUser || 'teacher',
-      evaluatorName: store.currentUser || '教师',
+      evaluatorId: store.currentUser || '',
+      evaluatorName: store.currentUser || (isMentor.value ? '企业导师' : '教师'),
       comment: level,
       createdAt: new Date().toISOString().split('T')[0],
     }
@@ -1729,11 +1733,11 @@ const handleBatchEval = (level: string) => {
   store.markSessionEvalRemindersCompleted(courseId.value, session)
 }
 
-/** 保存教师评价评分（单条输入） */
+/** 保存教师/导师评价评分（单条输入） */
 function handleSaveEvalScores() {
   if (!courseId.value) return
   const session = selectedBatchSession.value
-  const type: EvalType = 'teacher'
+  const type: EvalType = isMentor.value ? 'mentor' : 'teacher'
   Object.entries(evalScoreInputs.value).forEach(([studentId, score]) => {
     if (store.isSessionLocked(courseId.value || '', session) ||
         store.isTeacherEvalSubmitted(courseId.value || '', studentId, session, type)) return
@@ -1747,8 +1751,8 @@ function handleSaveEvalScores() {
       sessionNumber: session,
       type,
       score,
-      evaluatorId: store.currentUser || 'teacher',
-      evaluatorName: store.currentUser || '教师',
+      evaluatorId: store.currentUser || '',
+      evaluatorName: store.currentUser || (isMentor.value ? '企业导师' : '教师'),
       createdAt: new Date().toISOString().split('T')[0],
     }
     if (existing) {
@@ -1764,7 +1768,7 @@ function handleSaveEvalScores() {
 function handleSubmitAll() {
   if (!courseId.value) return
   const session = selectedBatchSession.value
-  const type: EvalType = 'teacher'
+  const type: EvalType = isMentor.value ? 'mentor' : 'teacher'
 
   // 先保存所有输入的评分
   handleSaveEvalScores()
