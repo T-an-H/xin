@@ -157,6 +157,11 @@ const showExtraBadge = (item: { to: string; label: string }) => {
   if (hasPendingEvalTodos.value) return true
   // 配置提醒红点（教师端）
   if (store.currentRole === 'teacher' && store.getPendingConfigCourses().length > 0) return true
+  // AI 分层测试待办红点（学生端）
+  if (store.currentRole === 'student') {
+    const student = store.students.find((s) => s.name === store.currentUser)
+    if (student && store.getPendingAITierTests(student.id).length > 0) return true
+  }
   return false
 }
 
