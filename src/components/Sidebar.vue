@@ -1,79 +1,12 @@
 <template>
-  <aside class="w-64 bg-[#0f172a] text-white flex flex-col h-screen sticky top-0">
-    <div class="p-6 border-b border-white/10">
-      <div class="flex items-center gap-3">
-        <div :class="`w-10 h-10 rounded-lg ${config.color} flex items-center justify-center`">
-          <GraduationCap class="w-6 h-6 text-[#0f172a]" />
-        </div>
-        <div>
-          <h1 class="font-bold text-lg">课程管理</h1>
-          <p class="text-xs text-white/50">{{ config.label }}</p>
-        </div>
-      </div>
-    </div>
-
-    <nav class="flex-1 p-4 space-y-1">
-      <!-- 主角色菜单项 -->
-      <router-link
-        v-for="item in config.items"
-        :key="item.to"
-        :to="item.to"
-        class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200"
-        :class="$route.path.startsWith(item.to) ? 'bg-white/15 text-white font-medium' : 'text-white/60 hover:text-white hover:bg-white/5'"
-      >
-        <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
-        <span class="relative">
-          {{ item.label }}
-          <span v-if="showExtraBadge(item)" class="absolute -top-2 -right-3 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-[#0f172a]" />
-        </span>
-      </router-link>
-
-      <!-- 双重身份：leader 领导的附加菜单项 -->
-      <template v-if="hasLeaderAccess">
-        <div class="pt-3 pb-1 border-t border-white/5 mt-3">
-          <p class="px-4 text-[10px] text-white/30 uppercase tracking-wider">学院管理</p>
-        </div>
-        <router-link
-          v-for="item in leaderExtraItems"
-          :key="item.to"
-          :to="item.to"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200"
-          :class="$route.path.startsWith(item.to) ? 'bg-white/15 text-white font-medium' : 'text-white/60 hover:text-white hover:bg-white/5'"
-        >
-          <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
-          <span>{{ item.label }}</span>
-        </router-link>
-      </template>
-    </nav>
-
-    <div class="p-4 border-t border-white/10">
-      <button
-        @click="handleLogout"
-        class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200 w-full"
-      >
-        <LogOut class="w-5 h-5 flex-shrink-0" />
-        <span>退出登录</span>
-      </button>
-    </div>
-  </aside>
+  <div id="d3-sidebar-root" class="flex-shrink-0"></div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import {
-  BookOpen,
-  BarChart3,
-  LogOut,
-  GraduationCap,
-  ClipboardCheck,
-  Award,
-  User,
-  Lightbulb,
-  Users,
-  Calendar,
-  Eye,
-} from 'lucide-vue-next'
+import * as d3 from 'd3'
+import { renderIcon } from '@/utils/d3-renderer'
 
 const store = useAppStore()
 const route = useRoute()
@@ -85,9 +18,9 @@ const adminNavItems = [
 ]
 
 const teacherNavItems = [
-  { to: '/teacher/courses', icon: BookOpen, label: '我的课程' },
-  { to: '/teacher/grades', icon: Award, label: '成绩管理' },
-  { to: '/teacher/extra', icon: Lightbulb, label: '额外功能' },
+  { to: '/teacher/courses', icon: 'bookOpen' as const, label: '我的课程' },
+  { to: '/teacher/grades', icon: 'award' as const, label: '成绩管理' },
+  { to: '/teacher/extra', icon: 'lightbulb' as const, label: '额外功能' },
 ]
 
 const studentNavItems = [
@@ -99,60 +32,50 @@ const studentNavItems = [
 ]
 
 const mentorNavItems = [
-  { to: '/mentor/courses', icon: BookOpen, label: '我的课程' },
-  { to: '/mentor/grades', icon: Award, label: '成绩管理' },
-  { to: '/mentor/extra', icon: Lightbulb, label: '额外功能' },
+  { to: '/mentor/courses', icon: 'bookOpen' as const, label: '我的课程' },
+  { to: '/mentor/grades', icon: 'award' as const, label: '成绩管理' },
+  { to: '/mentor/extra', icon: 'lightbulb' as const, label: '额外功能' },
 ]
 
 const leaderNavItems = [
-  { to: '/leader/courses', icon: Eye, label: '课程总览' },
-  { to: '/leader/students', icon: Users, label: '学员总览' },
+  { to: '/leader/courses', icon: 'eye' as const, label: '课程总览' },
+  { to: '/leader/students', icon: 'users' as const, label: '学员总览' },
 ]
 
-const roleConfig: Record<string, { items: typeof adminNavItems; color: string; label: string }> = {
-  admin: { items: adminNavItems, color: 'bg-amber-500', label: '管理员端' },
-  teacher: { items: teacherNavItems, color: 'bg-emerald-500', label: '教师端' },
-  student: { items: studentNavItems, color: 'bg-blue-500', label: '学生端' },
-  mentor: { items: mentorNavItems, color: 'bg-violet-500', label: '企业导师端' },
-  leader: { items: leaderNavItems, color: 'bg-rose-500', label: '学院领导端' },
+const roleConfig: Record<string, { items: { to: string; icon: string; label: string }[]; color: string; label: string }> = {
+  admin: { items: adminNavItems, color: 'bg-brand-600', label: '管理员端' },
+  teacher: { items: teacherNavItems, color: 'bg-brand-600', label: '教师端' },
+  student: { items: studentNavItems, color: 'bg-brand-600', label: '学生端' },
+  mentor: { items: mentorNavItems, color: 'bg-brand-600', label: '企业导师端' },
+  leader: { items: leaderNavItems, color: 'bg-brand-600', label: '学院领导端' },
 }
 
 const config = computed(() => roleConfig[store.currentRole || 'admin'])
 
-/** 当前用户是否同时拥有 leader 权限 */
 const hasLeaderAccess = computed(() => {
   return store.currentRole === 'leader' || store.secondaryRoles.includes('leader')
 })
 
-/** leader 附加菜单项（用于 leader+teacher/mentor 双重身份） */
 const leaderExtraItems = [
-  { to: '/leader/courses', icon: Eye, label: '学院课程' },
-  { to: '/leader/students', icon: Users, label: '学院学员' },
+  { to: '/leader/courses', icon: 'eye' as const, label: '学院课程' },
+  { to: '/leader/students', icon: 'users' as const, label: '学院学员' },
 ]
 
-/** 当前用户是否有未完成的评价待办任务 */
 const hasPendingEvalTodos = computed(() => {
   if (store.currentRole === 'student') {
     const student = store.students.find((s) => s.name === store.currentUser)
     if (!student) return false
-    return store.evalReminders.some(
-      (r) => r.studentId === student.id && r.status !== 'completed'
-    )
+    return store.evalReminders.some((r) => r.studentId === student.id && r.status !== 'completed')
   }
   if (store.currentRole === 'teacher' || store.currentRole === 'mentor') {
-    return store.evalReminders.some(
-      (r) => r.studentId === store.currentUser && r.status !== 'completed'
-    )
+    return store.evalReminders.some((r) => r.studentId === store.currentUser && r.status !== 'completed')
   }
   return false
 })
 
-/** 判断是否为额外功能菜单项且需要显示红点 */
 const showExtraBadge = (item: { to: string; label: string }) => {
   if (item.label !== '额外功能') return false
-  // 评价代办红点
   if (hasPendingEvalTodos.value) return true
-  // 配置提醒红点（教师端）
   if (store.currentRole === 'teacher' && store.getPendingConfigCourses().length > 0) return true
   // AI 分层测试待办红点（学生端）
   if (store.currentRole === 'student') {
@@ -162,8 +85,113 @@ const showExtraBadge = (item: { to: string; label: string }) => {
   return false
 }
 
-const handleLogout = () => {
-  store.logout()
-  router.replace('/login')
+// ===== D3 渲染 =====
+
+let rootEl: HTMLElement | null = null
+
+/** 判断 item 是否 active */
+function isActive(item: { to: string }) {
+  // 对于 /mentor/courses 与 /teacher/courses 等，检查 startsWith
+  const path = route.path
+  return path.startsWith(item.to)
 }
+
+/** 判断是否是 nav items 数组中的任一 items 的活跃路径 */
+function renderNavLink(
+  container: d3.Selection<any, any, any, any>,
+  item: { to: string; icon: string; label: string },
+) {
+  const active = isActive(item)
+  const link = container.append('a')
+    .attr('href', 'javascript:void(0)')
+    .attr('class', `flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${active ? 'bg-brand-600/50 text-white font-medium' : 'text-brand-400 hover:text-white hover:bg-brand-900'}`)
+    .on('click', () => router.push(item.to))
+
+  renderIcon(link, item.icon as any, 'w-5 h-5 flex-shrink-0')
+
+  const span = link.append('span').attr('class', 'relative')
+    .text(item.label)
+
+  if (showExtraBadge(item)) {
+    span.append('span')
+      .attr('class', 'absolute -top-2 -right-3 w-2.5 h-2.5 bg-brand-600 rounded-full ring-2 ring-brand-700')
+  }
+}
+
+function renderSidebar() {
+  if (!rootEl) return
+  rootEl.innerHTML = ''
+  const root = d3.select(rootEl)
+  const cfg = config.value
+
+  // ---- aside ----
+  const aside = root.append('aside')
+    .attr('class', 'w-64 bg-brand-700 text-white flex flex-col h-screen sticky top-0')
+
+  // ---- header ----
+  const header = aside.append('div')
+    .attr('class', 'p-6 border-b border-white/10')
+
+  const headerFlex = header.append('div')
+    .attr('class', 'flex items-center gap-3')
+
+  const logoBox = headerFlex.append('div')
+    .attr('class', `w-10 h-10 rounded-lg ${cfg.color} flex items-center justify-center`)
+  renderIcon(logoBox, 'graduationCap', 'w-6 h-6 text-white')
+
+  const headerText = headerFlex.append('div')
+  headerText.append('h1').attr('class', 'font-bold text-lg').text('课程管理')
+  headerText.append('p').attr('class', 'text-xs text-white/50').text(cfg.label)
+
+  // ---- nav ----
+  const nav = aside.append('nav')
+    .attr('class', 'flex-1 p-4 space-y-1')
+
+  // 主菜单项
+  cfg.items.forEach((item) => {
+    renderNavLink(nav, item as any)
+  })
+
+  // leader 附加菜单项
+  if (hasLeaderAccess.value) {
+    nav.append('div')
+      .attr('class', 'pt-3 pb-1 border-t border-white/5 mt-3')
+    nav.append('p')
+      .attr('class', 'px-4 text-[10px] text-brand-400 uppercase tracking-wider')
+      .text('学院管理')
+
+    leaderExtraItems.forEach((item) => {
+      renderNavLink(nav, item as any)
+    })
+  }
+
+  // ---- footer ----
+  const footer = aside.append('div')
+    .attr('class', 'p-4 border-t border-white/10')
+
+  footer.append('button')
+    .attr('class', 'flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-brand-400 hover:text-white hover:bg-brand-900 transition-all duration-200 w-full')
+    .on('click', () => {
+      store.logout()
+      router.replace('/login')
+    })
+    .call((sel) => {
+      renderIcon(sel, 'logOut', 'w-5 h-5 flex-shrink-0')
+      sel.append('span').text('退出登录')
+    })
+}
+
+onMounted(() => {
+  rootEl = document.getElementById('d3-sidebar-root')
+  if (rootEl) {
+    renderSidebar()
+  }
+})
+
+// 路由变化或状态变化时重新渲染
+watch(
+  () => [route.path, store.currentRole, store.secondaryRoles, store.evalReminders.length],
+  () => { renderSidebar() },
+  { flush: 'post' },
+)
 </script>

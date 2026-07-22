@@ -1,13 +1,13 @@
 <template>
   <div v-if="open" class="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" @click="onClose">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto" @click.stop>
-      <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-100">
+      <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-brand-400/20">
         <div class="flex items-center gap-3">
-          <Settings class="w-5 h-5 text-gray-700" />
-          <h2 class="text-lg font-bold text-gray-900">成绩权重配置</h2>
+          <Settings class="w-5 h-5 text-brand-800" />
+          <h2 class="text-lg font-bold text-brand-900">成绩权重配置</h2>
         </div>
-        <button @click="onClose" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <X class="w-5 h-5 text-gray-400" />
+        <button @click="onClose" class="p-2 rounded-lg hover:bg-brand-400/10 transition-colors">
+          <X class="w-5 h-5 text-brand-400" />
         </button>
       </div>
 
@@ -37,10 +37,10 @@
         </Section>
       </div>
 
-      <div class="sticky bottom-0 bg-white border-t border-gray-100 p-4 flex justify-end gap-3">
-        <button @click="onClose" class="px-5 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 transition-colors text-sm font-medium">取消</button>
+      <div class="sticky bottom-0 bg-white border-t border-brand-400/20 p-4 flex justify-end gap-3">
+        <button @click="onClose" class="px-5 py-2.5 rounded-lg border border-brand-400/30 hover:bg-brand-400/10 text-brand-800 transition-colors text-sm font-medium">取消</button>
         <button @click="handleSave" :disabled="mainTotal !== 100 || regularTotal !== 100 || midtermSubTotal !== 100 || finalSubTotal !== 100"
-          class="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-white rounded-lg transition-colors text-sm font-medium">
+          class="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-brand-400 text-white rounded-lg transition-colors text-sm font-medium">
           <Save class="w-4 h-4" /> 保存配置
         </button>
       </div>

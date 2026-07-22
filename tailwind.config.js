@@ -8,6 +8,15 @@ export default {
       fontFamily: {
         sans: ['"Noto Sans SC"', 'sans-serif'],
       },
+      colors: {
+        brand: {
+          900: '#1b3255',
+          800: '#2a4d7a',
+          700: '#1565C0',
+          600: '#1E88E5',
+          400: '#64B5F6',
+        },
+      },
     },
   },
   plugins: [],

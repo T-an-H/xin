@@ -1,62 +1,11 @@
 <template>
-  <div class="space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">学习进度</h1>
-      <p class="text-gray-500 mt-1">查看各课程学习进度和成绩</p>
-    </div>
-
-    <div class="space-y-4">
-      <div v-for="enroll in myEnrollments" :key="enroll.courseId" class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-3">
-            <BookOpen class="w-5 h-5 text-blue-500" />
-            <div>
-              <h3 class="font-semibold text-gray-900">{{ getCourseName(enroll.courseId) }}</h3>
-              <p class="text-xs text-gray-400">{{ getCourseCode(enroll.courseId) }}</p>
-            </div>
-          </div>
-          <span class="text-lg font-bold" :class="getGradeColor(getGrade(enroll.courseId))">{{ getGrade(enroll.courseId) ?? '-' }}</span>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 w-16">学习进度</span>
-            <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full rounded-full bg-blue-500" :style="{ width: `${getProgress(enroll.courseId)}%` }" />
-            </div>
-            <span class="text-xs text-gray-500 w-8">{{ getProgress(enroll.courseId) }}%</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 w-16">平时成绩</span>
-            <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full rounded-full bg-emerald-500" :style="{ width: `${getRegularScore(enroll.courseId)}%` }" />
-            </div>
-            <span class="text-xs text-gray-500 w-8">{{ getRegularScore(enroll.courseId) }}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 w-16">期中成绩</span>
-            <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full rounded-full bg-amber-500" :style="{ width: `${getMidtermScore(enroll.courseId)}%` }" />
-            </div>
-            <span class="text-xs text-gray-500 w-8">{{ getMidtermScore(enroll.courseId) }}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 w-16">期末成绩</span>
-            <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full rounded-full bg-purple-500" :style="{ width: `${getFinalScore(enroll.courseId)}%` }" />
-            </div>
-            <span class="text-xs text-gray-500 w-8">{{ getFinalScore(enroll.courseId) }}</span>
-          </div>
-        </div>
-      </div>
-      <div v-if="myEnrollments.length === 0" class="text-center py-12 text-gray-400">暂无课程数据</div>
-    </div>
-  </div>
+  <div id="student-progress-root"></div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { BookOpen } from 'lucide-vue-next'
+import * as d3 from 'd3'
+import { renderIcon } from '@/utils/d3-renderer'
 
 const store = useAppStore()
 const student = computed(() => store.students.find((s) => s.name === store.currentUser))
@@ -71,7 +20,7 @@ const getGrade = (courseId: string) => {
 }
 
 const getGradeColor = (score: number | null) => {
-  if (score === null || score === undefined) return 'text-gray-400'
+  if (score === null || score === undefined) return 'text-brand-400'
   if (score >= 90) return 'text-emerald-600'
   if (score >= 80) return 'text-blue-600'
   if (score >= 70) return 'text-amber-600'
@@ -112,4 +61,71 @@ const getFinalScore = (courseId: string) => {
   const total = (cfg.finalExamWeight || 0) + (cfg.finalProjectWeight || 0) || 1
   return Math.round(((detail.finalExamScore || 0) * (cfg.finalExamWeight || 0) + (detail.finalProjectScore || 0) * (cfg.finalProjectWeight || 0)) / total)
 }
+
+function renderProgress(root: HTMLElement) {
+  const container = d3.select(root)
+  container.html('')
+
+  // Header
+  const header = container.append('div')
+  header.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text('学习进度')
+  header.append('p').attr('class', 'text-brand-400 mt-1').text('查看各课程学习进度和成绩')
+
+  // Enrollments list
+  const listDiv = container.append('div').attr('class', 'space-y-4')
+
+  const enrollments = myEnrollments.value
+  if (enrollments.length === 0) {
+    listDiv.append('div').attr('class', 'text-center py-12 text-brand-400').text('暂无课程数据')
+    return
+  }
+
+  enrollments.forEach((enroll) => {
+    const courseId = enroll.courseId
+    const gradeVal = getGrade(courseId)
+
+    const card = listDiv.append('div').attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-5')
+
+    // Header row with course name and grade
+    const headerRow = card.append('div').attr('class', 'flex items-center justify-between mb-3')
+    const leftSide = headerRow.append('div').attr('class', 'flex items-center gap-3')
+    renderIcon(leftSide, 'bookOpen', 'w-5 h-5 text-brand-600')
+    const nameDiv = leftSide.append('div')
+    nameDiv.append('h3').attr('class', 'font-semibold text-brand-900').text(getCourseName(courseId))
+    nameDiv.append('p').attr('class', 'text-xs text-brand-400').text(getCourseCode(courseId))
+
+    headerRow.append('span')
+      .attr('class', `text-lg font-bold ${getGradeColor(gradeVal)}`)
+      .text(gradeVal ?? '-')
+
+    // Progress bars
+    const barsContainer = card.append('div').attr('class', 'space-y-2')
+
+    // Progress bar helper
+    function addBar(label: string, value: number, barColor: string) {
+      const row = barsContainer.append('div').attr('class', 'flex items-center gap-2')
+      row.append('span').attr('class', 'text-xs text-brand-400 w-16').text(label)
+      const barTrack = row.append('div').attr('class', 'flex-1 h-2 bg-brand-400/10 rounded-full overflow-hidden')
+      barTrack.append('div')
+        .attr('class', `h-full rounded-full ${barColor}`)
+        .style('width', `${value}%`)
+      row.append('span').attr('class', 'text-xs text-brand-400 w-8').text(`${value}`)
+    }
+
+    addBar('学习进度', getProgress(courseId), 'bg-brand-600')
+    addBar('平时成绩', getRegularScore(courseId), 'bg-emerald-500')
+    addBar('期中成绩', getMidtermScore(courseId), 'bg-amber-500')
+    addBar('期末成绩', getFinalScore(courseId), 'bg-purple-500')
+  })
+}
+
+onMounted(() => {
+  const root = document.getElementById('student-progress-root')
+  if (root) renderProgress(root)
+})
+
+watch([myEnrollments], () => {
+  const root = document.getElementById('student-progress-root')
+  if (root) renderProgress(root)
+}, { deep: true })
 </script>

@@ -1,61 +1,15 @@
 <template>
-  <div v-if="!student" class="text-center py-12 text-gray-400">学生不存在</div>
-  <div v-else class="space-y-6">
-    <div class="flex items-center gap-4">
-      <router-link to="/admin/students" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-        <ArrowLeft class="w-5 h-5 text-gray-500" />
-      </router-link>
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">{{ student.name }}</h1>
-        <p class="text-gray-500 mt-1">{{ student.studentId }} · {{ student.className }}</p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2 space-y-4">
-        <h3 class="text-sm font-semibold text-gray-800">已选课程</h3>
-        <div v-for="enroll in enrolledCourses" :key="enroll.courseId" class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-3">
-              <BookOpen class="w-5 h-5 text-blue-500" />
-              <span class="font-medium text-gray-900">{{ getCourseName(enroll.courseId) }}</span>
-            </div>
-            <span class="text-xs text-gray-400">{{ getCourseProgress(enroll.courseId) }}%</span>
-          </div>
-          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div class="h-full rounded-full bg-blue-500 transition-all" :style="{ width: `${getCourseProgress(enroll.courseId)}%` }" />
-          </div>
-        </div>
-        <div v-if="enrolledCourses.length === 0" class="text-center py-8 text-gray-400">该学生尚未选课</div>
-      </div>
-
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-fit">
-        <h3 class="text-sm font-semibold text-gray-800 mb-3">学习统计</h3>
-        <div class="space-y-3">
-          <div class="flex justify-between text-sm">
-            <span class="text-gray-600">已选课程</span>
-            <span class="font-medium">{{ enrolledCourses.length }}</span>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-gray-600">平均进度</span>
-            <span class="font-medium">{{ avgProgress }}%</span>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-gray-600">平均成绩</span>
-            <span class="font-medium">{{ avgScore }}分</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div id="admin-student-detail-root"></div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { ArrowLeft, BookOpen } from 'lucide-vue-next'
+import * as d3 from 'd3'
+import { renderIcon } from '@/utils/d3-renderer'
 
 const route = useRoute()
+const router = useRouter()
 const store = useAppStore()
 
 const student = computed(() => store.students.find((s) => s.id === route.params.id))
@@ -77,5 +31,91 @@ const avgScore = computed(() => {
   const grades = store.grades.filter((g) => g.studentId === student.value?.id)
   if (grades.length === 0) return 0
   return Math.round(grades.reduce((s, g) => s + g.totalScore, 0) / grades.length)
+})
+
+function renderStudentDetail(root: HTMLElement) {
+  root.innerHTML = ''
+  const container = d3.select(root)
+
+  const s = student.value
+  if (!s) {
+    container.append('div').attr('class', 'text-center py-12 text-brand-400').text('学生不存在')
+    return
+  }
+
+  const wrapper = container.append('div').attr('class', 'space-y-6')
+
+  // ---- 头部 ----
+  const headerRow = wrapper.append('div').attr('class', 'flex items-center gap-4')
+
+  const backBtn = headerRow.append('div')
+    .attr('class', 'p-2 rounded-lg hover:bg-brand-400/10 transition-colors cursor-pointer')
+    .on('click', () => router.push('/admin/students'))
+  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-brand-400')
+
+  const titleArea = headerRow.append('div')
+  titleArea.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text(s.name)
+  titleArea.append('p').attr('class', 'text-brand-400 mt-1').text(`${s.studentId} · ${s.className}`)
+
+  // ---- 主体 ----
+  const grid = wrapper.append('div').attr('class', 'grid grid-cols-1 lg:grid-cols-3 gap-6')
+
+  // ---- 左侧: 已选课程 ----
+  const leftCol = grid.append('div').attr('class', 'lg:col-span-2 space-y-4')
+  leftCol.append('h3').attr('class', 'text-sm font-semibold text-brand-800').text('已选课程')
+
+  const enrollments = enrolledCourses.value
+
+  if (enrollments.length === 0) {
+    leftCol.append('div').attr('class', 'text-center py-8 text-brand-400').text('该学生尚未选课')
+  }
+
+  enrollments.forEach((enroll) => {
+    const card = leftCol.append('div')
+      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-4')
+
+    const topRow = card.append('div').attr('class', 'flex items-center justify-between mb-2')
+
+    const leftFlex = topRow.append('div').attr('class', 'flex items-center gap-3')
+    renderIcon(leftFlex, 'bookOpen', 'w-5 h-5 text-brand-600')
+    leftFlex.append('span').attr('class', 'font-medium text-brand-900').text(getCourseName(enroll.courseId))
+
+    const progress = getCourseProgress(enroll.courseId)
+    topRow.append('span').attr('class', 'text-xs text-brand-400').text(`${progress}%`)
+
+    const barBg = card.append('div').attr('class', 'h-2 bg-brand-400/10 rounded-full overflow-hidden')
+    barBg.append('div')
+      .attr('class', 'h-full rounded-full bg-brand-600 transition-all')
+      .style('width', `${progress}%`)
+  })
+
+  // ---- 右侧: 学习统计 ----
+  const rightCol = grid.append('div')
+    .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-4 h-fit')
+  rightCol.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('学习统计')
+
+  const statsArea = rightCol.append('div').attr('class', 'space-y-3')
+
+  const statItems = [
+    { label: '已选课程', value: `${enrolledCourses.value.length}` },
+    { label: '平均进度', value: `${avgProgress.value}%` },
+    { label: '平均成绩', value: `${avgScore.value}分` },
+  ]
+
+  statItems.forEach((item) => {
+    const row = statsArea.append('div').attr('class', 'flex justify-between text-sm')
+    row.append('span').attr('class', 'text-brand-600').text(item.label)
+    row.append('span').attr('class', 'font-medium').text(item.value)
+  })
+}
+
+onMounted(() => {
+  const root = document.getElementById('admin-student-detail-root')
+  if (root) renderStudentDetail(root)
+})
+
+watch([() => route.params.id, () => store.students.length, () => store.enrollments.length, () => store.grades.length], () => {
+  const root = document.getElementById('admin-student-detail-root')
+  if (root) renderStudentDetail(root)
 })
 </script>

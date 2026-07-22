@@ -882,58 +882,15 @@
     :open="showGradeConfig"
     :on-close="() => { showGradeConfig = false; if (pendingFinalExamSelect) { selectedExam = pendingFinalExamSelect; pendingFinalExamSelect = ''; } }"
   />
-
-  <!-- 期末成绩权重提醒弹窗 -->
-  <Teleport to="body">
-    <div v-if="showWeightReminderModal" class="fixed inset-0 z-50 flex items-center justify-center">
-      <div class="absolute inset-0 bg-black/50" @click="showWeightReminderModal = false" />
-      <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900">权重配置提醒</h3>
-            <p class="text-xs text-gray-500">请在录入期末考试/项目成绩前完成权重配置</p>
-          </div>
-        </div>
-        <p class="text-sm text-gray-600 mb-4">
-          当前尚未完成成绩权重配置，期末考试/项目成绩录入后权重将<strong class="text-red-500">无法修改</strong>。
-          建议先完成权重配置，再录入成绩。
-        </p>
-        <div class="flex justify-end gap-2">
-          <button @click="showWeightReminderModal = false; selectedExam = pendingFinalExamSelect"
-            class="px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-            忽略，直接录入
-          </button>
-          <button @click="handleOpenGradeConfigFromReminder"
-            class="flex items-center gap-1.5 px-4 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
-            <Settings class="w-4 h-4" />
-            去配置权重
-          </button>
-        </div>
-      </div>
-    </div>
-  </Teleport>
-
-  <!-- 已结束课程只读提示（评价管理区域） -->
-  <div v-if="isReadOnly" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center text-sm text-gray-400">
-    <EyeOff class="w-8 h-8 mx-auto mb-2 text-gray-300" />
-    <p>该课程已结束，评价管理功能已关闭</p>
-  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import GradeConfig from '@/components/GradeConfig.vue'
-import {
-  ArrowLeft, Users, ClipboardCheck, Search, Settings,
-  TrendingUp, RefreshCw,
-  Eye, EyeOff, Save, CheckCircle, FileSpreadsheet,
-  Plus, Trash2, Edit3, Lock
-} from 'lucide-vue-next'
+import * as d3 from 'd3'
+import { renderIcon } from '@/utils/d3-renderer'
 import {
   EvalTemplateLabels, EvalTemplateDescs, TEMPLATE_EVAL_TYPES,
   EvalTypeLabels, EvalTypeColors, EvalFrequencyLabels,
@@ -942,6 +899,7 @@ import {
 import type { EvalTemplate, EvalType, Evaluation, EvalFrequency, OverdueRule } from '@/types'
 
 const route = useRoute()
+const router = useRouter()
 const store = useAppStore()
 
 const courseId = computed(() => route.params.id as string)
@@ -951,17 +909,17 @@ const isMentor = computed(() => store.currentRole === 'mentor')
 
 // ---- Tab 配置 ----
 const tabList = [
-  { key: 'comments',  label: '评论管理', icon: ClipboardCheck },
-  { key: 'grades',    label: '成绩管理', icon: TrendingUp },
-  { key: 'students',  label: '学生管理', icon: Users },
+  { key: 'comments',  label: '评论管理', icon: 'clipboardCheck' as const },
+  { key: 'grades',    label: '成绩管理', icon: 'trendingUp' as const },
+  { key: 'students',  label: '学生管理', icon: 'users' as const },
 ]
 
 // ---- 常量 ----
 const LEVEL_OPTIONS = [
-  { label: 'A (优秀)', range: [90, 100], color: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
-  { label: 'B (良好)', range: [80, 89],  color: 'bg-blue-100 text-blue-700 border-blue-300' },
-  { label: 'C (中等)', range: [70, 79],  color: 'bg-amber-100 text-amber-700 border-amber-300' },
-  { label: 'D (及格)', range: [60, 69],  color: 'bg-orange-100 text-orange-700 border-orange-300' },
+  { label: 'A (优秀)', range: [90, 100], color: 'bg-brand-600/15 text-brand-800 border-brand-600' },
+  { label: 'B (良好)', range: [80, 89],  color: 'bg-brand-600/15 text-brand-800 border-brand-600' },
+  { label: 'C (中等)', range: [70, 79],  color: 'bg-brand-600/15 text-brand-800 border-brand-600' },
+  { label: 'D (及格)', range: [60, 69],  color: 'bg-brand-600/15 text-brand-800 border-brand-600' },
 ]
 const ALL_EVAL_TYPES: EvalType[] = ['self', 'intra_group', 'inter_group', 'teacher', 'mentor']
 const EVAL_TEMPLATE_KEYS = Object.keys(EvalTemplateLabels) as EvalTemplate[]
@@ -977,12 +935,10 @@ const ExamTypeLabels: Record<string, string> = {
 }
 
 // ---- 配置锁定状态 ----
-/** 评价方案是否已锁定（第一节课开始后不可修改） */
 const evalConfigLocked = computed(() => {
   if (!courseId.value) return true
   return !store.isEvalConfigEditable(courseId.value)
 })
-/** 成绩权重是否已锁定（期末考试成绩录入后不可修改） */
 const isWeightLocked = computed(() => {
   if (!courseId.value) return true
   return !store.isWeightConfigEditable(courseId.value)
@@ -993,8 +949,7 @@ const activeTab = ref<string>('comments')
 const showSettings = ref(false)
 const studentSearch = ref('')
 
-// ---- 学生管理（统一视图） ----
-// 添加学生
+// ---- 学生管理 ----
 const showAddStudentModal = ref(false)
 const newStudentName = ref('')
 const newStudentId = ref('')
@@ -1006,15 +961,13 @@ const showGroupModal = ref(false)
 const editingGroup = ref<import('@/types').StudentGroup | null>(null)
 const groupFormName = ref('')
 const groupFormMembers = ref<string[]>([])
-const groupExcelInput = ref<HTMLInputElement | null>(null)
-// 学生弹窗编辑
 const showEditStudentModal = ref(false)
 const editingStudent = ref<import('@/types').Student | null>(null)
 const editStudentName = ref('')
 const editStudentIdField = ref('')
 const editStudentGroupId = ref('')
 
-// ---- 成绩管理（考试/项目）状态 ----
+// ---- 成绩管理 ----
 const showNewExamModal = ref(false)
 const showGradeConfig = ref(false)
 const newExamName = ref('')
@@ -1023,32 +976,25 @@ const newExamType = ref<'midterm_exam' | 'midterm_project' | 'final_exam' | 'fin
 const selectedExam = ref('')
 const gradeSearch = ref('')
 const totalSearch = ref('')
-// 期末成绩权重提醒弹窗
 const showWeightReminderModal = ref(false)
 const pendingFinalExamSelect = ref('')
 
-/** 获取学生姓名首字母 */
 function getStudentInitial(name: string): string {
   const ch = name.charAt(0)
-  // 英文字母
   if (/[a-zA-Z]/.test(ch)) return ch.toUpperCase()
-  // 中文字符 — 取本身
   return ch
 }
 
-/** 按首字母分组的成绩学生列表（无搜索时显示全部） */
 const studentGradeGroups = computed(() => {
   const enrolled = enrolledStudents.value
     .map((e) => e.student)
     .filter(Boolean) as NonNullable<(typeof enrolledStudents.value)[number]['student']>[]
 
-  // 过滤：有搜索词时只保留匹配的
   const q = totalSearch.value.trim().toLowerCase()
   const filtered = q
     ? enrolled.filter((s) => s.name.toLowerCase().includes(q))
     : enrolled
 
-  // 按首字母分组
   const groups = new Map<string, typeof filtered>()
   for (const student of filtered) {
     const initial = getStudentInitial(student.name)
@@ -1056,24 +1002,19 @@ const studentGradeGroups = computed(() => {
     groups.get(initial)!.push(student)
   }
 
-  // 排序
   const sorted = Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b, 'zh-CN'))
   return sorted.map(([initial, students]) => ({
     initial,
     students: students.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN')),
   }))
 })
+
 const examInputs = ref<Record<string, number>>({})
 const selectedStudentIds = ref<string[]>([])
-/** 教师/导师评价输入 */
 const evalScoreInputs = ref<Record<string, number>>({})
-/** 评价学生搜索 */
 const evalStudentSearch = ref('')
-
-/** 当前评价轮次 */
 const selectedBatchSession = ref(1)
 
-// ---- 计算属性 ----
 const myCourses = computed(() => store.courses.filter((c) => c.teacher === store.currentUser))
 const selectedConfig = computed(() => courseId.value ? store.evalConfigs.find((c) => c.courseId === courseId.value) : null)
 const baseEnabledTypes = computed<EvalType[]>(() => selectedConfig.value ? TEMPLATE_EVAL_TYPES[selectedConfig.value.template] : [])
@@ -1081,25 +1022,20 @@ const totalSessions = computed(() => courseId.value ? store.getEvalSessions(cour
 const courseHasGroups = computed(() => courseId.value ? store.hasGroups(courseId.value) : false)
 
 // ---- 评价管理 ----
-
-/** 学生搜索过滤 + 按组排列 */
 const evalTableSections = computed(() => {
   if (!courseId.value) return []
   const session = selectedBatchSession.value
   const search = evalStudentSearch.value.trim().toLowerCase()
 
-  // 所有未退课学生
   const enrolled = store.enrollments
     .filter((e) => e.courseId === courseId.value && e.status !== 'dropped')
     .map((e) => store.students.find((s) => s.id === e.studentId))
     .filter(Boolean) as NonNullable<ReturnType<typeof store.students.find>>[]
 
-  // 搜索过滤
   const filtered = search
     ? enrolled.filter((s) => s.name.toLowerCase().includes(search))
     : enrolled
 
-  // 获取课程分组
   const groups = store.studentGroups.filter((g) => g.courseId === courseId.value)
   const memberToGroup = new Map<string, string>()
   for (const g of groups) {
@@ -1108,7 +1044,6 @@ const evalTableSections = computed(() => {
     }
   }
 
-  // 按组归类
   const groupedMap = new Map<string, typeof filtered>()
   const ungrouped: typeof filtered = []
   for (const s of filtered) {
@@ -1121,7 +1056,6 @@ const evalTableSections = computed(() => {
     }
   }
 
-  // 构建每行数据
   function buildRow(student: typeof filtered[number]) {
     const evals = store.evaluations.filter(
       (e) => e.courseId === courseId.value && e.studentId === student.id && e.sessionNumber === session
@@ -1148,7 +1082,6 @@ const evalTableSections = computed(() => {
     }
   }
 
-  // 组装 section
   const sections: { groupName: string; students: ReturnType<typeof buildRow>[] }[] = []
   for (const [name, members] of groupedMap) {
     sections.push({ groupName: name, students: members.map(buildRow) })
@@ -1161,7 +1094,6 @@ const evalTableSections = computed(() => {
 
 const hasEvalInputs = computed(() => Object.keys(evalScoreInputs.value).length > 0)
 
-// 全选/反选
 const isAllSelected = computed(() => {
   const total = evalTableSections.value.reduce((a, s) => a + s.students.length, 0)
   return total > 0 && selectedStudentIds.value.length === total
@@ -1173,7 +1105,6 @@ const examNames = computed(() => {
   return store.getExamNames(courseId.value)
 })
 
-/** 按类型分组的考试/项目 */
 const examsByType = computed(() => {
   if (!courseId.value) return []
   const names = examNames.value
@@ -1186,7 +1117,6 @@ const examsByType = computed(() => {
   return Array.from(map.entries()).map(([type, exams]) => ({ type, exams }))
 })
 
-/** 获取某个考试类型的权重标签（从 GradeConfig 中读取） */
 function getTypeWeightLabel(type: string): string {
   if (!courseId.value) return '-'
   const cfg = store.getGradeConfig(courseId.value)
@@ -1254,7 +1184,6 @@ function isExamSubmitted(studentId: string): boolean {
   return score?.status === 'submitted'
 }
 
-/** 获取该学生当前选中考试的百分制成绩 */
 function getStudentExamPercent(studentId: string): string {
   if (!courseId.value || !selectedExam.value) return '-'
   const score = store.getExamScoresForCourse(courseId.value, selectedExam.value)
@@ -1263,61 +1192,54 @@ function getStudentExamPercent(studentId: string): string {
   return `${Math.round((score.score / score.fullScore) * 100)}分`
 }
 
-/** 从 store 获取某个考试/项目的权重 */
 function getExamWeightFromConfig(examName: string): number {
   if (!courseId.value) return 0
   return store.getExamWeight(courseId.value, examName)
 }
 
-/** 权重总和（基于类型权重） */
 const examWeightTotal = computed(() => {
   if (!courseId.value) return 0
   const cfg = store.getGradeConfig(courseId.value)
   return cfg.midtermWeight + cfg.finalWeight + cfg.regularWeight
 })
 
-/** 修改权重 */
 function handleWeightChange(examName: string, weight: number) {
   if (!courseId.value || isReadOnly.value) return
   store.setExamWeight(courseId.value, examName, weight)
 }
 
-/** 获取某个考试/项目的类型 */
 function getExamTypeForName(examName: string): string {
   if (!courseId.value) return 'midterm_exam'
   const scores = store.getExamScoresForCourse(courseId.value, examName)
   return scores.length > 0 ? scores[0].type : 'midterm_exam'
 }
 
-/** 判断是否为期末考试/期末项目类型 */
 function isFinalExamType(examName: string): boolean {
   const type = getExamTypeForName(examName)
   return type === 'final_exam' || type === 'final_project'
 }
 
-/** 选择考试/项目：如果是期末类型且权重未配置，弹出提醒 */
 function handleSelectExam(name: string) {
   if (!courseId.value) return
-  // 如果是期末类型且权重未配置完成，弹出提醒
   if (isFinalExamType(name) && !isWeightLocked.value) {
     const gradeConfig = store.getGradeConfig(courseId.value)
     const isConfigDefault =
       gradeConfig.regularWeight === 40 && gradeConfig.midtermWeight === 0 && gradeConfig.finalWeight === 60
     if (isConfigDefault) {
-      // 使用默认值（未配置），弹出提醒
       showWeightReminderModal.value = true
       pendingFinalExamSelect.value = name
+      render()
       return
     }
   }
-  // 直接选中
   selectedExam.value = name
+  render()
 }
 
-/** 从提醒弹窗打开权重配置 */
 function handleOpenGradeConfigFromReminder() {
   showWeightReminderModal.value = false
   showGradeConfig.value = true
+  render()
 }
 
 function handleAddExam() {
@@ -1325,7 +1247,6 @@ function handleAddExam() {
   const name = newExamName.value.trim()
   const type = newExamType.value
 
-  // 期中/期末考试只能创建一次
   if (type === 'midterm_exam' || type === 'final_exam') {
     const existing = store.getExamScoresForCourse(courseId.value)
       .filter((s) => s.type === type)
@@ -1353,7 +1274,6 @@ function handleAddExam() {
     })
   }
 
-  // 项目类：自动为该类型的每项分配均分权重
   if (type === 'midterm_project' || type === 'final_project') {
     const sameTypeExams = store.getExamScoresForCourse(courseId.value)
       .filter((s) => s.type === type)
@@ -1370,11 +1290,11 @@ function handleAddExam() {
   showNewExamModal.value = false
   selectedExam.value = name
   newExamName.value = ''
+  render()
 }
 
 function handleSaveExamScores() {
   if (!courseId.value || !selectedExam.value) return
-  // 从已有记录中获取正确的考试类型、满分，权重从配置读取
   const existingScores = store.getExamScoresForCourse(courseId.value, selectedExam.value)
   const examType = existingScores.length > 0
     ? existingScores[0].type
@@ -1402,17 +1322,16 @@ function handleSaveExamScores() {
     }
   })
   examInputs.value = {}
+  render()
 }
 
 function handleSubmitExamScores() {
   if (!courseId.value || !selectedExam.value) return
-  // 先保存未保存的输入
   handleSaveExamScores()
   store.submitExamScores(courseId.value, selectedExam.value)
+  render()
 }
 
-/** 查询学生总成绩 */
-/** 获取某学生的加权总分（按类型权重计算，多项目时均分类型权重） */
 function getStudentTotalScore(studentId: string): string | number {
   if (!courseId.value) return '-'
   const scores = store.getExamScoresForCourse(courseId.value)
@@ -1421,24 +1340,20 @@ function getStudentTotalScore(studentId: string): string | number {
   const gradeConfig = store.getGradeConfig(courseId.value)
   let weightedSum = 0
   let totalWeight = 0
-  // 按类型分组，计算每个类型中已配置了单独权重的和未配置的
   const typeGroups = new Map<string, { count: number; sumPercent: number }>()
   for (const s of scores) {
     const w = store.getExamWeight(courseId.value, s.examName)
     const percent = (s.score / s.fullScore) * 100
     if (w > 0) {
-      // 已配置单独权重，直接使用
       weightedSum += percent * w
       totalWeight += w
     } else {
-      // 未配置单独权重，归入类型组
       if (!typeGroups.has(s.type)) typeGroups.set(s.type, { count: 0, sumPercent: 0 })
       const g = typeGroups.get(s.type)!
       g.count++
       g.sumPercent += percent
     }
   }
-  // 应用类型级权重
   for (const [type, g] of typeGroups) {
     let typeWeight = 0
     if (type === 'midterm_exam' || type === 'midterm_project') typeWeight = gradeConfig.midtermWeight
@@ -1454,14 +1369,12 @@ function getStudentTotalScore(studentId: string): string | number {
   return Math.round(weightedSum / totalWeight)
 }
 
-/** 获取某学生的考试/项目数 */
 function getStudentExamCount(studentId: string): number {
   if (!courseId.value) return 0
   return store.getExamScoresForCourse(courseId.value)
     .filter((s) => s.studentId === studentId).length
 }
 
-/** 获取某学生的截至当前的平时成绩 */
 function getStudentAvgScore(studentId: string): string | number {
   if (!courseId.value) return '-'
   const allEvals = store.evaluations.filter(
@@ -1481,10 +1394,8 @@ function getStudentScoreForExam(studentId: string, examName: string): string | n
   return score?.score ?? '-'
 }
 
-/** Excel 导入 */
 async function handleExcelImport(event: Event) {
   if (!courseId.value || !selectedExam.value) return
-  // 从已有记录中获取正确的考试类型
   const existingScores = store.getExamScoresForCourse(courseId.value, selectedExam.value)
   const examType = existingScores.length > 0
     ? existingScores[0].type
@@ -1498,7 +1409,6 @@ async function handleExcelImport(event: Event) {
     const wb = XLSX.read(buf, { type: 'array' })
     const ws = wb.Sheets[wb.SheetNames[0]]
     const data: Record<string, string>[] = XLSX.utils.sheet_to_json(ws)
-    // 期望格式：第一列是学生姓名/学号，第二列是成绩
     const keys = Object.keys(data[0] || {})
     if (keys.length < 2) {
       alert('Excel 格式不正确，请确保第一列为学生姓名/学号，第二列为成绩')
@@ -1545,7 +1455,6 @@ async function handleExcelImport(event: Event) {
   }
 }
 
-/** 下载 Excel 导入模板 */
 async function handleDownloadTemplate() {
   if (!courseId.value || !selectedExam.value) {
     alert('请先选择一个考试/项目')
@@ -1581,14 +1490,13 @@ const enabledTypes = computed(() => baseEnabledTypes.value.filter((t) => {
   return true
 }))
 
-const filteredEvalTypes = computed(() => enabledTypes.value.filter((t) => true)) // no filter needed
+const filteredEvalTypes = computed(() => enabledTypes.value.filter((t) => true))
 
 const displaySessions = computed(() => {
   const count = Math.min(totalSessions.value, 3)
   return Array.from({ length: count }, (_, i) => i + 1)
 })
 
-// 课程学生（未退课）
 const enrolledStudents = computed(() => {
   if (!courseId.value) return []
   return store.enrollments
@@ -1600,12 +1508,10 @@ const enrolledStudents = computed(() => {
     .filter((e) => e.student)
 })
 
-/** 以组为单位的学生列表（包含分组信息和成员） */
 const studentSections = computed(() => {
   if (!courseId.value) return []
   const search = studentSearch.value.trim().toLowerCase()
 
-  // 所有未退课学生
   const enrolled = store.enrollments
     .filter((e) => e.courseId === courseId.value && e.status !== 'dropped')
     .map((e) => ({
@@ -1614,12 +1520,10 @@ const studentSections = computed(() => {
     }))
     .filter((e) => e.student) as { enrollmentId: string; student: NonNullable<ReturnType<typeof store.students.find>> }[]
 
-  // 搜索过滤
   const filtered = search
     ? enrolled.filter(({ student }) => student.name.toLowerCase().includes(search) || student.id.includes(search))
     : enrolled
 
-  // 获取课程分组
   const groups = store.studentGroups.filter((g) => g.courseId === courseId.value)
   const memberToGroup = new Map<string, string>()
   const groupIdMap = new Map<string, string>()
@@ -1630,7 +1534,6 @@ const studentSections = computed(() => {
     }
   }
 
-  // 按组归类
   const groupedMap = new Map<string, { groupId: string; students: typeof filtered }>()
   const ungrouped: typeof filtered = []
   for (const item of filtered) {
@@ -1644,7 +1547,6 @@ const studentSections = computed(() => {
     }
   }
 
-  // 组装 sections
   const sections: { groupId: string; groupName: string; students: typeof filtered }[] = []
   for (const g of groups) {
     const entry = groupedMap.get(g.name)
@@ -1728,10 +1630,10 @@ function getScoreDisplay(studentId: string, sessionNumber: number, type: EvalTyp
 
 function scoreCellClass(studentId: string, sessionNumber: number, type: EvalType): string {
   const v = getAvgScore(studentId, sessionNumber, type)
-  if (v === null) return 'text-gray-300'
-  if (v >= 85) return 'text-emerald-600'
-  if (v >= 60) return 'text-blue-600'
-  return 'text-red-500'
+  if (v === null) return 'text-brand-400/60'
+  if (v >= 85) return 'text-brand-600'
+  if (v >= 60) return 'text-brand-600'
+  return 'text-brand-600'
 }
 
 function getStudentTotalAvg(studentId: string): string {
@@ -1748,25 +1650,23 @@ function getStudentTotalAvg(studentId: string): string {
 function totalScoreColor(val: string | number): string {
   if (val === '-') return '#9ca3af'
   const n = parseInt(String(val))
-  if (n >= 85) return '#059669'
-  if (n >= 60) return '#2563eb'
-  return '#dc2626'
+  if (n >= 85) return '#1E88E5'
+  if (n >= 60) return '#1E88E5'
+  return '#1E88E5'
 }
 
-// 选课状态
 function getEnrollStatus(studentId: string): { label: string; color: string; progress: number } {
   const enr = store.enrollments.find((e) => e.courseId === courseId.value && e.studentId === studentId)
-  if (!enr) return { label: '未知', color: 'bg-gray-50 text-gray-500', progress: 0 }
+  if (!enr) return { label: '未知', color: 'bg-brand-400/10 text-brand-400', progress: 0 }
   const map: Record<string, { label: string; color: string }> = {
-    enrolled:     { label: '已报名',    color: 'bg-blue-50 text-blue-600' },
-    in_progress:  { label: '学习中',    color: 'bg-amber-50 text-amber-600' },
-    completed:    { label: '已完成',    color: 'bg-emerald-50 text-emerald-600' },
-    dropped:      { label: '已退课',    color: 'bg-red-50 text-red-600' },
+    enrolled:     { label: '已报名',    color: 'bg-brand-600/10 text-brand-600' },
+    in_progress:  { label: '学习中',    color: 'bg-brand-400/10 text-brand-600' },
+    completed:    { label: '已完成',    color: 'bg-brand-400/10 text-brand-600' },
+    dropped:      { label: '已退课',    color: 'bg-brand-600/10 text-brand-600' },
   }
-  return { ...map[enr.status] || { label: '未知', color: 'bg-gray-50 text-gray-500' }, progress: enr.progress || 0 }
+  return { ...map[enr.status] || { label: '未知', color: 'bg-brand-400/10 text-brand-400' }, progress: enr.progress || 0 }
 }
 
-// ---- 操作 ----
 const handleSetConfig = (updates: Partial<import('@/types').EvaluationConfig>) => {
   if (!courseId.value) return
   const existing = store.evalConfigs.find((c) => c.courseId === courseId.value)
@@ -1791,7 +1691,6 @@ const handleBatchEval = (level: string) => {
   const session = selectedBatchSession.value
   const type: EvalType = isMentor.value ? 'mentor' : 'teacher'
 
-  // 只给选中的学生批量打分（跳过已提交的）
   selectedStudentIds.value.forEach((studentId) => {
     if (store.isSessionLocked(courseId.value || '', session) ||
         store.isTeacherEvalSubmitted(courseId.value || '', studentId, session, type)) return
@@ -1816,13 +1715,11 @@ const handleBatchEval = (level: string) => {
       store.addEvaluation(ev)
     }
   })
-  // 清空输入缓存，防止后续"保存评分"覆盖批量结果
   evalScoreInputs.value = {}
-  // 标记该轮次所有评价提醒为已完成
   store.markSessionEvalRemindersCompleted(courseId.value, session)
+  render()
 }
 
-/** 保存教师/导师评价评分（单条输入） */
 function handleSaveEvalScores() {
   if (!courseId.value) return
   const session = selectedBatchSession.value
@@ -1851,18 +1748,16 @@ function handleSaveEvalScores() {
     }
   })
   evalScoreInputs.value = {}
+  render()
 }
 
-// ---- 提交所有保存的评价（提交后不可修改） ----
 function handleSubmitAll() {
   if (!courseId.value) return
   const session = selectedBatchSession.value
   const type: EvalType = isMentor.value ? 'mentor' : 'teacher'
 
-  // 先保存所有输入的评分
   handleSaveEvalScores()
 
-  // 标记所有有评价的学生为已提交
   const allStudents = store.enrollments
     .filter((e) => e.courseId === courseId.value && e.status !== 'dropped')
     .map((e) => e.studentId)
@@ -1877,11 +1772,10 @@ function handleSubmitAll() {
     }
   }
 
-  // 标记该轮次所有评价提醒为已完成
   store.markSessionEvalRemindersCompleted(courseId.value, session)
+  render()
 }
 
-// ---- 全选/反选 ----
 const toggleAll = () => {
   if (isAllSelected.value) {
     selectedStudentIds.value = []
@@ -1894,23 +1788,20 @@ const toggleAll = () => {
     }
     selectedStudentIds.value = allIds
   }
+  render()
 }
 
 const selectedUnsubmittedCount = computed(() => {
   return selectedStudentIds.value.length
 })
 
-// ---- 评价轮次锁定与时机 ----
-
-/** 选择评价轮次：自动锁定上一轮并处理逾期 */
 function handleSessionSelect(session: number) {
   if (!courseId.value) return
-  // 自动锁定上一轮（触发逾期处理）
   store.autoLockPreviousSession(courseId.value, session)
   selectedBatchSession.value = session
+  render()
 }
 
-/** 某轮次是否不可选（已锁定 / 未到上课时间 / 最终轮次超期） */
 function isSessionDisabled(session: number): boolean {
   if (!courseId.value) return true
   if (store.isSessionLocked(courseId.value, session)) return true
@@ -1919,19 +1810,16 @@ function isSessionDisabled(session: number): boolean {
   return false
 }
 
-/** 某轮次是否已到上课时间 */
 function isSessionTime(session: number): boolean {
   if (!courseId.value) return true
   return store.isSessionTime(courseId.value, session)
 }
 
-/** 最终轮次是否已过截止期 */
 const isFinalSessionExpired = computed(() => {
   if (!courseId.value) return false
   return store.isFinalSessionDeadlinePassed(courseId.value, totalSessions.value)
 })
 
-/** 轮次按钮 tooltip */
 function getSessionTitle(session: number): string {
   if (!courseId.value) return ''
   if (store.isSessionLocked(courseId.value, session)) return '该轮次已锁定，不可修改'
@@ -1940,12 +1828,10 @@ function getSessionTitle(session: number): string {
   return ''
 }
 
-/** 当前轮次是否有可提交的评分 */
 const hasSubmittable = computed(() => submittableCount.value > 0)
 
 const submittableCount = computed(() => {
   const session = selectedBatchSession.value
-  const type: EvalType = 'teacher'
   let count = 0
   for (const section of evalTableSections.value) {
     for (const s of section.students) {
@@ -1956,28 +1842,25 @@ const submittableCount = computed(() => {
   return count
 })
 
-// ---- 逾期处理 ----
 const handleProcessOverdue = () => {
   if (!courseId.value) return
   for (let s = 1; s <= totalSessions.value; s++) {
     store.processSessionOverdue(courseId.value, s)
   }
-  // 标记逾期学生自评提醒为已完成
   const students = enrolledStudents.value.map(({ student }) => student).filter(Boolean)
   for (const s of students) {
     for (let sn = 1; sn <= totalSessions.value; sn++) {
       store.markEvalReminderCompleted(courseId.value, s!.id, sn)
     }
   }
+  render()
 }
 
-/** 获取学生姓名 */
 function getStudentName(studentId: string): string {
   const student = store.students.find((s) => s.id === studentId)
   return student?.name || studentId
 }
 
-/** 获取学生所在组名 */
 function getStudentGroupId(studentId: string): string | null {
   for (const g of store.studentGroups) {
     if (g.memberIds.includes(studentId)) return g.id
@@ -1985,7 +1868,6 @@ function getStudentGroupId(studentId: string): string | null {
   return null
 }
 
-/** 从分组中移除学生 */
 function handleRemoveStudentFromGroup(studentId: string) {
   for (const g of store.studentGroups) {
     if (g.memberIds.includes(studentId)) {
@@ -1995,42 +1877,36 @@ function handleRemoveStudentFromGroup(studentId: string) {
       break
     }
   }
+  render()
 }
 
-/** 编辑学生 - 打开弹窗 */
 function handleEditStudent(student: import('@/types').Student) {
   editingStudent.value = student
   editStudentName.value = student.name
   editStudentIdField.value = student.id
-  // 查找学生当前所在分组
   const group = store.studentGroups.find(g => g.courseId === courseId.value && g.memberIds.includes(student.id))
   editStudentGroupId.value = group?.id || ''
   showEditStudentModal.value = true
+  render()
 }
 
-/** 编辑学生 - 保存 */
 function handleSaveEditStudent() {
   if (!editingStudent.value || !editStudentName.value.trim()) return
   const student = editingStudent.value
   const newId = editStudentIdField.value.trim() || student.id
-  // 如果学号变了，检查是否已被占用
   if (newId !== student.id && store.students.some((s) => s.id === newId)) {
     alert('该学号已被其他学生使用')
     return
   }
   const oldId = student.id
-  // 更新学生信息
   store.updateStudent(oldId, { name: editStudentName.value.trim(), id: newId })
 
-  // 如果学号变化，级联更新所有关联数据
   if (newId !== oldId) {
-    // 更新选课记录
     store.enrollments.forEach((e) => {
       if (e.studentId === oldId) {
         store.updateEnrollment(e.id, { studentId: newId })
       }
     })
-    // 更新评价记录（学生评价和教师评价）
     store.evaluations.forEach((ev) => {
       if (ev.studentId === oldId) {
         store.updateEvaluation(ev.id, { studentId: newId })
@@ -2039,7 +1915,6 @@ function handleSaveEditStudent() {
         store.updateEvaluation(ev.id, { evaluatorId: newId })
       }
     })
-    // 更新考试成绩
     const examScores = (store as any).examScores?.value || []
     examScores.forEach((s: any) => {
       if (s.studentId === oldId) {
@@ -2048,13 +1923,11 @@ function handleSaveEditStudent() {
         )
       }
     })
-    // 更新评价提醒
     const evalReminders = (store as any).evalReminders?.value || []
     ;(store as any).evalReminders.value = evalReminders.map((r: any) => {
       if (r.studentId === oldId) return { ...r, studentId: newId }
       return r
     })
-    // 更新分组中的成员 ID
     store.studentGroups.forEach((g) => {
       if (g.memberIds.includes(oldId)) {
         store.updateStudentGroup(g.id, {
@@ -2062,24 +1935,20 @@ function handleSaveEditStudent() {
         })
       }
     })
-    // 持久化 examScores 和 evalReminders
     try {
       localStorage.setItem('examScores', JSON.stringify((store as any).examScores?.value || []))
       localStorage.setItem('evalReminders', JSON.stringify((store as any).evalReminders?.value || []))
     } catch {}
   }
 
-  // 处理分组归属变更
   const currentGroup = store.studentGroups.find(g => g.courseId === courseId.value && g.memberIds.includes(newId))
   const currentGroupId = currentGroup?.id || ''
   if (currentGroupId !== editStudentGroupId.value) {
-    // 从旧分组移除
     if (currentGroupId) {
       store.updateStudentGroup(currentGroupId, {
         memberIds: currentGroup!.memberIds.filter((id) => id !== newId),
       })
     }
-    // 加入新分组
     if (editStudentGroupId.value) {
       const newGroup = store.studentGroups.find((g) => g.id === editStudentGroupId.value)
       if (newGroup) {
@@ -2095,35 +1964,31 @@ function handleSaveEditStudent() {
   editStudentName.value = ''
   editStudentIdField.value = ''
   editStudentGroupId.value = ''
+  render()
 }
 
-/** 移除学生（退课 + 清理分组） */
 function handleRemoveStudent(studentId: string) {
   if (!courseId.value) return
   if (!confirm('确定将该学生删除并从课程中移除？')) return
-  // 从分组中移除
   handleRemoveStudentFromGroup(studentId)
-  // 删除选课记录
   const enrollment = store.enrollments.find(
     (e) => e.courseId === courseId.value && e.studentId === studentId && e.status !== 'dropped'
   )
   if (enrollment) {
     store.deleteEnrollment(enrollment.id)
   }
+  render()
 }
 
-/** 添加单个学生 */
 function handleAddSingleStudent() {
   if (!courseId.value || !newStudentName.value.trim()) return
   const name = newStudentName.value.trim()
-  // 查找或创建学生
   let student = store.students.find((s) => s.name === name || (newStudentId.value.trim() && s.id === newStudentId.value.trim()))
   if (!student) {
     const id = newStudentId.value.trim() || `stu-${Date.now()}`
     store.addStudent({ id, name, phone: '', email: '', avatar: '', joinDate: new Date().toISOString().split('T')[0], status: 'active' })
     student = store.students.find((s) => s.id === id)!
   }
-  // 检查是否已选课
   const exists = store.enrollments.some(
     (e) => e.courseId === courseId.value && e.studentId === student!.id && e.status !== 'dropped'
   )
@@ -2150,9 +2015,9 @@ function handleAddSingleStudent() {
   showAddStudentModal.value = false
   newStudentName.value = ''
   newStudentId.value = ''
+  render()
 }
 
-/** Excel 导入学生 */
 async function handleImportStudentsExcel(event: Event) {
   if (!courseId.value) return
   const input = event.target as HTMLInputElement
@@ -2207,25 +2072,22 @@ async function handleImportStudentsExcel(event: Event) {
   input.value = ''
 }
 
-// ====== 学生管理：分组管理 ======
-
-/** 打开新建分组弹窗 */
 function openNewGroupModal() {
   editingGroup.value = null
   groupFormName.value = ''
   groupFormMembers.value = []
   showGroupModal.value = true
+  render()
 }
 
-/** 打开编辑分组弹窗 */
 function openEditGroupModal(group: import('@/types').StudentGroup) {
   editingGroup.value = group
   groupFormName.value = group.name
   groupFormMembers.value = [...group.memberIds]
   showGroupModal.value = true
+  render()
 }
 
-/** 保存分组（新建或编辑） */
 function handleSaveGroup() {
   if (!courseId.value || !groupFormName.value.trim()) {
     alert('请输入组名')
@@ -2249,15 +2111,15 @@ function handleSaveGroup() {
   editingGroup.value = null
   groupFormName.value = ''
   groupFormMembers.value = []
+  render()
 }
 
-/** 删除分组 */
 function handleDeleteGroup(groupId: string) {
   if (!confirm('确定删除该分组？')) return
   store.deleteStudentGroup(groupId)
+  render()
 }
 
-/** Excel 导入分组 */
 async function handleImportGroupsExcel(event: Event) {
   if (!courseId.value) return
   const input = event.target as HTMLInputElement
@@ -2275,7 +2137,6 @@ async function handleImportGroupsExcel(event: Event) {
       return
     }
     const groupNameKey = keys[0]
-    // 按组名聚合成员
     const groupMap = new Map<string, string[]>()
     for (const row of data) {
       const groupName = String(row[groupNameKey] || '').trim()
@@ -2317,4 +2178,277 @@ async function handleImportGroupsExcel(event: Event) {
   }
   input.value = ''
 }
+
+// ====== D3 渲染函数 ======
+
+function renderFileSpreadsheetIcon(parent: d3.Selection<any, any, any, any>, className?: string) {
+  const svg = parent.append('svg')
+    .attr('viewBox', '0 0 24 24')
+    .attr('fill', 'none')
+    .attr('stroke', 'currentColor')
+    .attr('stroke-width', '2')
+    .attr('stroke-linecap', 'round')
+    .attr('stroke-linejoin', 'round')
+  if (className) svg.attr('class', className)
+  svg.html('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 12h8"/><path d="M8 16h8"/><path d="M8 20h8"/>')
+  return svg
+}
+
+function renderPlusIconSvg(parent: d3.Selection<any, any, any, any>, className?: string) {
+  const svg = parent.append('svg')
+    .attr('viewBox', '0 0 24 24')
+    .attr('fill', 'none')
+    .attr('stroke', 'currentColor')
+    .attr('stroke-width', '2')
+    .attr('stroke-linecap', 'round')
+    .attr('stroke-linejoin', 'round')
+  if (className) svg.attr('class', className)
+  svg.html('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>')
+  return svg
+}
+
+function render() {
+  const root = document.getElementById('teacher-course-detail-root')
+  if (!root) return
+  const sel = d3.select(root)
+  sel.selectAll('*').remove()
+
+  const container = sel.append('div').attr('class', 'space-y-6')
+
+  // ===== 返回按钮 + 课程信息 =====
+  renderHeader(container)
+
+  // ===== 已结束只读提示 =====
+  if (isReadOnly.value) {
+    renderReadOnlyBanner(container)
+  }
+
+  // ===== Tab 切换 =====
+  renderTabBar(container)
+
+  // ===== Tab 内容 =====
+  if (activeTab.value === 'comments') {
+    renderCommentsTab(container)
+  } else if (activeTab.value === 'grades') {
+    // 成绩管理 Tab - 显示提示
+    const panel = container.append('div')
+      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-6 text-center text-brand-400')
+    panel.append('p').text('成绩管理内容加载中...')
+  } else if (activeTab.value === 'students') {
+    // 学员管理 Tab - 显示提示
+    const panel = container.append('div')
+      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-6 text-center text-brand-400')
+    panel.append('p').text('学员管理内容加载中...')
+  }
+}
+
+function renderHeader(container: d3.Selection<any, any, any, any>) {
+  const topRow = container.append('div').attr('class', 'flex items-center gap-3')
+
+  const backBtn = topRow.append('button')
+    .attr('class', 'p-2 rounded-lg hover:bg-brand-400/10 transition-colors')
+    .on('click', () => router.back())
+  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-brand-400')
+
+  const infoDiv = topRow.append('div').attr('class', 'flex-1')
+  infoDiv.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text(course.value?.title || '课程详情')
+  infoDiv.append('p').attr('class', 'text-brand-400 mt-1').text(`${course.value?.id} · ${course.value?.duration}课时`)
+
+  const statusClass = course.value?.status === 'active' ? 'bg-brand-600/10 text-brand-600' : 'bg-brand-400/10 text-brand-400'
+  topRow.append('span')
+    .attr('class', `text-xs px-2 py-0.5 rounded-full ${statusClass}`)
+    .text(course.value?.status === 'active' ? '进行中' : '已结束')
+}
+
+function renderReadOnlyBanner(container: d3.Selection<any, any, any, any>) {
+  const banner = container.append('div').attr('class', 'flex items-center gap-2 px-4 py-3 bg-brand-400/10 border border-brand-400/30 rounded-xl text-sm text-brand-400')
+  renderIcon(banner, 'eye', 'w-4 h-4 text-brand-400')
+  banner.append('span').html('该课程已结束，当前为<strong>只读查看</strong>模式，无法进行配置修改操作')
+}
+
+function renderTabBar(container: d3.Selection<any, any, any, any>) {
+  const tabBar = container.append('div').attr('class', 'flex gap-1 border-b border-brand-400/30')
+  tabList.forEach((tab) => {
+    const isActive = activeTab.value === tab.key
+    const btn = tabBar.append('button')
+      .attr('class', `px-5 py-2.5 text-sm font-medium rounded-t-lg transition-all ${isActive ? 'bg-white text-brand-600 border border-b-0 border-brand-400/30 -mb-px' : 'text-brand-400 hover:text-brand-800'}`)
+      .on('click', () => { activeTab.value = tab.key; render() })
+    renderIcon(btn, tab.icon, 'w-4 h-4 inline mr-1.5')
+    btn.append('span').text(tab.label)
+  })
+}
+
+function renderCommentsTab(container: d3.Selection<any, any, any, any>) {
+  const tabContent = container.append('div').attr('class', 'space-y-6')
+
+  // 评价方案配置
+  renderEvalConfigCard(tabContent)
+
+  // 评价管理
+  if (!isReadOnly.value) {
+    renderEvalManagementCard(tabContent)
+  }
+}
+
+function renderEvalManagementCard(container: d3.Selection<any, any, any, any>) {
+  const card = container.append('div')
+    .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-5')
+  card.append('h3').attr('class', 'text-sm font-semibold text-brand-900 mb-3').text('评价管理')
+  card.append('p').attr('class', 'text-sm text-brand-400').text('评价管理功能内容加载中...')
+}
+
+function renderEvalConfigCard(container: d3.Selection<any, any, any, any>) {
+  const card = container.append('div').attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-5')
+
+  const headerBtn = card.append('button')
+    .attr('class', 'w-full flex items-center justify-between')
+    .on('click', () => {
+      if (isReadOnly.value || evalConfigLocked.value || isMentor.value) return
+      showSettings.value = !showSettings.value
+      render()
+    })
+
+  const left = headerBtn.append('div').attr('class', 'flex items-center gap-2')
+  renderIcon(left, 'settings', 'w-5 h-5 text-brand-400')
+  left.append('h2').attr('class', 'font-semibold text-brand-900').text('评价方案配置')
+
+  const right = headerBtn.append('div').attr('class', 'flex items-center gap-3')
+
+  // 锁定标签
+  if (evalConfigLocked.value || isMentor.value) {
+    const lockSpan = right.append('span').attr('class', 'text-xs px-2 py-0.5 rounded-full bg-brand-400/10 text-brand-400 border border-brand-400/30')
+    renderIcon(lockSpan, 'lock', 'w-3 h-3 inline mr-0.5')
+    lockSpan.append('span').text('仅查看')
+  }
+
+  right.append('span').attr('class', 'text-xs text-brand-400')
+    .text(`${selectedConfig.value ? EvalTemplateLabels[selectedConfig.value.template] : '默认方案'} · ${selectedConfig.value ? EvalFrequencyLabels[selectedConfig.value.frequency] : '默认频率'}`)
+
+  if (!isReadOnly.value && !evalConfigLocked.value && !isMentor.value) {
+    right.append('span').attr('class', 'text-xs text-brand-400 hover:text-brand-600')
+      .text(showSettings.value ? '收起 ▲' : '展开 ▼')
+  }
+  if (isReadOnly.value || evalConfigLocked.value || isMentor.value) {
+    right.append('span').attr('class', 'text-xs text-brand-400/60').text('仅查看')
+  }
+
+  // 锁定提示
+  if (evalConfigLocked.value) {
+    const lockHint = card.append('div').attr('class', 'mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10 border border-brand-400/30 rounded-lg text-xs text-brand-400')
+    renderIcon(lockHint, 'lock', 'w-3.5 h-3.5 text-brand-400')
+    if (selectedConfig.value) {
+      lockHint.append('span').text('评价方案已在第一节课开始前配置完成，已锁定不可修改。')
+    } else {
+      lockHint.append('span').text('第一节课已开始，评价方案未配置，现按默认方案实施，已锁定不可修改。')
+    }
+  }
+
+  // 评价类型标签
+  const tagWrap = card.append('div').attr('class', 'flex flex-wrap gap-2 mt-3 mb-1')
+  ALL_EVAL_TYPES.forEach((t) => {
+    if (!selectedConfig.value || !TEMPLATE_EVAL_TYPES[selectedConfig.value.template].includes(t)) {
+      tagWrap.append('span')
+        .attr('class', 'text-xs px-2.5 py-1 rounded-full bg-brand-400/10 text-brand-400/60 border border-brand-400/30')
+        .text(`${EvalTypeLabels[t]} ✗`)
+    } else if (((t === 'intra_group' || t === 'inter_group') && !courseHasGroups.value) || (t === 'mentor' && selectedConfig.value && !selectedConfig.value.hasMentor)) {
+      const span = tagWrap.append('span')
+        .attr('class', 'text-xs px-2.5 py-1 rounded-full bg-brand-400/10 text-brand-400 border border-brand-400/50')
+      renderIcon(span, 'eyeOff', 'w-3 h-3 inline mr-0.5')
+      span.append('span').text(`${EvalTypeLabels[t]}（自动隐藏）`)
+    } else {
+      const span = tagWrap.append('span')
+        .attr('class', `text-xs px-2.5 py-1 rounded-full border ${EvalTypeColors[t]}`)
+      renderIcon(span, 'eye', 'w-3 h-3 inline mr-0.5')
+      span.append('span').text(EvalTypeLabels[t])
+    }
+  })
+
+  // 配置编辑区域
+  if (showSettings.value && !isReadOnly.value && !evalConfigLocked.value && !isMentor.value) {
+    renderEvalSettings(card)
+  } else if ((isReadOnly.value || evalConfigLocked.value) && showSettings.value) {
+    const readonlyArea = card.append('div').attr('class', 'border-t border-brand-400/20 mt-3 pt-4 text-sm text-brand-400 text-center py-4')
+    renderIcon(readonlyArea, 'eyeOff', 'w-5 h-5 inline mr-1')
+    readonlyArea.append('span').text(isReadOnly.value ? '已结束课程不可修改配置' : '第一节课已开始，评价方案已锁定不可修改')
+  }
+}
+
+function renderEvalSettings(card: d3.Selection<any, any, any, any>) {
+  const area = card.append('div').attr('class', 'border-t border-brand-400/20 mt-3 pt-4 space-y-4')
+
+  // 评价模板
+  const tplDiv = area.append('div')
+  tplDiv.append('p').attr('class', 'text-sm font-medium text-brand-800 mb-2').text('评价模板')
+  const tplGrid = tplDiv.append('div').attr('class', 'grid grid-cols-1 md:grid-cols-2 gap-2')
+
+  EVAL_TEMPLATE_KEYS.forEach((tpl) => {
+    const isSelected = selectedConfig.value?.template === tpl
+    const btn = tplGrid.append('button')
+      .attr('class', `text-left p-3 rounded-lg border transition-all ${isSelected ? 'border-brand-600 bg-brand-400/10' : 'border-brand-400/30 bg-white hover:border-brand-400'}`)
+      .on('click', () => { handleSetConfig({ template: tpl }); render() })
+
+    btn.append('span').attr('class', 'text-sm font-medium text-brand-900').text(EvalTemplateLabels[tpl])
+    btn.append('p').attr('class', 'text-xs text-brand-400 mt-0.5').text(EvalTemplateDescs[tpl])
+
+    const tagRow = btn.append('div').attr('class', 'flex gap-1 mt-1')
+    TEMPLATE_EVAL_TYPES[tpl].forEach((et) => {
+      tagRow.append('span').attr('class', 'text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-brand-400').text(EvalTypeLabels[et])
+    })
+  })
+
+  // 评价频率
+  const freqDiv = area.append('div')
+  freqDiv.append('p').attr('class', 'text-sm font-medium text-brand-800 mb-2').text('评价频率')
+  const freqGrid = freqDiv.append('div').attr('class', 'grid grid-cols-1 md:grid-cols-2 gap-2')
+
+  EVAL_FREQUENCY_KEYS.forEach((freq) => {
+    const isSelected = selectedConfig.value?.frequency === freq
+    const btn = freqGrid.append('button')
+      .attr('class', `text-left p-3 rounded-lg border transition-all ${isSelected ? 'border-brand-600 bg-brand-400/10' : 'border-brand-400/30 bg-white hover:border-brand-400'}`)
+      .on('click', () => { handleSetConfig({ frequency: freq }); render() })
+
+    btn.append('span').attr('class', 'text-sm font-medium text-brand-900').text(EvalFrequencyLabels[freq])
+    btn.append('p').attr('class', 'text-xs text-brand-400 mt-0.5').text(EvalFrequencyDescs[freq])
+    btn.append('span').attr('class', 'text-xs text-brand-400 mt-0.5 block')
+      .text(`共 ${courseId.value ? store.getEvalSessions(courseId.value) : 0} 次评价`)
+  })
+
+  // 自定义次数
+  if (selectedConfig.value?.frequency === 'custom') {
+    const customDiv = area.append('div').attr('class', 'mt-2')
+    customDiv.append('label').attr('class', 'text-xs text-brand-400').text('自定义评价次数：')
+    customDiv.append('input')
+      .attr('type', 'number').attr('min', '1').attr('max', '20')
+      .attr('class', 'ml-2 w-16 px-2 py-1 border border-brand-400/30 rounded-lg text-sm')
+      .property('value', selectedConfig.value?.customSessions || 3)
+      .on('change', (e) => {
+        const val = parseInt((e.target as HTMLInputElement).value) || 3
+        handleSetConfig({ customSessions: val })
+        render()
+      })
+  }
+
+  // 企业导师开关
+  const mentorRow = area.append('div').attr('class', 'flex items-center gap-3')
+  mentorRow.append('label').attr('class', 'text-sm font-medium text-brand-800').text('企业导师参与评价')
+  const toggle = mentorRow.append('input')
+    .attr('type', 'checkbox')
+    .attr('class', 'w-4 h-4 text-brand-600 border-brand-400/50 rounded focus:ring-brand-600')
+    .property('checked', selectedConfig.value?.hasMentor ?? false)
+    .on('change', (e) => {
+      handleSetConfig({ hasMentor: (e.target as HTMLInputElement).checked })
+      render()
+    })
+  mentorRow.append('label').attr('class', 'ml-2 text-sm text-brand-400').text('(企业导师可以对学员进行评价)')
+}
+
+// ===== 生命周期 =====
+function renderPage() {
+  const el = document.getElementById('teacher-course-detail-root')
+  if (el) render()
+}
+
+onMounted(renderPage)
+watch(activeTab, renderPage)
+watch(showSettings, renderPage)
 </script>
