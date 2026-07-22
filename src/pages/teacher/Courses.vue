@@ -106,7 +106,15 @@ import { BookOpen, Users, ArrowRight } from 'lucide-vue-next'
 const router = useRouter()
 const store = useAppStore()
 
-const myCourses = computed(() => store.courses.filter((c) => c.teacher === store.currentUser))
+const isMentor = computed(() => store.currentRole === 'mentor')
+
+const myCourses = computed(() => {
+  if (isMentor.value) {
+    const mentorCourseIds = store.getMentorCourseIds(store.currentUser || '')
+    return store.courses.filter((c) => mentorCourseIds.includes(c.id))
+  }
+  return store.courses.filter((c) => c.teacher === store.currentUser)
+})
 
 /** 根据课程 ID 分配不同的渐变配色 */
 const gradients = [
@@ -134,6 +142,6 @@ function studentCount(courseId: string) {
 }
 
 function goDetail(courseId: string) {
-  router.push(`/teacher/courses/${courseId}`)
+  router.push(`${isMentor.value ? '/mentor' : '/teacher'}/courses/${courseId}`)
 }
 </script>

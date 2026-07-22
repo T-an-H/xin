@@ -138,7 +138,17 @@ const router = createRouter({
         {
           path: 'courses/:id',
           name: 'MentorCourseDetail',
-          component: () => import('@/pages/mentor/CourseDetail.vue'),
+          component: () => import('@/pages/teacher/CourseDetail.vue'),
+        },
+        {
+          path: 'grades',
+          name: 'MentorGrades',
+          component: () => import('@/pages/teacher/Grades.vue'),
+        },
+        {
+          path: 'extra',
+          name: 'MentorExtra',
+          component: () => import('@/pages/teacher/Extra.vue'),
         },
       ],
     },

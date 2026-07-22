@@ -204,7 +204,15 @@ const detailTarget = ref<{ studentName: string; courseTitle: string; courseId: s
 const printRef = ref<HTMLElement | null>(null)
 
 // ====== Computed ======
-const myCourses = computed(() => store.courses.filter((c) => c.teacher === store.currentUser))
+const isMentor = computed(() => store.currentRole === 'mentor')
+
+const myCourses = computed(() => {
+  if (isMentor.value) {
+    const mentorCourseIds = store.getMentorCourseIds(store.currentUser || '')
+    return store.courses.filter((c) => mentorCourseIds.includes(c.id))
+  }
+  return store.courses.filter((c) => c.teacher === store.currentUser)
+})
 const myCourseIds = computed(() => myCourses.value.map((c) => c.id))
 
 const filteredEnrollments = computed(() => {

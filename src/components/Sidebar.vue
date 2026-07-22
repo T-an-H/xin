@@ -103,6 +103,8 @@ const studentNavItems = [
 
 const mentorNavItems = [
   { to: '/mentor/courses', icon: BookOpen, label: '我的课程' },
+  { to: '/mentor/grades', icon: Award, label: '成绩管理' },
+  { to: '/mentor/extra', icon: Lightbulb, label: '额外功能' },
 ]
 
 const leaderNavItems = [
