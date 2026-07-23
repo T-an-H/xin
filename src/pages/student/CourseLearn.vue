@@ -494,7 +494,15 @@ onMounted(() => {
   if (myStudent.value) {
     store.autoAssignOverdueBasicTier(courseId, myStudent.value.id)
   }
+  // 初始渲染 D3 知识图谱
+  const root = document.getElementById('student-course-learn-root')
+  if (root) renderCourseLearn(root)
 })
+
+function reRender() {
+  const root = document.getElementById('student-course-learn-root')
+  if (root) renderCourseLearn(root)
+}
 
 const tabs = [
   { id: 'ai_tier', label: 'AI分层', icon: 'layers' },

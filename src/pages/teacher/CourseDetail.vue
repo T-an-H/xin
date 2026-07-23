@@ -978,6 +978,7 @@ const gradeSearch = ref('')
 const totalSearch = ref('')
 const showWeightReminderModal = ref(false)
 const pendingFinalExamSelect = ref('')
+const groupExcelInput = ref<HTMLInputElement | null>(null)
 
 function getStudentInitial(name: string): string {
   const ch = name.charAt(0)
