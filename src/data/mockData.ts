@@ -158,12 +158,15 @@ export const teachers: Teacher[] = [
 export const mentors: Mentor[] = [
   { id: 'm-1', name: '张导师', phone: '139****2001', email: 'zhangmentor@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangmentor', courseIds: ['course-1', 'course-14'] },
   { id: 'm-2', name: '李导师', phone: '139****2002', email: 'limentor@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=limentor', courseIds: ['course-4', 'course-11'] },
+  { id: 'm-3', name: '王导师', phone: '139****2003', email: 'wangmentor@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wangmentor', courseIds: ['course-5', 'course-15'] },
+  { id: 'm-4', name: '陈导师', phone: '139****2004', email: 'chenmentor@example.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=chenmentor', courseIds: ['course-3', 'course-20'] },
 ];
 
 /** 学院领导 */
 export const leaders: Leader[] = [
   { id: 'l-1', name: '刘院长', phone: '139****3001', email: 'liuhead@example.com', categoryIds: ['cat-1', 'cat-2'], asTeacher: true },
   { id: 'l-2', name: '陈院长', phone: '139****3002', email: 'chenhead@example.com', categoryIds: ['cat-3', 'cat-4', 'cat-5'], asMentor: false },
+  { id: 'l-3', name: '张院长', phone: '139****3003', email: 'zhanghead@example.com', categoryIds: ['cat-1', 'cat-4'], asMentor: true },
 ];
 
 export const grades: Grade[] = [

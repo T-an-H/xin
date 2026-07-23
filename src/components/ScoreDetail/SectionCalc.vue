@@ -7,17 +7,17 @@
 
     <div class="space-y-1.5 mb-2">
       <div v-for="item in items" :key="item.label" class="flex items-center gap-2">
-        <span class="text-xs text-gray-500 w-20 flex-shrink-0">{{ item.label }} ({{ item.weight }}%)</span>
-        <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div class="h-full rounded-full transition-all duration-300" :style="{ width: `${item.score ?? 0}%`, backgroundColor: item.score != null ? '#f59e0b' : '#e5e7eb' }" />
+        <span class="text-xs text-gray-400 w-20 flex-shrink-0">{{ item.label }} ({{ item.weight }}%)</span>
+        <div class="flex-1 h-2 bg-brand-400/10 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-300" :style="{ width: `${item.score ?? 0}%`, backgroundColor: item.score != null ? '#429fc4' : '#5eb6b9' }" />
         </div>
-        <span class="text-xs font-medium text-gray-700 w-8 text-right">{{ item.score ?? '-' }}</span>
+        <span class="text-xs font-medium text-gray-800 w-8 text-right">{{ item.score ?? '-' }}</span>
       </div>
     </div>
 
     <p class="text-xs text-gray-400">
       {{ score }} × {{ weight }}% = {{ contribution.toFixed(1) }} 分
-      <span v-if="weight > 0" class="text-gray-300">（贡献至总分）</span>
+      <span v-if="weight > 0" class="text-gray-400/60">（贡献至总分）</span>
     </p>
   </div>
 </template>

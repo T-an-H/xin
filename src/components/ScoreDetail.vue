@@ -1,12 +1,12 @@
 <template>
   <div v-if="open" class="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" @click="onClose">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" @click.stop>
-      <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-5 border-b border-gray-100">
+      <div class="sticky top-0 bg-white z-10 flex items-center justify-between p-5 border-b border-brand-400/20">
         <div>
           <h2 class="text-lg font-bold text-gray-900">{{ studentName }}</h2>
           <p class="text-sm text-gray-400">{{ courseTitle }}</p>
         </div>
-        <button @click="onClose" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+        <button @click="onClose" class="p-2 rounded-lg hover:bg-brand-400/10 transition-colors">
           <X class="w-5 h-5 text-gray-400" />
         </button>
       </div>
@@ -41,9 +41,9 @@
             :items="finalSubs"
           />
 
-          <div class="border-t border-gray-100 pt-4">
+          <div class="border-t border-brand-400/20 pt-4">
             <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-gray-500">最终成绩</span>
+              <span class="text-sm font-medium text-gray-400">最终成绩</span>
               <span class="text-2xl font-bold text-gray-900">{{ totalScore }}</span>
             </div>
             <p class="text-xs text-gray-400 mt-1">
@@ -58,7 +58,7 @@
           </div>
         </template>
 
-        <div class="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
+        <div class="bg-brand-400/10 rounded-xl p-4 text-xs text-gray-400 space-y-1">
           <p><span class="font-medium">权重配置：</span>平时 {{ cfg.regularWeight }}% + 期中 {{ cfg.midtermWeight }}% + 期末 {{ cfg.finalWeight }}%</p>
           <p v-if="cfg.regularWeight > 0">
             平时构成：自评 {{ cfg.selfEvalWeight }}% · 组内互评 {{ cfg.peerReviewWeight }}% · 组间互评 {{ cfg.interGroupEvalWeight }}% · 教师 {{ cfg.teacherScoreWeight }}% · 企业导师 {{ cfg.mentorScoreWeight }}%

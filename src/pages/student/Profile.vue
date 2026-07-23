@@ -1,216 +1,12 @@
 <template>
-  <div class="space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">个人画像</h1>
-      <p class="text-gray-500 mt-1">查看个人信息与学习能力分析</p>
-    </div>
-
-    <!-- 个人信息卡片 -->
-    <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-      <div class="flex items-start gap-6">
-        <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-          <span class="text-2xl font-bold text-blue-600">{{ student?.name?.charAt(0) || '?' }}</span>
-        </div>
-        <div class="flex-1">
-          <h2 class="text-xl font-bold text-gray-900">{{ student?.name || store.currentUser || '未知用户' }}</h2>
-          <div class="grid grid-cols-2 gap-x-8 gap-y-2 mt-3">
-            <span class="flex items-center gap-2 text-sm text-gray-500"><Mail class="w-4 h-4" /> {{ student?.email || '未设置' }}</span>
-            <span class="flex items-center gap-2 text-sm text-gray-500"><Phone class="w-4 h-4" /> {{ student?.phone || '未设置' }}</span>
-            <span class="flex items-center gap-2 text-sm text-gray-500"><Calendar class="w-4 h-4" /> 入学时间：{{ student?.joinDate || '未知' }}</span>
-            <span class="flex items-center gap-2 text-sm text-gray-500"><User class="w-4 h-4" /> 学号：{{ student?.id || '未知' }}</span>
-          </div>
-        </div>
-        <div class="flex gap-6">
-          <div class="text-center px-4 py-3 bg-blue-50 rounded-lg">
-            <p class="text-2xl font-bold text-blue-600">{{ myEnrollments.length }}</p>
-            <p class="text-xs text-gray-500 mt-1">已报名</p>
-          </div>
-          <div class="text-center px-4 py-3 bg-emerald-50 rounded-lg">
-            <p class="text-2xl font-bold text-emerald-600">{{ completed }}</p>
-            <p class="text-xs text-gray-500 mt-1">已完成</p>
-          </div>
-          <div class="text-center px-4 py-3 bg-amber-50 rounded-lg">
-            <p class="text-2xl font-bold text-amber-600">{{ avgScore }}</p>
-            <p class="text-xs text-gray-500 mt-1">平均分</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 能力雷达图 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <BarChart3 class="w-5 h-5 text-blue-500" /> 课程成绩雷达图
-        </h3>
-        <div v-if="radarData.length > 0" class="relative w-80 h-80 mx-auto cursor-pointer" @click="showDetailModal = true">
-          <svg viewBox="-120 -120 440 440" class="w-full h-full">
-            <polygon v-for="level in 5" :key="level" :points="gridPoints(level)" fill="none" stroke="#e2e8f0" stroke-width="1" />
-            <line v-for="(_, i) in radarData" :key="'axis-' + i" :x1="100" :y1="100" :x2="axisEndX(i)" :y2="axisEndY(i)" stroke="#e2e8f0" stroke-width="1" />
-            <polygon :points="dataPolygonPoints" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" stroke-width="2" />
-            <g v-for="(d, i) in radarData" :key="'point-' + i">
-              <circle :cx="dataPointX(i)" :cy="dataPointY(i)" r="4" fill="#3b82f6" />
-              <text :x="dataLabelX(i)" :y="dataLabelY(i)" :text-anchor="dataLabelAnchor(i)" font-size="9" fill="#64748b">
-                {{ d.label }}
-              </text>
-              <text :x="dataLabelX(i)" :y="dataLabelY(i) + 12" :text-anchor="dataLabelAnchor(i)" font-size="9" fill="#3b82f6" font-weight="bold">
-                {{ d.value }}分
-              </text>
-            </g>
-          </svg>
-          <div class="absolute inset-0 flex items-center justify-center bg-black/10 rounded-lg opacity-0 hover:opacity-100 transition-opacity">
-            <span class="text-white font-medium text-sm bg-blue-600 px-3 py-1 rounded-full shadow-lg">点击查看详情</span>
-          </div>
-        </div>
-        <p v-else class="text-gray-400 text-center py-12">暂无平时成绩数据<br />完成课程评价后将生成能力雷达图</p>
-      </div>
-
-      <!-- 学习统计 -->
-      <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <TrendingUp class="w-5 h-5 text-emerald-500" /> 学习统计
-        </h3>
-        <div class="space-y-4">
-          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span class="text-sm text-gray-600">学习中课程</span>
-            <span class="font-semibold text-gray-900">{{ inProgress }} 门</span>
-          </div>
-          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span class="text-sm text-gray-600">已完成课程</span>
-            <span class="font-semibold text-emerald-600">{{ completed }} 门</span>
-          </div>
-          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span class="text-sm text-gray-600">总学分</span>
-            <span class="font-semibold text-blue-600">{{ totalCredits }} 学分</span>
-          </div>
-          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span class="text-sm text-gray-600">平均成绩</span>
-            <span class="font-semibold text-amber-600">{{ avgScore }} 分</span>
-          </div>
-          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span class="text-sm text-gray-600">平均进度</span>
-            <span class="font-semibold text-gray-900">{{ avgProgress }}%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 学习轨迹 -->
-    <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <BookOpen class="w-5 h-5 text-purple-500" /> 学习轨迹
-      </h3>
-      <div class="relative">
-        <div v-for="(enr, index) in myEnrollments" :key="enr.id" class="flex gap-4 pb-6 relative">
-          <div v-if="index < myEnrollments.length - 1" class="absolute left-[7px] top-4 bottom-0 w-0.5 bg-blue-200" />
-          <div :class="`w-4 h-4 rounded-full mt-1 flex-shrink-0 ${
-            enr.status === 'completed' ? 'bg-emerald-500' :
-            enr.status === 'in_progress' ? 'bg-amber-500' : 'bg-blue-500'
-          }`" />
-          <div class="flex-1">
-            <p class="font-medium text-gray-900">{{ getCourse(enr.courseId)?.title || '未知课程' }}</p>
-            <p class="text-sm text-gray-500">
-              {{ enr.enrollDate }} · 进度 {{ enr.progress }}% · 
-              {{ enr.status === 'completed' ? ' 已完成' : enr.status === 'in_progress' ? ' 学习中' : ' 已报名' }}
-            </p>
-          </div>
-        </div>
-        <p v-if="myEnrollments.length === 0" class="text-gray-400 text-center py-4">暂无学习记录</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 详情弹窗 -->
-  <Teleport to="body">
-    <div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50" @click="showDetailModal = false" />
-      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div class="flex items-center justify-between p-6 border-b border-gray-100">
-          <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <BarChart3 class="w-6 h-6 text-blue-500" /> 能力分析详情
-          </h3>
-          <button @click="showDetailModal = false" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-          <!-- 能力综合分析 - 顶部长条 -->
-          <div class="mb-6 p-5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl">
-            <div class="flex items-start gap-4">
-              <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                <Sparkles class="w-5 h-5 text-white" />
-              </div>
-              <div class="flex-1">
-                <h5 class="font-semibold text-white mb-2">能力综合分析</h5>
-                <p class="text-white/90 text-sm leading-relaxed">{{ abilityAnalysis }}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- 课程分析 -->
-            <div>
-              <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <BookOpen class="w-5 h-5 text-purple-500" /> 课程分析
-              </h4>
-              <div class="space-y-4">
-                <div v-for="(data, index) in radarData" :key="index" class="p-4 bg-gray-50 rounded-lg">
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="font-medium text-gray-900">{{ data.label }}</span>
-                    <span class="text-lg font-bold text-blue-600">{{ data.value }}分</span>
-                  </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-blue-600 h-2 rounded-full" :style="{ width: data.value + '%' }"></div>
-                  </div>
-                  <div class="mt-3 flex flex-wrap gap-2">
-                    <span class="px-2 py-1 text-xs rounded-full" :class="getScoreClass(data.value)">
-                      {{ getScoreText(data.value) }}
-                    </span>
-                    <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">
-                      {{ getCourseDetail(data.label) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 职业推荐 -->
-            <div>
-              <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Sparkles class="w-5 h-5 text-indigo-500" /> 职业推荐
-              </h4>
-              <div class="space-y-4">
-                <div v-for="(rec, index) in careerRecommendations" :key="index" class="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg">
-                  <div class="flex items-center gap-2 mb-2">
-                    <component :is="rec.icon" class="w-5 h-5 text-indigo-600" />
-                    <span class="font-semibold text-gray-900">{{ rec.title }}</span>
-                    <span class="ml-auto text-sm font-bold text-indigo-600">{{ rec.matchScore }}%</span>
-                  </div>
-                  <p class="text-sm text-gray-600 mb-3">{{ rec.description }}</p>
-                  <div class="flex flex-wrap gap-1">
-                    <span v-for="tag in rec.tags" :key="tag" class="px-2 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full">{{ tag }}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div v-if="careerRecommendations.length === 0" class="text-gray-400 text-center py-8">
-                完成课程评价后，系统将生成职业推荐
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </Teleport>
+  <div id="student-profile-root"></div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { User, Mail, Phone, Calendar, BookOpen, Award, TrendingUp, BarChart3, Sparkles, LineChart, Cpu } from 'lucide-vue-next'
+import * as d3 from 'd3'
+import { renderIcon } from '@/utils/d3-renderer'
 
 const store = useAppStore()
 const student = computed(() => store.students.find((s) => s.name === store.currentUser))
@@ -294,14 +90,6 @@ function axisEndY(i: number): number {
   return 100 + 150 * Math.sin(angle)
 }
 
-const dataPolygonPoints = computed(() => {
-  return radarData.value.map((d, i) => {
-    const angle = getAngle(i)
-    const r = d.value * 1.5
-    return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`
-  }).join(' ')
-})
-
 function dataPointX(i: number): number {
   const angle = getAngle(i)
   const r = radarData.value[i].value * 1.5
@@ -333,73 +121,109 @@ function dataLabelAnchor(i: number): string {
   return x > 100 ? 'start' : 'end'
 }
 
+const dataPolygonPoints = computed(() => {
+  return radarData.value.map((d, i) => {
+    const angle = getAngle(i)
+    const r = d.value * 1.5
+    return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`
+  }).join(' ')
+})
+
+const showDetailModal = ref(false)
+
 const careerRecommendations = computed(() => {
   if (radarData.value.length === 0) return []
-  
+
   const scores: Record<string, number> = {}
   radarData.value.forEach((d) => {
     scores[d.label] = d.value
   })
-  
+
   const aiScore = scores['AI 生成式应用开发'] || 0
   const vizScore = scores['数据可视化与商业分析'] || 0
   const frontendScore = scores['React 前端开发实战'] || 0
   const tsScore = scores['TypeScript 高级编程'] || 0
   const commScore = scores['高效沟通与表达训练'] || 0
-  
-  const recommendations = []
-  
+
+  const recommendations: { title: string; description: string; tags: string[]; matchScore: number; icon: string }[] = []
+
   if (aiScore >= 80) {
     recommendations.push({
       title: 'AI 应用开发工程师',
       description: '利用AI技术构建智能化应用，将大语言模型能力融入产品，是当前最热门的职业方向之一。',
       tags: ['AI', '大模型', '应用开发', '创新'],
       matchScore: Math.round((aiScore * 0.6 + frontendScore * 0.2 + tsScore * 0.2)),
-      icon: Sparkles
+      icon: 'sparkles'
     })
   }
-  
+
   if (vizScore >= 75) {
     recommendations.push({
       title: '数据可视化工程师',
       description: '将复杂数据转化为直观的可视化图表，帮助企业洞察业务趋势，支持数据驱动决策。',
       tags: ['数据可视化', '图表', 'BI', '分析'],
       matchScore: Math.round((vizScore * 0.5 + frontendScore * 0.3 + commScore * 0.2)),
-      icon: LineChart
+      icon: 'lineChart'
     })
   }
-  
+
   if (frontendScore >= 75) {
     recommendations.push({
       title: '前端开发工程师',
       description: '负责构建用户界面和交互体验，结合React、TypeScript等现代技术栈打造高质量Web应用。',
       tags: ['React', 'TypeScript', 'UI', '交互'],
       matchScore: Math.round((frontendScore * 0.5 + tsScore * 0.3 + vizScore * 0.2)),
-      icon: Cpu
+      icon: 'cpu'
     })
   }
-  
+
   if (aiScore >= 70 && frontendScore >= 70) {
     recommendations.push({
       title: '全栈AI开发工程师',
       description: '兼具前端开发与AI技术能力，能够独立完成从界面到智能功能的完整项目开发。',
       tags: ['全栈', 'AI', '前端', '后端'],
       matchScore: Math.round((aiScore * 0.35 + frontendScore * 0.35 + tsScore * 0.3)),
-      icon: Sparkles
+      icon: 'sparkles'
     })
   }
-  
+
   return recommendations.sort((a, b) => b.matchScore - a.matchScore).slice(0, 3)
 })
 
-const showDetailModal = ref(false)
+const abilityAnalysis = computed(() => {
+  if (radarData.value.length === 0) return '暂无能力数据'
+
+  const scores = radarData.value.map((d) => d.value)
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length
+  const maxScore = Math.max(...scores)
+  const minScore = Math.min(...scores)
+  const maxLabel = radarData.value.find((d) => d.value === maxScore)?.label || ''
+  const minLabel = radarData.value.find((d) => d.value === minScore)?.label || ''
+
+  let analysis = `您的平均能力得分为 ${Math.round(avg)} 分，整体表现`
+
+  if (avg >= 85) analysis += '优秀'
+  else if (avg >= 75) analysis += '良好'
+  else if (avg >= 65) analysis += '中等'
+  else analysis += '有待提升'
+
+  analysis += `。您的优势课程是「${maxLabel}」，建议继续深耕；`
+
+  if (minScore < 75) {
+    analysis += `「${minLabel}」相对薄弱，建议加强学习。`
+  } else {
+    analysis += '各课程均衡发展，可尝试拓展更多领域。'
+  }
+
+  return analysis
+})
 
 function getScoreClass(score: number): string {
   if (score >= 90) return 'bg-emerald-100 text-emerald-700'
   if (score >= 80) return 'bg-blue-100 text-blue-700'
-  if (score >= 70) return 'bg-amber-100 text-amber-700'
-  if (score >= 60) return 'bg-orange-100 text-orange-700'
-  return 'bg-red-100 text-red-700'
+  if (score >= 70) return 'bg-amber-100 text-gray-800'
+  if (score >= 60) return 'bg-brand-600/15 text-orange-700'
+  return 'bg-brand-600/15 text-red-700'
 }
 
 function getScoreText(score: number): string {
@@ -421,31 +245,277 @@ function getCourseDetail(title: string): string {
   return detailMap[title] || '综合能力'
 }
 
-const abilityAnalysis = computed(() => {
-  if (radarData.value.length === 0) return '暂无能力数据'
-  
-  const scores = radarData.value.map((d) => d.value)
-  const avg = scores.reduce((a, b) => a + b, 0) / scores.length
-  const maxScore = Math.max(...scores)
-  const minScore = Math.min(...scores)
-  const maxLabel = radarData.value.find((d) => d.value === maxScore)?.label || ''
-  const minLabel = radarData.value.find((d) => d.value === minScore)?.label || ''
-  
-  let analysis = `您的平均能力得分为 ${Math.round(avg)} 分，整体表现`
-  
-  if (avg >= 85) analysis += '优秀'
-  else if (avg >= 75) analysis += '良好'
-  else if (avg >= 65) analysis += '中等'
-  else analysis += '有待提升'
-  
-  analysis += `。您的优势课程是「${maxLabel}」，建议继续深耕；`
-  
-  if (minScore < 75) {
-    analysis += `「${minLabel}」相对薄弱，建议加强学习。`
+function renderProfile(root: HTMLElement) {
+  const container = d3.select(root)
+  container.selectAll('*').remove()
+
+  const s = student.value
+  const enrs = myEnrollments.value
+  const rd = radarData.value
+  const recs = careerRecommendations.value
+
+  // 页面标题
+  const titleDiv = container.append('div')
+  titleDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text('个人画像')
+  titleDiv.append('p').attr('class', 'text-gray-400 mt-1').text('查看个人信息与学习能力分析')
+
+  // 个人信息卡片
+  const infoCard = container.append('div').attr('class', 'bg-white rounded-xl p-6 border border-gray-100 shadow-sm')
+  const infoRow = infoCard.append('div').attr('class', 'flex items-start gap-6')
+
+  // 头像
+  const avatar = infoRow.append('div').attr('class', 'w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0')
+  avatar.append('span').attr('class', 'text-2xl font-bold text-brand-600').text(s?.name?.charAt(0) || '?')
+
+  // 信息
+  const infoContent = infoRow.append('div').attr('class', 'flex-1')
+  infoContent.append('h2').attr('class', 'text-xl font-bold text-gray-900').text(s?.name || store.currentUser || '未知用户')
+  const infoGrid = infoContent.append('div').attr('class', 'grid grid-cols-2 gap-x-8 gap-y-2 mt-3')
+
+  const infoItems = [
+    { icon: 'mail' as const, text: s?.email || '未设置' },
+    { icon: 'phone' as const, text: s?.phone || '未设置' },
+    { icon: 'calendar' as const, text: `入学时间：${s?.joinDate || '未知'}` },
+    { icon: 'user' as const, text: `学号：${s?.id || '未知'}` },
+  ]
+  infoItems.forEach((item) => {
+    const span = infoGrid.append('span').attr('class', 'flex items-center gap-2 text-sm text-gray-400')
+    renderIcon(span, item.icon).attr('class', 'w-4 h-4')
+    span.append('span').text(item.text)
+  })
+
+  // 统计数字
+  const statsRow = infoRow.append('div').attr('class', 'flex gap-6')
+  const stats = [
+    { value: enrs.length, label: '已报名', bg: 'bg-blue-50', text: 'text-brand-600' },
+    { value: completed.value, label: '已完成', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    { value: avgScore.value, label: '平均分', bg: 'bg-brand-400/10', text: 'text-amber-600' },
+  ]
+  stats.forEach((st) => {
+    const box = statsRow.append('div').attr('class', `text-center px-4 py-3 ${st.bg} rounded-lg`)
+    box.append('p').attr('class', `text-2xl font-bold ${st.text}`).text(String(st.value))
+    box.append('p').attr('class', 'text-xs text-gray-400 mt-1').text(st.label)
+  })
+
+  // 能力雷达图 + 学习统计 两列布局
+  const twoCol = container.append('div').attr('class', 'grid grid-cols-1 lg:grid-cols-2 gap-6')
+
+  // 雷达图卡片
+  const radarCard = twoCol.append('div').attr('class', 'bg-white rounded-xl p-6 border border-gray-100 shadow-sm')
+  const radarTitle = radarCard.append('h3').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
+  renderIcon(radarTitle, 'barChart3').attr('class', 'w-5 h-5 text-brand-600')
+  radarTitle.append('span').text('课程成绩雷达图')
+
+  if (rd.length > 0) {
+    const svgWrap = radarCard.append('div')
+      .attr('class', 'relative w-80 h-80 mx-auto cursor-pointer')
+      .on('click', () => { showDetailModal.value = true; reRender() })
+
+    const svg = svgWrap.append('svg').attr('viewBox', '-120 -120 440 440').attr('class', 'w-full h-full')
+
+    // 网格多边形
+    for (let level = 1; level <= 5; level++) {
+      svg.append('polygon')
+        .attr('points', gridPoints(level))
+        .attr('fill', 'none')
+        .attr('stroke', '#5eb6b9')
+        .attr('stroke-width', 1)
+        .attr('stroke-opacity', 0.3)
+    }
+
+    // 轴线
+    rd.forEach((_, i) => {
+      svg.append('line')
+        .attr('x1', 100).attr('y1', 100)
+        .attr('x2', axisEndX(i)).attr('y2', axisEndY(i))
+        .attr('stroke', '#5eb6b9')
+        .attr('stroke-width', 1)
+        .attr('stroke-opacity', 0.3)
+    })
+
+    // 数据多边形
+    svg.append('polygon')
+      .attr('points', dataPolygonPoints.value)
+      .attr('fill', 'rgba(65, 90, 119, 0.2)')
+      .attr('stroke', '#429fc4')
+      .attr('stroke-width', 2)
+
+    // 数据点 + 标签
+    rd.forEach((d, i) => {
+      svg.append('circle')
+        .attr('cx', dataPointX(i)).attr('cy', dataPointY(i))
+        .attr('r', 4).attr('fill', '#429fc4')
+
+      svg.append('text')
+        .attr('x', dataLabelX(i)).attr('y', dataLabelY(i))
+        .attr('text-anchor', dataLabelAnchor(i))
+        .attr('font-size', 9).attr('fill', '#5eb6b9')
+        .text(d.label)
+
+      svg.append('text')
+        .attr('x', dataLabelX(i)).attr('y', dataLabelY(i) + 12)
+        .attr('text-anchor', dataLabelAnchor(i))
+        .attr('font-size', 9).attr('fill', '#429fc4').attr('font-weight', 'bold')
+        .text(`${d.value}分`)
+    })
+
+    // hover提示
+    const hoverOverlay = svgWrap.append('div')
+      .attr('class', 'absolute inset-0 flex items-center justify-center bg-black/10 rounded-lg opacity-0 hover:opacity-100 transition-opacity')
+    hoverOverlay.append('span').attr('class', 'text-white font-medium text-sm bg-brand-600 px-3 py-1 rounded-full shadow-lg').text('点击查看详情')
   } else {
-    analysis += '各课程均衡发展，可尝试拓展更多领域。'
+    radarCard.append('p').attr('class', 'text-gray-400 text-center py-12')
+      .html('暂无平时成绩数据<br />完成课程评价后将生成能力雷达图')
   }
-  
-  return analysis
+
+  // 学习统计
+  const statCard = twoCol.append('div').attr('class', 'bg-white rounded-xl p-6 border border-gray-100 shadow-sm')
+  const statTitle = statCard.append('h3').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
+  renderIcon(statTitle, 'trendingUp').attr('class', 'w-5 h-5 text-brand-600')
+  statTitle.append('span').text('学习统计')
+
+  const statItems = [
+    { label: '学习中课程', value: `${inProgress.value} 门`, color: 'text-gray-900' },
+    { label: '已完成课程', value: `${completed.value} 门`, color: 'text-emerald-600' },
+    { label: '总学分', value: `${totalCredits.value} 学分`, color: 'text-brand-600' },
+    { label: '平均成绩', value: `${avgScore.value} 分`, color: 'text-amber-600' },
+    { label: '平均进度', value: `${avgProgress.value}%`, color: 'text-gray-900' },
+  ]
+  const statBody = statCard.append('div').attr('class', 'space-y-4')
+  statItems.forEach((item) => {
+    const row = statBody.append('div').attr('class', 'flex items-center justify-between p-3 bg-gray-50 rounded-lg')
+    row.append('span').attr('class', 'text-sm text-gray-600').text(item.label)
+    row.append('span').attr('class', `font-semibold ${item.color}`).text(item.value)
+  })
+
+  // 学习轨迹
+  const trackCard = container.append('div').attr('class', 'bg-white rounded-xl p-6 border border-brand-400/20 shadow-sm')
+  const trackTitle = trackCard.append('h3').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
+  renderIcon(trackTitle, 'bookOpen').attr('class', 'w-5 h-5 text-brand-600')
+  trackTitle.append('span').text('学习轨迹')
+
+  if (enrs.length > 0) {
+    const trackList = trackCard.append('div').attr('class', 'relative')
+    enrs.forEach((enr, index) => {
+      const item = trackList.append('div').attr('class', 'flex gap-4 pb-6 relative')
+
+      if (index < enrs.length - 1) {
+        item.append('div').attr('class', 'absolute left-[7px] top-4 bottom-0 w-0.5 bg-blue-200')
+      }
+
+      const dotClass = enr.status === 'completed' ? 'bg-brand-600' :
+        enr.status === 'in_progress' ? 'bg-brand-600' : 'bg-blue-500'
+      item.append('div').attr('class', `w-4 h-4 rounded-full mt-1 flex-shrink-0 ${dotClass}`)
+
+      const content = item.append('div').attr('class', 'flex-1')
+      content.append('p').attr('class', 'font-medium text-gray-900').text(getCourse(enr.courseId)?.title || '未知课程')
+
+      const statusText = enr.status === 'completed' ? '已完成' : enr.status === 'in_progress' ? '学习中' : '已报名'
+      content.append('p').attr('class', 'text-sm text-gray-400')
+        .text(`${enr.enrollDate} · 进度 ${enr.progress}% · ${statusText}`)
+    })
+  } else {
+    trackCard.append('p').attr('class', 'text-gray-400 text-center py-4').text('暂无学习记录')
+  }
+
+  // 详情弹窗 (showDetailModal)
+  if (showDetailModal.value) {
+    const modalOverlay = container.append('div').attr('class', 'fixed inset-0 z-50 flex items-center justify-center p-4')
+    modalOverlay.append('div').attr('class', 'absolute inset-0 bg-black/50').on('click', () => { showDetailModal.value = false; reRender() })
+
+    const modalBox = modalOverlay.append('div').attr('class', 'relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden')
+
+    // modal header
+    const modalHeader = modalBox.append('div').attr('class', 'flex items-center justify-between p-6 border-b border-brand-400/20')
+    const modalHeaderTitle = modalHeader.append('h3').attr('class', 'text-xl font-bold text-gray-900 flex items-center gap-2')
+    renderIcon(modalHeaderTitle, 'barChart3').attr('class', 'w-6 h-6 text-brand-600')
+    modalHeaderTitle.append('span').text('能力分析详情')
+
+    const closeBtn = modalHeader.append('button')
+      .attr('class', 'p-2 hover:bg-brand-400/10 rounded-lg transition-colors')
+      .on('click', () => { showDetailModal.value = false; reRender() })
+    const closeSvg = closeBtn.append('svg').attr('class', 'w-6 h-6 text-gray-400')
+      .attr('fill', 'none').attr('stroke', 'currentColor').attr('viewBox', '0 0 24 24')
+    closeSvg.append('path').attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+      .attr('stroke-width', '2').attr('d', 'M6 18L18 6M6 6l12 12')
+
+    const modalBody = modalBox.append('div').attr('class', 'p-6 overflow-y-auto max-h-[calc(90vh-80px)]')
+
+    // 能力综合分析
+    const analysisBanner = modalBody.append('div').attr('class', 'mb-6 p-5 bg-gradient-to-r from-brand-600 to-indigo-600 rounded-xl')
+    const bannerRow = analysisBanner.append('div').attr('class', 'flex items-start gap-4')
+    const bannerIcon = bannerRow.append('div').attr('class', 'w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0')
+    renderIcon(bannerIcon, 'sparkles').attr('class', 'w-5 h-5 text-white')
+    const bannerText = bannerRow.append('div').attr('class', 'flex-1')
+    bannerText.append('h5').attr('class', 'font-semibold text-white mb-2').text('能力综合分析')
+    bannerText.append('p').attr('class', 'text-white/90 text-sm leading-relaxed').text(abilityAnalysis.value)
+
+    // 课程分析 + 职业推荐 两列
+    const modalGrid = modalBody.append('div').attr('class', 'grid grid-cols-1 lg:grid-cols-2 gap-6')
+
+    // 课程分析
+    const courseAnalysisCol = modalGrid.append('div')
+    const courseAnalysisTitle = courseAnalysisCol.append('h4').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
+    renderIcon(courseAnalysisTitle, 'bookOpen').attr('class', 'w-5 h-5 text-brand-600')
+    courseAnalysisTitle.append('span').text('课程分析')
+
+    const courseList = courseAnalysisCol.append('div').attr('class', 'space-y-4')
+    rd.forEach((data) => {
+      const item = courseList.append('div').attr('class', 'p-4 bg-brand-400/10 rounded-lg')
+      const header = item.append('div').attr('class', 'flex items-center justify-between mb-2')
+      header.append('span').attr('class', 'font-medium text-gray-900').text(data.label)
+      header.append('span').attr('class', 'text-lg font-bold text-brand-600').text(`${data.value}分`)
+
+      const barBg = item.append('div').attr('class', 'w-full bg-brand-400/10 rounded-full h-2')
+      barBg.append('div').attr('class', 'bg-brand-600 h-2 rounded-full').style('width', `${data.value}%`)
+
+      const tags = item.append('div').attr('class', 'mt-3 flex flex-wrap gap-2')
+      tags.append('span').attr('class', `px-2 py-1 text-xs rounded-full ${getScoreClass(data.value)}`)
+        .text(getScoreText(data.value))
+      tags.append('span').attr('class', 'px-2 py-1 text-xs bg-brand-400/10 text-brand-600 rounded-full')
+        .text(getCourseDetail(data.label))
+    })
+
+    // 职业推荐
+    const careerCol = modalGrid.append('div')
+    const careerTitle = careerCol.append('h4').attr('class', 'text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2')
+    renderIcon(careerTitle, 'sparkles').attr('class', 'w-5 h-5 text-indigo-500')
+    careerTitle.append('span').text('职业推荐')
+
+    const careerList = careerCol.append('div').attr('class', 'space-y-4')
+    if (recs.length > 0) {
+      recs.forEach((rec) => {
+        const card = careerList.append('div').attr('class', 'p-4 bg-gradient-to-br from-brand-400/5 to-brand-400/5 rounded-lg')
+        const cardHeader = card.append('div').attr('class', 'flex items-center gap-2 mb-2')
+        renderIcon(cardHeader, rec.icon as any).attr('class', 'w-5 h-5 text-brand-600')
+        cardHeader.append('span').attr('class', 'font-semibold text-gray-900').text(rec.title)
+        cardHeader.append('span').attr('class', 'ml-auto text-sm font-bold text-brand-600').text(`${rec.matchScore}%`)
+
+        card.append('p').attr('class', 'text-sm text-gray-600 mb-3').text(rec.description)
+
+        const tagRow = card.append('div').attr('class', 'flex flex-wrap gap-1')
+        rec.tags.forEach((tag) => {
+          tagRow.append('span').attr('class', 'px-2 py-1 text-xs bg-brand-600/15 text-gray-800 rounded-full').text(tag)
+        })
+      })
+    } else {
+      careerList.append('div').attr('class', 'text-gray-400 text-center py-8').text('完成课程评价后，系统将生成职业推荐')
+    }
+  }
+}
+
+function reRender() {
+  const el = document.getElementById('student-profile-root')
+  if (el) renderProfile(el)
+}
+
+onMounted(() => {
+  const el = document.getElementById('student-profile-root')
+  if (el) renderProfile(el)
 })
+
+watch([myEnrollments, myGrades], () => {
+  const el = document.getElementById('student-profile-root')
+  if (el) renderProfile(el)
+}, { deep: true })
 </script>

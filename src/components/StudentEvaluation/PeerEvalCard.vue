@@ -8,7 +8,7 @@
           <span class="text-sm font-bold">{{ avgScore }}分</span>
           <span class="text-[10px] text-gray-400">(来自{{ receivedEvals.length }}人)</span>
           <div class="flex gap-1 ml-1">
-            <span v-for="e in receivedEvals" :key="e.id" class="text-[10px] px-1.5 py-0.5 bg-white rounded border text-gray-500" :title="`${e.evaluatorName}: ${e.score}分`">
+            <span v-for="e in receivedEvals" :key="e.id" class="text-[10px] px-1.5 py-0.5 bg-white rounded border text-gray-400" :title="`${e.evaluatorName}: ${e.score}分`">
               {{ e.evaluatorName }}:{{ e.score }}
             </span>
           </div>
@@ -18,24 +18,24 @@
     </div>
 
     <div v-if="myGroup && currentTargets.length > 0" class="ml-8">
-      <button @click="showGive = !showGive" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-600">
+      <button @click="showGive = !showGive" class="text-xs flex items-center gap-1 text-brand-600 hover:text-brand-600">
         {{ showGive ? '收起' : `给${peerLabel}评价 (${submittedCount}/${currentTargets.length})` }}
       </button>
 
-      <div v-if="showGive" :class="`mt-1.5 p-2 rounded-lg border space-y-2 ${isIntraGroup ? 'bg-blue-50 border-blue-100' : 'bg-purple-50 border-purple-100'}`">
-        <p class="text-[10px] text-gray-500">{{ peerTitle }}：{{ isIntraGroup ? '请为以下同学打分' : '请为以下小组统一打分' }}</p>
+      <div v-if="showGive" :class="`mt-1.5 p-2 rounded-lg border space-y-2 ${isIntraGroup ? 'bg-brand-600/10 border-brand-400/20' : 'bg-brand-400/10 border-brand-400/20'}`">
+        <p class="text-[10px] text-gray-400">{{ peerTitle }}：{{ isIntraGroup ? '请为以下同学打分' : '请为以下小组统一打分' }}</p>
 
         <template v-if="isIntraGroup">
           <div v-for="target in intraTargets" :key="target.studentId" class="flex items-center gap-2 px-2 py-1.5 bg-white rounded border border-blue-50">
-            <span class="text-xs font-medium text-gray-700 min-w-[4em]">{{ target.studentName }}</span>
+            <span class="text-xs font-medium text-gray-800 min-w-[4em]">{{ target.studentName }}</span>
             <template v-if="hasSubmittedPeerEval(target.studentId)">
-              <span class="text-[10px] text-emerald-500 ml-auto">已评 {{ getExistingEval(target.studentId)?.score }}分</span>
+              <span class="text-[10px] text-brand-600 ml-auto">已评 {{ getExistingEval(target.studentId)?.score }}分</span>
             </template>
             <template v-else>
               <div class="flex items-center gap-1 ml-auto">
                 <input type="range" min="0" max="100" :value="peerScores[target.studentId] ?? 75" @input="(e) => setPeerScore(target.studentId, Number((e.target as HTMLInputElement).value))" class="w-20 h-1" />
                 <span class="text-xs font-bold w-8 text-center">{{ peerScores[target.studentId] ?? 75 }}</span>
-                <button @click="handleSubmitPeerEval(target.studentId)" class="text-[10px] px-1.5 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600">提交</button>
+                <button @click="handleSubmitPeerEval(target.studentId)" class="text-[10px] px-1.5 py-0.5 bg-brand-600 text-white rounded hover:bg-brand-800">提交</button>
               </div>
             </template>
           </div>
@@ -43,10 +43,10 @@
         <template v-else>
           <div v-for="target in interGroupTargets" :key="target.groupId" class="px-2 py-2 bg-white rounded border border-purple-50">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-medium text-gray-700 min-w-[4em]">{{ target.groupName }}</span>
+              <span class="text-xs font-medium text-gray-800 min-w-[4em]">{{ target.groupName }}</span>
               <span class="text-[10px] text-gray-400">成员：{{ target.memberNames.join('、') }}</span>
               <template v-if="hasSubmittedGroupEval(target.groupId)">
-                <span class="text-[10px] text-emerald-500 ml-auto">已评 {{ getGroupExistingEval(target.groupId)?.score }}分</span>
+                <span class="text-[10px] text-brand-600 ml-auto">已评 {{ getGroupExistingEval(target.groupId)?.score }}分</span>
               </template>
               <template v-else>
                 <div class="flex items-center gap-1 ml-auto">

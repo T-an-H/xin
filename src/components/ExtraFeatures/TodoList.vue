@@ -8,16 +8,16 @@
         <span class="text-xs font-normal text-gray-400">（请在课前完成配置）</span>
       </p>
       <div v-for="cfg in pendingConfigCourses" :key="cfg.courseId"
-        class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 shadow-sm group">
-        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-          <Settings class="w-4 h-4 text-blue-600" />
+        class="flex items-center gap-3 p-3 bg-brand-600/10 rounded-lg border border-brand-400 shadow-sm group">
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-brand-600/15 flex items-center justify-center">
+          <Settings class="w-4 h-4 text-gray-600" />
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-blue-900 truncate">{{ cfg.courseTitle }}</p>
-          <p class="text-xs text-blue-600">未配置：{{ cfg.missing.join('、') }}</p>
+          <p class="text-xs text-gray-600">未配置：{{ cfg.missing.join('、') }}</p>
         </div>
         <router-link to="/teacher/courses"
-          class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-800 transition-colors">
           <ArrowRight class="w-3 h-3" />
           去配置
         </router-link>
@@ -33,15 +33,15 @@
       </p>
       <div v-for="group in evalReminderGroups" :key="group.key"
         class="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200 shadow-sm group">
-        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-          <ClipboardCheck class="w-4 h-4 text-amber-600" />
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-brand-600/15 flex items-center justify-center">
+          <ClipboardCheck class="w-4 h-4 text-gray-600" />
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-amber-900 truncate">{{ group.courseTitle }}</p>
-          <p class="text-xs text-amber-600">{{ group.label }}</p>
+          <p class="text-xs text-gray-600">{{ group.label }}</p>
         </div>
         <router-link :to="group.link"
-          class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
+          class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-800 transition-colors">
           <ArrowRight class="w-3 h-3" />
           去评价
         </router-link>
@@ -74,8 +74,8 @@
 
     <!-- 手动添加待办 -->
     <div class="flex items-center gap-3">
-      <input type="text" v-model="title" @keydown.enter="handleAdd" placeholder="添加待办事项..." class="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm" />
-      <input type="date" v-model="dueDate" class="px-3 py-2.5 rounded-lg border border-gray-200 focus:border-amber-500 outline-none text-sm" />
+      <input type="text" v-model="title" @keydown.enter="handleAdd" placeholder="添加待办事项..." class="flex-1 px-4 py-2.5 rounded-lg border border-brand-400/30 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm" />
+      <input type="date" v-model="dueDate" class="px-3 py-2.5 rounded-lg border border-brand-400/30 focus:border-amber-500 outline-none text-sm" />
       <button @click="handleAdd" class="flex items-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors text-sm font-medium">
         <Plus class="w-4 h-4" /> 添加
       </button>
@@ -83,13 +83,13 @@
 
     <div v-if="activeTodos.length > 0" class="space-y-1.5">
       <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">待完成</p>
-      <div v-for="t in activeTodos" :key="t.id" class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-100 shadow-sm group">
+      <div v-for="t in activeTodos" :key="t.id" class="flex items-center gap-3 p-3 bg-white rounded-lg border border-brand-400/20 shadow-sm group">
         <button @click="store.updateTodo(t.id, { completed: true })" class="flex-shrink-0">
-          <Circle class="w-5 h-5 text-gray-300 hover:text-emerald-500 transition-colors" />
+          <Circle class="w-5 h-5 text-gray-400/60 hover:text-gray-600 transition-colors" />
         </button>
         <span class="flex-1 text-sm text-gray-900">{{ t.title }}</span>
         <span v-if="t.dueDate" class="text-xs text-gray-400">{{ t.dueDate }}</span>
-        <button @click="store.deleteTodo(t.id)" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-red-400 transition-all">
+        <button @click="store.deleteTodo(t.id)" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-brand-600/10 text-red-400 transition-all">
           <X class="w-4 h-4" />
         </button>
       </div>
@@ -97,12 +97,12 @@
 
     <div v-if="doneTodos.length > 0" class="space-y-1.5">
       <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">已完成</p>
-      <div v-for="t in doneTodos" :key="t.id" class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-50">
+      <div v-for="t in doneTodos" :key="t.id" class="flex items-center gap-3 p-3 bg-brand-400/10 rounded-lg border border-brand-400/20">
         <button @click="store.updateTodo(t.id, { completed: false })" class="flex-shrink-0">
-          <CheckCircle class="w-5 h-5 text-emerald-500" />
+          <CheckCircle class="w-5 h-5 text-gray-600" />
         </button>
         <span class="flex-1 text-sm text-gray-400 line-through">{{ t.title }}</span>
-        <button @click="store.deleteTodo(t.id)" class="p-1 rounded hover:bg-red-50 text-red-400 transition-colors">
+        <button @click="store.deleteTodo(t.id)" class="p-1 rounded hover:bg-brand-600/10 text-red-400 transition-colors">
           <X class="w-4 h-4" />
         </button>
       </div>

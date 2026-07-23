@@ -4,16 +4,16 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">成绩查询</h1>
-        <p class="text-gray-500 mt-1">查看学生成绩、课程统计概览，支持导出和打印</p>
+        <p class="text-gray-400 mt-1">查看学生成绩、课程统计概览，支持导出和打印</p>
       </div>
       <div class="flex items-center gap-2">
         <button @click="handleExportGrades"
-          class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+          class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg border border-brand-400/30 text-gray-400 hover:bg-brand-400/10 transition-colors">
           <Download class="w-4 h-4" />
           导出 Excel
         </button>
         <button @click="handlePrintGrades"
-          class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+          class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg border border-brand-400/30 text-gray-400 hover:bg-brand-400/10 transition-colors">
           <Printer class="w-4 h-4" />
           打印成绩表
         </button>
@@ -23,16 +23,16 @@
     <!-- 筛选栏 -->
     <div class="flex flex-wrap gap-4">
       <select v-model="selectedCourse"
-        class="px-4 py-2.5 rounded-lg border border-gray-200 focus:border-emerald-500 outline-none text-sm bg-white">
+        class="px-4 py-2.5 rounded-lg border border-brand-400/30 focus:border-brand-600 outline-none text-sm bg-white">
         <option value="all">全部课程</option>
         <option v-for="c in myCourses" :key="c.id" :value="c.id">{{ c.title }}</option>
       </select>
       <select v-model="selectedSemester"
-        class="px-4 py-2.5 rounded-lg border border-gray-200 focus:border-emerald-500 outline-none text-sm bg-white min-w-[160px]">
+        class="px-4 py-2.5 rounded-lg border border-brand-400/30 focus:border-brand-600 outline-none text-sm bg-white min-w-[160px]">
         <option v-for="(sem, idx) in SEMESTERS" :key="idx" :value="idx === SEMESTERS.length - 1 ? 'all' : String(idx)">{{ sem.label }}</option>
       </select>
       <button @click="showStats = !showStats"
-        class="flex items-center gap-1 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 rounded-lg border border-gray-200 bg-white">
+        class="flex items-center gap-1 px-3 py-2 text-sm text-gray-400 hover:text-gray-800 rounded-lg border border-brand-400/30 bg-white">
         <BarChart3 class="w-4 h-4" />
         统计概览
         <ChevronUp v-if="showStats" class="w-3 h-3" />
@@ -44,85 +44,85 @@
     </div>
 
     <!-- 统计概览 -->
-    <div v-if="showStats" class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+    <div v-if="showStats" class="bg-white rounded-xl border border-brand-400/20 shadow-sm p-5 space-y-4">
       <!-- 关键指标 -->
       <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div class="bg-blue-50 rounded-lg p-3">
-          <p class="text-xs text-blue-500 mb-0.5">平均分</p>
-          <p class="text-xl font-bold text-blue-700">{{ stats.avg ?? '-' }}</p>
+        <div class="bg-brand-600/10 rounded-lg p-3">
+          <p class="text-xs text-gray-600 mb-0.5">平均分</p>
+          <p class="text-xl font-bold text-gray-800">{{ stats.avg ?? '-' }}</p>
         </div>
-        <div class="bg-emerald-50 rounded-lg p-3">
-          <p class="text-xs text-emerald-500 mb-0.5">最高分</p>
-          <p class="text-xl font-bold text-emerald-700">{{ stats.max ?? '-' }}</p>
+        <div class="bg-brand-400/10 rounded-lg p-3">
+          <p class="text-xs text-gray-600 mb-0.5">最高分</p>
+          <p class="text-xl font-bold text-gray-800">{{ stats.max ?? '-' }}</p>
         </div>
-        <div class="bg-amber-50 rounded-lg p-3">
-          <p class="text-xs text-amber-500 mb-0.5">最低分</p>
-          <p class="text-xl font-bold text-amber-700">{{ stats.min ?? '-' }}</p>
+        <div class="bg-brand-400/10 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">最低分</p>
+          <p class="text-xl font-bold text-gray-800">{{ stats.min ?? '-' }}</p>
         </div>
-        <div class="bg-purple-50 rounded-lg p-3">
-          <p class="text-xs text-purple-500 mb-0.5">及格率</p>
-          <p class="text-xl font-bold text-purple-700">{{ stats.passRate !== null ? `${stats.passRate}%` : '-' }}</p>
+        <div class="bg-brand-400/10 rounded-lg p-3">
+          <p class="text-xs text-gray-600 mb-0.5">及格率</p>
+          <p class="text-xl font-bold text-gray-800">{{ stats.passRate !== null ? `${stats.passRate}%` : '-' }}</p>
         </div>
-        <div class="bg-gray-50 rounded-lg p-3">
-          <p class="text-xs text-gray-500 mb-0.5">已评人数</p>
-          <p class="text-xl font-bold text-gray-700">{{ stats.totalGraded }}</p>
+        <div class="bg-brand-400/10 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">已评人数</p>
+          <p class="text-xl font-bold text-gray-800">{{ stats.totalGraded }}</p>
         </div>
       </div>
 
       <!-- 成绩分布条形图 -->
       <div v-if="stats.scoresList.length > 0">
-        <p class="text-xs font-medium text-gray-500 mb-2">成绩分布（{{ selectedCourseTitle }}）</p>
+        <p class="text-xs font-medium text-gray-400 mb-2">成绩分布（{{ selectedCourseTitle }}）</p>
         <div class="space-y-1.5">
           <div v-for="d in distribution" :key="d.label" class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 w-8 text-right">{{ d.label }}</span>
-            <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+            <span class="text-xs text-gray-400 w-8 text-right">{{ d.label }}</span>
+            <div class="flex-1 bg-brand-400/10 rounded-full h-3 overflow-hidden">
               <div class="h-full rounded-full transition-all duration-500" :class="d.bar" :style="{ width: `${d.pct}%` }" />
             </div>
-            <span class="text-xs text-gray-500 w-12">{{ d.count }}人 ({{ d.pct }}%)</span>
+            <span class="text-xs text-gray-400 w-12">{{ d.count }}人 ({{ d.pct }}%)</span>
           </div>
         </div>
       </div>
 
       <!-- 知识掌握热力图 -->
-      <div v-if="selectedCourse !== 'all'" class="mt-4 border-t border-gray-100 pt-4">
-        <p class="text-xs font-medium text-gray-500 mb-2">知识掌握热力图（{{ getCourseTitle(selectedCourse) }}）</p>
+      <div v-if="selectedCourse !== 'all'" class="mt-4 border-t border-brand-400/20 pt-4">
+        <p class="text-xs font-medium text-gray-400 mb-2">知识掌握热力图（{{ getCourseTitle(selectedCourse) }}）</p>
         <div class="grid grid-cols-5 gap-1.5 max-w-md">
           <div v-for="kp in knowledgePoints" :key="kp.label" class="flex flex-col items-center gap-1">
             <div class="w-full aspect-square rounded-lg flex items-center justify-center text-white text-xs font-bold" :class="kp.color">
               {{ kp.mastery }}%
             </div>
-            <span class="text-[9px] text-gray-500 text-center leading-tight">{{ kp.label }}</span>
+            <span class="text-[9px] text-gray-400 text-center leading-tight">{{ kp.label }}</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 权重摘要 -->
-    <div v-if="currentCfg" class="bg-amber-50 rounded-xl p-4 border border-amber-200 text-sm text-amber-800 flex flex-wrap gap-x-6 gap-y-1">
+    <div v-if="currentCfg" class="bg-brand-400/10 rounded-xl p-4 border border-brand-400/50 text-sm text-gray-800 flex flex-wrap gap-x-6 gap-y-1">
       <span>总成绩 = 平时 {{ currentCfg.regularWeight }}% + 期中 {{ currentCfg.midtermWeight }}% + 期末 {{ currentCfg.finalWeight }}%</span>
       <span>平时 = 自评 {{ currentCfg.selfEvalWeight }}% + 组内互评 {{ currentCfg.peerReviewWeight }}% + 组间互评 {{ currentCfg.interGroupEvalWeight }}% + 教师 {{ currentCfg.teacherScoreWeight }}% + 企业导师 {{ currentCfg.mentorScoreWeight }}%</span>
     </div>
 
     <!-- 成绩查询表 -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" ref="printRef">
+    <div class="bg-white rounded-xl border border-brand-400/20 shadow-sm overflow-hidden" ref="printRef">
       <div class="overflow-x-auto">
         <table class="w-full min-w-[600px]">
           <thead>
-            <tr class="bg-gray-50 border-b border-gray-100">
-              <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">学员</th>
-              <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">课程</th>
-              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[80px]">总分</th>
-              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[70px]">等级</th>
-              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[100px]">评阅时间</th>
-              <th class="text-center px-4 py-3 text-sm font-medium text-gray-500 min-w-[70px]">详情</th>
+            <tr class="bg-brand-400/10 border-b border-brand-400/20">
+              <th class="text-left px-4 py-3 text-sm font-medium text-gray-400">学员</th>
+              <th class="text-left px-4 py-3 text-sm font-medium text-gray-400">课程</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-400 min-w-[80px]">总分</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-400 min-w-[70px]">等级</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-400 min-w-[100px]">评阅时间</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-400 min-w-[70px]">详情</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
-            <tr v-for="enr in filteredEnrollments" :key="enr.id" class="hover:bg-gray-50 transition-colors">
+          <tbody class="divide-y divide-brand-400/20">
+            <tr v-for="enr in filteredEnrollments" :key="enr.id" class="hover:bg-brand-400/10 transition-colors">
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                    <span class="text-xs font-medium text-emerald-600">{{ getStudentName(enr.studentId).charAt(0) }}</span>
+                  <div class="w-7 h-7 rounded-full bg-brand-600/15 flex items-center justify-center flex-shrink-0">
+                    <span class="text-xs font-medium text-gray-600">{{ getStudentName(enr.studentId).charAt(0) }}</span>
                   </div>
                   <span class="text-sm font-medium text-gray-900 whitespace-nowrap">{{ getStudentName(enr.studentId) }}</span>
                 </div>
@@ -132,24 +132,24 @@
                 <span v-if="getStudentTotal(enr)" class="font-semibold text-sm" :class="getTotalColorClass(getStudentTotal(enr)!)">
                   {{ getStudentTotal(enr) }}
                 </span>
-                <span v-else class="text-gray-300">-</span>
+                <span v-else class="text-gray-400/60">-</span>
               </td>
               <td class="px-4 py-3 text-center">
                 <span v-if="getStudentTotal(enr)" class="text-xs px-2 py-0.5 rounded-full" :class="getGradeLevel(getStudentTotal(enr)!).color">
                   {{ getGradeLevel(getStudentTotal(enr)!).label }}
                 </span>
-                <span v-else class="text-gray-300">-</span>
+                <span v-else class="text-gray-400/60">-</span>
               </td>
-              <td class="px-4 py-3 text-center text-sm text-gray-500">
+              <td class="px-4 py-3 text-center text-sm text-gray-400">
                 {{ getGradedAt(enr) || '-' }}
               </td>
               <td class="px-4 py-3 text-center">
                 <button v-if="getStudentTotal(enr) !== null"
                   @click="openDetail(enr)"
-                  class="text-xs text-blue-500 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors">
+                  class="text-xs text-gray-600 hover:text-gray-800 px-2 py-1 rounded hover:bg-brand-600/10 transition-colors">
                   查看详情
                 </button>
-                <span v-else class="text-gray-300">-</span>
+                <span v-else class="text-gray-400/60">-</span>
               </td>
             </tr>
           </tbody>
@@ -181,11 +181,11 @@ import type { DetailedGrade, Enrollment } from '@/types'
 const store = useAppStore()
 
 const GRADE_COLORS = [
-  { range: [90, 100], label: '优秀', color: 'bg-emerald-100 text-emerald-700 border-emerald-300', bar: 'bg-emerald-400' },
-  { range: [80, 89], label: '良好', color: 'bg-blue-100 text-blue-700 border-blue-300', bar: 'bg-blue-400' },
-  { range: [70, 79], label: '中等', color: 'bg-amber-100 text-amber-700 border-amber-300', bar: 'bg-amber-400' },
-  { range: [60, 69], label: '及格', color: 'bg-orange-100 text-orange-700 border-orange-300', bar: 'bg-orange-400' },
-  { range: [0, 59], label: '不及格', color: 'bg-red-100 text-red-700 border-red-300', bar: 'bg-red-400' },
+  { range: [90, 100], label: '优秀', color: 'bg-brand-600/15 text-gray-800 border-brand-400', bar: 'bg-brand-600' },
+  { range: [80, 89], label: '良好', color: 'bg-brand-600/15 text-gray-800 border-brand-400', bar: 'bg-brand-600' },
+  { range: [70, 79], label: '中等', color: 'bg-brand-600/15 text-gray-800 border-brand-400/50', bar: 'bg-brand-600' },
+  { range: [60, 69], label: '及格', color: 'bg-brand-600/15 text-gray-800 border-brand-400', bar: 'bg-brand-600' },
+  { range: [0, 59], label: '不及格', color: 'bg-brand-600/15 text-gray-800 border-brand-400', bar: 'bg-brand-600' },
 ]
 
 const PASS_THRESHOLD = 60
@@ -296,7 +296,7 @@ const knowledgePoints = computed(() => {
   const labels = ['基础概念', '核心算法', '应用实践', '项目开发', '前沿探索']
   return labels.map((label, i) => {
     const mastery = getMastery(i)
-    const color = mastery >= 85 ? 'bg-emerald-400' : mastery >= 70 ? 'bg-blue-400' : mastery >= 60 ? 'bg-amber-400' : 'bg-red-400'
+    const color = mastery >= 85 ? 'bg-brand-600' : mastery >= 70 ? 'bg-brand-600' : mastery >= 60 ? 'bg-brand-600' : 'bg-brand-600'
     return { label, mastery, color }
   })
 })
@@ -337,11 +337,11 @@ const getGradeLevel = (score: number) => {
 }
 
 const getTotalColorClass = (total: number) => {
-  if (total >= 90) return 'text-emerald-600'
-  if (total >= 80) return 'text-blue-600'
-  if (total >= 70) return 'text-amber-600'
-  if (total >= 60) return 'text-orange-600'
-  return 'text-red-600'
+  if (total >= 90) return 'text-brand-600'
+  if (total >= 80) return 'text-brand-600'
+  if (total >= 70) return 'text-brand-600'
+  if (total >= 60) return 'text-brand-600'
+  return 'text-brand-600'
 }
 
 const openDetail = (enr: Enrollment) => {
@@ -391,8 +391,8 @@ function handlePrintGrades() {
   const style = `
     <style>
       table { width: 100%; border-collapse: collapse; font-size: 14px; }
-      th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-      th { background: #f9fafb; font-weight: 600; color: #6b7280; }
+      th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #d1d9e6; }
+      th { background: #bac9bd; font-weight: 600; color: #429fc4; }
     </style>
   `
   const win = window.open('', '_blank')

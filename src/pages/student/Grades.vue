@@ -1,70 +1,25 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">成绩管理</h1>
-        <p class="text-gray-500 mt-1">查看各课程成绩明细及最终成绩构成</p>
-      </div>
-      <select v-model="semester" class="px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm">
-        <option value="">全部学期</option>
-        <option v-for="s in semesters" :key="s" :value="s">{{ s }}</option>
-      </select>
-    </div>
+    <div id="student-grades-root"></div>
 
-    <!-- 统计卡片 -->
+    <!-- 统计卡片 (保留子组件) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatCard :icon="Award" label="平均成绩" :value="avgScore" :color="avgScore >= 60 ? 'bg-emerald-500' : 'bg-red-500'" />
-      <StatCard :icon="TrendingUp" label="最高分" :value="maxScore" color="bg-blue-500" />
-      <StatCard :icon="TrendingDown" label="最低分" :value="minScore" color="bg-amber-500" />
-      <StatCard :icon="BookOpen" label="已评课程" :value="gradedCourses" color="bg-purple-500" />
+      <StatCard :icon="Award" label="平均成绩" :value="avgScore" :color="avgScore >= 60 ? 'bg-brand-400/10' : 'bg-brand-600'" />
+      <StatCard :icon="TrendingUp" label="最高分" :value="maxScore" color="bg-brand-600" />
+      <StatCard :icon="TrendingDown" label="最低分" :value="minScore" color="bg-brand-600" />
+      <StatCard :icon="BookOpen" label="已评课程" :value="gradedCourses" color="bg-brand-600" />
     </div>
 
-    <!-- 课程成绩列表 -->
-    <div class="space-y-3">
-      <div v-for="entry in gradeEntries" :key="entry.grade.id"
-        class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-
-        <!-- 卡片头 - 点击打开弹窗 -->
-        <button @click="openModal(entry)" class="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center" :class="entry.gradient">
-              <BookOpen class="w-5 h-5 text-white" />
-            </div>
-            <div class="text-left min-w-0">
-              <p class="text-sm font-semibold text-gray-900 truncate">{{ entry.courseName }}</p>
-              <p class="text-xs text-gray-400">{{ entry.teacher }} · {{ entry.semester }}</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-3 flex-shrink-0">
-            <div class="text-right">
-              <span class="text-lg font-bold" :class="getGradeColor(entry.totalScore)">{{ entry.totalScore }}</span>
-              <span class="text-xs text-gray-400">分</span>
-              <p class="text-[10px]">
-                <span class="px-1.5 py-0.5 rounded" :class="getGradeBadge(entry.totalScore)">{{ getGradeLevel(entry.totalScore) }}</span>
-              </p>
-            </div>
-            <ChevronRight class="w-4 h-4 text-gray-400" />
-          </div>
-        </button>
-      </div>
-
-      <div v-if="filteredGrades.length === 0" class="text-center py-12 text-gray-400 bg-white rounded-xl border border-gray-100">
-        暂无成绩数据
-      </div>
-    </div>
-
-    <!-- 成绩明细弹窗 -->
+    <!-- 成绩明细弹窗 (保留子组件) -->
     <Modal :isOpen="modalOpen" :onClose="closeModal" :title="modalTitle" maxWidth="max-w-xl">
       <div v-if="modalEntry" class="space-y-4">
-        <!-- 暂无明细 -->
         <div v-if="!modalEntry.detail" class="text-center py-6 text-gray-400 text-sm">
           暂无该课程的详细成绩明细数据
         </div>
 
-        <!-- 平时成绩明细 -->
         <div v-if="modalEntry.detail" class="space-y-3">
           <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-            <ClipboardList class="w-3.5 h-3.5" /> 平时成绩构成
+            <component :is="ClipboardList" class="w-3.5 h-3.5" /> 平时成绩构成
           </h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div v-for="item in regularItems(modalEntry)" :key="item.label"
@@ -72,7 +27,7 @@
               <component :is="item.icon" class="w-4 h-4" :class="item.iconColor" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-medium text-gray-700">{{ item.label }}</span>
+                  <span class="text-xs font-medium text-gray-800">{{ item.label }}</span>
                   <span class="text-xs font-bold" :class="item.color">{{ item.score }}<span class="font-normal text-gray-400">/100</span></span>
                 </div>
                 <div class="flex items-center gap-2 mt-1">
@@ -86,17 +41,16 @@
           </div>
         </div>
 
-        <!-- 期中/期末成绩 -->
         <div v-if="modalEntry.detail" class="space-y-3">
           <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-            <BarChart3 class="w-3.5 h-3.5" /> 大考成绩
+            <component :is="BarChart3" class="w-3.5 h-3.5" /> 大考成绩
           </h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <template v-for="item in examItems(modalEntry)" :key="item.label">
-              <div v-if="item.score !== undefined" class="flex items-center justify-between p-2.5 rounded-lg bg-white border border-gray-100">
+              <div v-if="item.score !== undefined" class="flex items-center justify-between p-2.5 rounded-lg bg-white border border-brand-400/20">
                 <div class="flex items-center gap-2">
-                  <FileText class="w-4 h-4 text-gray-400" />
-                  <span class="text-xs text-gray-700">{{ item.label }}</span>
+                  <component :is="FileText" class="w-4 h-4 text-gray-400" />
+                  <span class="text-xs text-gray-800">{{ item.label }}</span>
                   <span class="text-[10px] text-gray-400">（权重{{ item.weight }}%）</span>
                 </div>
                 <span class="text-sm font-bold" :class="getGradeColor(item.score)">{{ item.score }}</span>
@@ -105,35 +59,33 @@
           </div>
         </div>
 
-        <!-- 最终成绩计算方式 -->
-        <div class="bg-blue-50/80 border border-blue-100 rounded-lg p-3 space-y-2">
-          <h4 class="text-xs font-semibold text-blue-700 flex items-center gap-1.5">
-            <Calculator class="w-3.5 h-3.5" /> 最终成绩计算
+        <div class="bg-blue-50/80 border border-brand-400 rounded-lg p-3 space-y-2">
+          <h4 class="text-xs font-semibold text-gray-800 flex items-center gap-1.5">
+            <component :is="Calculator" class="w-3.5 h-3.5" /> 最终成绩计算
           </h4>
-          <p class="text-xs text-blue-600 leading-relaxed">
-            <span class="font-medium">总成绩</span> = 
+          <p class="text-xs text-brand-600 leading-relaxed">
+            <span class="font-medium">总成绩</span> =
             平时成绩(×<span class="font-medium">{{ cfgMap[modalEntry.grade.courseId]?.regularWeight ?? 40 }}%</span>)
             <template v-if="(cfgMap[modalEntry.grade.courseId]?.midtermWeight ?? 0) > 0">
               + 期中成绩(×<span class="font-medium">{{ cfgMap[modalEntry.grade.courseId]?.midtermWeight }}%</span>)
             </template>
             + 期末成绩(×<span class="font-medium">{{ cfgMap[modalEntry.grade.courseId]?.finalWeight ?? 60 }}%</span>)
           </p>
-          <p v-if="modalEntry.detail" class="text-xs text-blue-500 leading-relaxed">
-            <span class="font-medium">平时成绩</span> = 
+          <p v-if="modalEntry.detail" class="text-xs text-brand-600 leading-relaxed">
+            <span class="font-medium">平时成绩</span> =
             <template v-for="(item, idx) in regularItems(modalEntry)" :key="item.label">
               {{ item.score }}×{{ item.weight }}%{{ idx < regularItems(modalEntry).length - 1 ? ' + ' : '' }}
             </template>
             = <span class="font-bold">{{ calcRegular(modalEntry) }}</span>
           </p>
-          <div class="flex items-center gap-2 pt-1 border-t border-blue-100">
-            <span class="text-xs font-bold text-blue-700">最终得分：</span>
+          <div class="flex items-center gap-2 pt-1 border-t border-brand-400">
+            <span class="text-xs font-bold text-gray-800">最终得分：</span>
             <span class="text-base font-bold" :class="getGradeColor(modalEntry.totalScore)">{{ modalEntry.totalScore }}</span>
           </div>
         </div>
 
-        <!-- 教师评语 -->
         <div v-if="modalEntry.grade.comment" class="flex items-start gap-2 text-xs text-gray-500">
-          <MessageSquare class="w-3.5 h-3.5 mt-0.5 text-gray-400 flex-shrink-0" />
+          <component :is="MessageSquare" class="w-3.5 h-3.5 mt-0.5 text-gray-400 flex-shrink-0" />
           <span class="italic">"{{ modalEntry.grade.comment }}"</span>
         </div>
       </div>
@@ -142,14 +94,38 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch, h } from 'vue'
 import { useAppStore } from '@/stores/app'
 import type { DetailedGrade, Grade } from '@/types'
 import { getDefaultGradeConfig } from '@/types'
 import { detailedGrades as mockDetailedGrades } from '@/data/mockData'
-import { Award, BookOpen, TrendingUp, TrendingDown, ChevronRight, ClipboardList, BarChart3, Calculator, MessageSquare, User, Users, Building2, GraduationCap, Briefcase, FileText } from 'lucide-vue-next'
+import { Icons, renderIcon } from '@/utils/d3-renderer'
+import * as d3 from 'd3'
 import StatCard from '@/components/StatCard.vue'
 import Modal from '@/components/Modal.vue'
+
+// 使用 Icons 映射创建 Vue 组件，替代 lucide-vue-next
+function iconView(name: keyof typeof Icons) {
+  const svgHtml = Icons[name]
+  if (!svgHtml) return undefined as any
+  return { render() { return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', innerHTML: svgHtml }) } }
+}
+
+const Award = iconView('award')
+const TrendingUp = iconView('trendingUp')
+const TrendingDown = iconView('trendingDown')
+const BookOpen = iconView('bookOpen')
+const ChevronRight = iconView('chevronRight')
+const ClipboardList = iconView('clipboardList')
+const BarChart3 = iconView('barChart3')
+const Calculator = iconView('calculator')
+const MessageSquare = iconView('messageSquare')
+const FileText = iconView('fileText')
+const User = iconView('user')
+const Users = iconView('users')
+const Building2 = iconView('building2')
+const GraduationCap = iconView('graduationCap')
+const Briefcase = iconView('briefcase')
 
 const store = useAppStore()
 const semester = ref('')
@@ -210,7 +186,7 @@ function calcRegular(entry: GradeEntry): number {
 }
 
 const gradeEntries = computed<GradeEntry[]>(() => {
-  const gradients = ['from-blue-500 to-cyan-500', 'from-purple-500 to-pink-500', 'from-emerald-500 to-teal-500', 'from-amber-500 to-orange-500', 'from-rose-500 to-red-500', 'from-indigo-500 to-violet-500']
+  const gradients = ['from-brand-600 to-brand-600', 'from-brand-600 to-brand-600', 'from-brand-600 to-brand-600', 'from-brand-600 to-brand-600', 'from-rose-500 to-red-500', 'from-brand-600 to-brand-600']
   return filteredGrades.value.map((g, i) => {
     const course = store.courses.find((c) => c.id === g.courseId)
     const d = getDetail(g.courseId)
@@ -240,25 +216,25 @@ const regularItems = (entry: GradeEntry) => {
   if (d?.selfEvalScore !== undefined) {
     items.push({
       label: '自评', score: d.selfEvalScore, weight: cfg.selfEvalWeight,
-      icon: User, iconColor: 'text-blue-500', bar: 'bg-blue-500', border: 'border-blue-100', color: 'text-blue-600',
+      icon: User, iconColor: 'text-brand-600', bar: 'bg-brand-600', border: 'border-brand-400', color: 'text-brand-600',
     })
   }
   if (d?.peerReviewScore !== undefined) {
     items.push({
       label: '互评', score: d.peerReviewScore, weight: cfg.peerReviewWeight,
-      icon: Users, iconColor: 'text-emerald-500', bar: 'bg-emerald-500', border: 'border-emerald-100', color: 'text-emerald-600',
+      icon: Users, iconColor: 'text-brand-600', bar: 'bg-brand-400/10', border: 'border-emerald-100', color: 'text-brand-600',
     })
   }
   if (d?.interGroupScore !== undefined) {
     items.push({
       label: '组间评', score: d.interGroupScore, weight: cfg.interGroupEvalWeight,
-      icon: Building2, iconColor: 'text-purple-500', bar: 'bg-purple-500', border: 'border-purple-100', color: 'text-purple-600',
+      icon: Building2, iconColor: 'text-brand-600', bar: 'bg-brand-600', border: 'border-brand-400/20', color: 'text-brand-600',
     })
   }
   if (d?.teacherScore !== undefined) {
     items.push({
       label: '教师评', score: d.teacherScore, weight: cfg.teacherScoreWeight,
-      icon: GraduationCap, iconColor: 'text-amber-500', bar: 'bg-amber-500', border: 'border-amber-100', color: 'text-amber-600',
+      icon: GraduationCap, iconColor: 'text-amber-500', bar: 'bg-brand-600', border: 'border-amber-100', color: 'text-brand-600',
     })
   }
   if (d?.mentorScore !== undefined) {
@@ -284,11 +260,11 @@ const examItems = (entry: GradeEntry) => {
 }
 
 const getGradeColor = (score: number) => {
-  if (score >= 90) return 'text-emerald-600'
-  if (score >= 80) return 'text-blue-600'
-  if (score >= 70) return 'text-amber-600'
+  if (score >= 90) return 'text-brand-600'
+  if (score >= 80) return 'text-brand-600'
+  if (score >= 70) return 'text-brand-600'
   if (score >= 60) return 'text-orange-600'
-  return 'text-red-600'
+  return 'text-brand-600'
 }
 
 const getGradeLevel = (score: number) => {
@@ -300,11 +276,11 @@ const getGradeLevel = (score: number) => {
 }
 
 const getGradeBadge = (score: number) => {
-  if (score >= 90) return 'bg-emerald-50 text-emerald-600'
-  if (score >= 80) return 'bg-blue-50 text-blue-600'
-  if (score >= 70) return 'bg-amber-50 text-amber-600'
-  if (score >= 60) return 'bg-orange-50 text-orange-600'
-  return 'bg-red-50 text-red-600'
+  if (score >= 90) return 'bg-brand-400/10 text-brand-600'
+  if (score >= 80) return 'bg-brand-600/10 text-brand-600'
+  if (score >= 70) return 'bg-brand-400/10 text-brand-600'
+  if (score >= 60) return 'bg-brand-400/10 text-brand-600'
+  return 'bg-brand-600/10 text-brand-600'
 }
 
 const avgScore = computed(() => {
@@ -323,4 +299,82 @@ const minScore = computed(() => {
 })
 
 const gradedCourses = computed(() => gradeEntries.value.length)
+
+function renderGrades(root: HTMLElement) {
+  const container = d3.select(root)
+  container.selectAll('*').remove()
+
+  // 头部：标题 + 学期筛选
+  const headerDiv = container.append('div').attr('class', 'flex items-center justify-between')
+  const titleDiv = headerDiv.append('div')
+  titleDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text('成绩管理')
+  titleDiv.append('p').attr('class', 'text-gray-500 mt-1').text('查看各课程成绩明细及最终成绩构成')
+
+  const select = headerDiv.append('select')
+    .attr('class', 'px-3 py-2.5 rounded-lg border border-brand-400/30 focus:border-brand-600 outline-none text-sm')
+    .on('change', (event) => {
+      semester.value = (event.target as HTMLSelectElement).value
+    })
+  select.append('option').attr('value', '').text('全部学期')
+  semesters.value.forEach((s) => {
+    select.append('option').attr('value', s).text(s)
+  })
+  select.property('value', semester.value)
+
+  // 课程成绩列表
+  const listDiv = container.append('div').attr('class', 'space-y-3')
+
+  if (gradeEntries.value.length === 0) {
+    listDiv.append('div')
+      .attr('class', 'text-center py-12 text-gray-400 bg-white rounded-xl border border-brand-400/20')
+      .text('暂无成绩数据')
+    return
+  }
+
+  gradeEntries.value.forEach((entry) => {
+    const card = listDiv.append('div')
+      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm overflow-hidden')
+
+    const btn = card.append('button')
+      .attr('class', 'w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors')
+      .on('click', () => openModal(entry))
+
+    const leftDiv = btn.append('div').attr('class', 'flex items-center gap-3 min-w-0')
+    const iconWrap = leftDiv.append('div')
+      .attr('class', `w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center ${entry.gradient}`)
+    renderIcon(iconWrap, 'bookOpen').attr('class', 'w-5 h-5 text-white')
+
+    const textDiv = leftDiv.append('div').attr('class', 'text-left min-w-0')
+    textDiv.append('p').attr('class', 'text-sm font-semibold text-gray-900 truncate').text(entry.courseName)
+    textDiv.append('p').attr('class', 'text-xs text-gray-400').text(`${entry.teacher} · ${entry.semester}`)
+
+    const rightDiv = btn.append('div').attr('class', 'flex items-center gap-3 flex-shrink-0')
+    const scoreWrap = rightDiv.append('div').attr('class', 'text-right')
+    const scoreSpan = scoreWrap.append('span')
+      .attr('class', `text-lg font-bold ${getGradeColor(entry.totalScore)}`)
+      .text(String(entry.totalScore))
+    scoreWrap.append('span').attr('class', 'text-xs text-gray-400').text('分')
+    const badgeP = scoreWrap.append('p').attr('class', 'text-[10px]')
+    badgeP.append('span')
+      .attr('class', `px-1.5 py-0.5 rounded ${getGradeBadge(entry.totalScore)}`)
+      .text(getGradeLevel(entry.totalScore))
+
+    renderIcon(rightDiv, 'chevronRight').attr('class', 'w-4 h-4 text-gray-400')
+  })
+}
+
+onMounted(() => {
+  const el = document.getElementById('student-grades-root')
+  if (el) renderGrades(el)
+})
+
+watch(gradeEntries, () => {
+  const el = document.getElementById('student-grades-root')
+  if (el) renderGrades(el)
+}, { deep: true })
+
+watch(semester, () => {
+  const el = document.getElementById('student-grades-root')
+  if (el) renderGrades(el)
+})
 </script>

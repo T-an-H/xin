@@ -1,36 +1,36 @@
 <template>
   <div>
     <!-- 无配置 -->
-    <div v-if="!config" class="bg-gray-50 rounded-lg p-4 text-center text-sm text-gray-400">该课程尚未配置评价方案</div>
-    <div v-else-if="enabledTypes.length === 0" class="bg-amber-50 rounded-lg p-4 text-center text-sm text-amber-500">当前课程配置下无可用的评价类型</div>
+    <div v-if="!config" class="bg-brand-400/10 rounded-lg p-4 text-center text-sm text-gray-400">该课程尚未配置评价方案</div>
+    <div v-else-if="enabledTypes.length === 0" class="bg-brand-400/10 rounded-lg p-4 text-center text-sm text-gray-400">当前课程配置下无可用的评价类型</div>
     <div v-else class="space-y-3">
       <!-- 配置标签 -->
       <div class="flex items-center gap-2 flex-wrap mb-2">
-        <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">{{ EvalTemplateLabels[config.template] }}</span>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-brand-600/15 text-brand-600 border border-brand-400">{{ EvalTemplateLabels[config.template] }}</span>
         <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-600 border border-cyan-200">
           {{ EvalFrequencyLabels[config.frequency] }}
           <span class="ml-1 text-[10px] text-cyan-400">（共{{ totalSessions }}次）</span>
         </span>
-        <span v-if="!courseHasGroups" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">组内/组间互评自动隐藏（未分组）</span>
-        <span v-if="!config.hasMentor" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">企业导师评价自动隐藏（无企业参与）</span>
+        <span v-if="!courseHasGroups" class="text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-gray-400">组内/组间互评自动隐藏（未分组）</span>
+        <span v-if="!config.hasMentor" class="text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-gray-400">企业导师评价自动隐藏（无企业参与）</span>
       </div>
 
       <!-- 评价场次列表 -->
-      <div v-for="session in totalSessions" :key="session" class="border rounded-lg overflow-hidden" :class="sessionReminders[session]?.status === 'overdue' ? 'border-red-200' : 'border-gray-100'">
-        <button @click="sessionState(session).disabled ? null : openEvalModal(session)" :disabled="sessionState(session).disabled" class="w-full flex items-center justify-between px-4 py-3 text-sm transition-colors" :class="sessionState(session).disabled ? 'bg-gray-50 cursor-not-allowed text-gray-400' : 'hover:bg-gray-50 text-gray-800'">
+      <div v-for="session in totalSessions" :key="session" class="border rounded-lg overflow-hidden" :class="sessionReminders[session]?.status === 'overdue' ? 'border-brand-400' : 'border-brand-400/20'">
+        <button @click="sessionState(session).disabled ? null : openEvalModal(session)" :disabled="sessionState(session).disabled" class="w-full flex items-center justify-between px-4 py-3 text-sm transition-colors" :class="sessionState(session).disabled ? 'bg-brand-400/10 cursor-not-allowed text-gray-400' : 'hover:bg-brand-400/10 text-gray-800'">
           <div class="flex items-center gap-3">
             <span :class="sessionState(session).disabled ? 'text-gray-400' : 'font-medium text-gray-800'">第{{ session }}次评价</span>
-            <span v-if="sessionState(session).disabled && sessionState(session).reason" class="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+            <span v-if="sessionState(session).disabled && sessionState(session).reason" class="text-xs px-1.5 py-0.5 rounded-full bg-brand-400/10 text-gray-400">
               {{ sessionState(session).reason }}
             </span>
-            <span v-else :class="`text-xs px-1.5 py-0.5 rounded-full ${sessionReminders[session]?.status === 'overdue' ? 'bg-red-100 text-red-600' : sessionReminders[session]?.status === 'pending' ? 'bg-amber-100 text-amber-600' : 'text-gray-400'}`">
+            <span v-else :class="`text-xs px-1.5 py-0.5 rounded-full ${sessionReminders[session]?.status === 'overdue' ? 'bg-brand-600/15 text-brand-600' : sessionReminders[session]?.status === 'pending' ? 'bg-brand-600/15 text-brand-600' : 'text-gray-400'}`">
               {{ sessionReminders[session]?.status === 'overdue' ? '已逾期' : sessionReminders[session]?.status === 'pending' ? '待评价' : '' }}
             </span>
-            <span class="text-xs" :class="sessionState(session).disabled ? 'text-gray-300' : 'text-gray-500'">{{ getSessionEvals(session).filter(e => e.record).length }}/{{ enabledTypes.length }} 项已评</span>
+            <span class="text-xs" :class="sessionState(session).disabled ? 'text-gray-400/60' : 'text-gray-400'">{{ getSessionEvals(session).filter(e => e.record).length }}/{{ enabledTypes.length }} 项已评</span>
           </div>
           <div class="flex items-center gap-2">
-            <CheckCircle v-if="!sessionState(session).disabled && getSessionEvals(session).filter(e => e.record).length === enabledTypes.length" class="w-3.5 h-3.5 text-emerald-500" />
-            <Lock v-else-if="sessionState(session).disabled" class="w-3.5 h-3.5 text-gray-300" />
+            <CheckCircle v-if="!sessionState(session).disabled && getSessionEvals(session).filter(e => e.record).length === enabledTypes.length" class="w-3.5 h-3.5 text-brand-600" />
+            <Lock v-else-if="sessionState(session).disabled" class="w-3.5 h-3.5 text-gray-400/60" />
             <ChevronRight v-else class="w-4 h-4 text-gray-400" />
           </div>
         </button>
@@ -40,12 +40,12 @@
     <!-- 评价弹窗 -->
     <Modal :is-open="evalModalOpen" :on-close="closeEvalModal" :title="`第${editingSession}次评价填写`" max-width="max-w-2xl">
       <!-- 异常预警 -->
-      <div v-if="modalAnomalies.length > 0" class="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-        <div class="flex items-center gap-2 text-red-600 text-sm font-medium mb-1">
+      <div v-if="modalAnomalies.length > 0" class="mb-4 bg-brand-600/10 border border-brand-400 rounded-lg p-3">
+        <div class="flex items-center gap-2 text-brand-600 text-sm font-medium mb-1">
           <AlertTriangle class="w-4 h-4" />
           异常预警 ({{ modalAnomalies.length }}条)
         </div>
-        <p v-for="a in modalAnomalies" :key="a.id" class="text-xs text-red-500 ml-6">{{ a.warning }}</p>
+        <p v-for="a in modalAnomalies" :key="a.id" class="text-xs text-brand-600 ml-6">{{ a.warning }}</p>
       </div>
 
       <!-- 表单 - 各评价类型 -->
@@ -62,7 +62,7 @@
                 <span class="text-sm font-bold w-10 text-right" :class="scoreColorClass(modalScores.self)">{{ modalScores.self }}</span>
                 <span class="text-xs text-gray-400">分</span>
               </div>
-              <p v-if="validationErrors.self" class="text-xs text-red-500">{{ validationErrors.self }}</p>
+              <p v-if="validationErrors.self" class="text-xs text-brand-600">{{ validationErrors.self }}</p>
             </div>
 
             <!-- 教师/导师评价：只读 -->
@@ -77,16 +77,16 @@
             <div v-else class="space-y-1.5">
               <div v-if="getPeerTargets(type).length === 0" class="text-xs text-gray-400">暂无互评目标</div>
               <div v-for="target in getPeerTargets(type)" :key="target.key" class="flex items-center gap-2 px-2 py-1.5 bg-white/60 rounded border">
-                <span class="text-xs font-medium text-gray-700 min-w-[4em]">{{ target.label }}</span>
+                <span class="text-xs font-medium text-gray-800 min-w-[4em]">{{ target.label }}</span>
                 <template v-if="hasSubmittedPeerFor(target)">
-                  <span class="text-xs text-emerald-500 ml-auto">已评 {{ getSubmittedPeerScore(target) }}分</span>
+                  <span class="text-xs text-brand-600 ml-auto">已评 {{ getSubmittedPeerScore(target) }}分</span>
                 </template>
                 <template v-else>
                   <div class="flex items-center gap-1 ml-auto">
                     <input type="range" min="0" max="100" :value="getPeerScore(target.key)" @input="setPeerScoreInput(target.key, $event)" class="w-20 h-1 accent-blue-500" />
                     <span class="text-xs font-bold w-8 text-center">{{ getPeerScore(target.key) }}</span>
                   </div>
-                  <p v-if="validationErrors[`peer_${target.key}`]" class="text-xs text-red-500 ml-2">{{ validationErrors[`peer_${target.key}`] }}</p>
+                  <p v-if="validationErrors[`peer_${target.key}`]" class="text-xs text-brand-600 ml-2">{{ validationErrors[`peer_${target.key}`] }}</p>
                 </template>
               </div>
             </div>
@@ -94,11 +94,11 @@
         </div>
 
         <!-- 提交按钮 -->
-        <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
-          <div v-if="submitError" class="flex-1 text-xs text-red-500 flex items-center gap-1">
+        <div class="flex items-center gap-3 pt-2 border-t border-brand-400/20">
+          <div v-if="submitError" class="flex-1 text-xs text-brand-600 flex items-center gap-1">
             <AlertTriangle class="w-3 h-3" />{{ submitError }}
           </div>
-          <button @click="handleModalSubmit" class="ml-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+          <button @click="handleModalSubmit" class="ml-auto px-6 py-2 bg-brand-600 hover:bg-brand-800 text-white text-sm font-medium rounded-lg transition-colors">
             保存提交
           </button>
         </div>
@@ -307,9 +307,9 @@ const validationErrors = ref<Record<string, string>>({})
 const submitError = ref('')
 
 function scoreColorClass(score: number): string {
-  if (score >= 85) return 'text-emerald-600'
-  if (score >= 60) return 'text-blue-600'
-  return 'text-red-500'
+  if (score >= 85) return 'text-brand-600'
+  if (score >= 60) return 'text-brand-600'
+  return 'text-brand-600'
 }
 
 function validateForm(): boolean {
