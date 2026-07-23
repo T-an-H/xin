@@ -13,7 +13,7 @@
     <!-- 成绩明细弹窗 (保留子组件) -->
     <Modal :isOpen="modalOpen" :onClose="closeModal" :title="modalTitle" maxWidth="max-w-xl">
       <div v-if="modalEntry" class="space-y-4">
-        <div v-if="!modalEntry.detail" class="text-center py-6 text-brand-400 text-sm">
+        <div v-if="!modalEntry.detail" class="text-center py-6 text-gray-400 text-sm">
           暂无该课程的详细成绩明细数据
         </div>
 
@@ -27,14 +27,14 @@
               <component :is="item.icon" class="w-4 h-4" :class="item.iconColor" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-medium text-brand-800">{{ item.label }}</span>
-                  <span class="text-xs font-bold" :class="item.color">{{ item.score }}<span class="font-normal text-brand-400">/100</span></span>
+                  <span class="text-xs font-medium text-gray-800">{{ item.label }}</span>
+                  <span class="text-xs font-bold" :class="item.color">{{ item.score }}<span class="font-normal text-gray-400">/100</span></span>
                 </div>
                 <div class="flex items-center gap-2 mt-1">
                   <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div class="h-full rounded-full" :class="item.bar" :style="{ width: item.score + '%' }" />
                   </div>
-                  <span class="text-[10px] text-brand-400">权重{{ item.weight }}%</span>
+                  <span class="text-[10px] text-gray-400">权重{{ item.weight }}%</span>
                 </div>
               </div>
             </div>
@@ -49,9 +49,9 @@
             <template v-for="item in examItems(modalEntry)" :key="item.label">
               <div v-if="item.score !== undefined" class="flex items-center justify-between p-2.5 rounded-lg bg-white border border-brand-400/20">
                 <div class="flex items-center gap-2">
-                  <component :is="FileText" class="w-4 h-4 text-brand-400" />
-                  <span class="text-xs text-brand-800">{{ item.label }}</span>
-                  <span class="text-[10px] text-brand-400">（权重{{ item.weight }}%）</span>
+                  <component :is="FileText" class="w-4 h-4 text-gray-400" />
+                  <span class="text-xs text-gray-800">{{ item.label }}</span>
+                  <span class="text-[10px] text-gray-400">（权重{{ item.weight }}%）</span>
                 </div>
                 <span class="text-sm font-bold" :class="getGradeColor(item.score)">{{ item.score }}</span>
               </div>
@@ -60,7 +60,7 @@
         </div>
 
         <div class="bg-blue-50/80 border border-brand-400 rounded-lg p-3 space-y-2">
-          <h4 class="text-xs font-semibold text-brand-800 flex items-center gap-1.5">
+          <h4 class="text-xs font-semibold text-gray-800 flex items-center gap-1.5">
             <component :is="Calculator" class="w-3.5 h-3.5" /> 最终成绩计算
           </h4>
           <p class="text-xs text-brand-600 leading-relaxed">
@@ -79,13 +79,13 @@
             = <span class="font-bold">{{ calcRegular(modalEntry) }}</span>
           </p>
           <div class="flex items-center gap-2 pt-1 border-t border-brand-400">
-            <span class="text-xs font-bold text-brand-800">最终得分：</span>
+            <span class="text-xs font-bold text-gray-800">最终得分：</span>
             <span class="text-base font-bold" :class="getGradeColor(modalEntry.totalScore)">{{ modalEntry.totalScore }}</span>
           </div>
         </div>
 
         <div v-if="modalEntry.grade.comment" class="flex items-start gap-2 text-xs text-gray-500">
-          <component :is="MessageSquare" class="w-3.5 h-3.5 mt-0.5 text-brand-400 flex-shrink-0" />
+          <component :is="MessageSquare" class="w-3.5 h-3.5 mt-0.5 text-gray-400 flex-shrink-0" />
           <span class="italic">"{{ modalEntry.grade.comment }}"</span>
         </div>
       </div>
@@ -307,7 +307,7 @@ function renderGrades(root: HTMLElement) {
   // 头部：标题 + 学期筛选
   const headerDiv = container.append('div').attr('class', 'flex items-center justify-between')
   const titleDiv = headerDiv.append('div')
-  titleDiv.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text('成绩管理')
+  titleDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text('成绩管理')
   titleDiv.append('p').attr('class', 'text-gray-500 mt-1').text('查看各课程成绩明细及最终成绩构成')
 
   const select = headerDiv.append('select')
@@ -326,7 +326,7 @@ function renderGrades(root: HTMLElement) {
 
   if (gradeEntries.value.length === 0) {
     listDiv.append('div')
-      .attr('class', 'text-center py-12 text-brand-400 bg-white rounded-xl border border-brand-400/20')
+      .attr('class', 'text-center py-12 text-gray-400 bg-white rounded-xl border border-brand-400/20')
       .text('暂无成绩数据')
     return
   }
@@ -345,21 +345,21 @@ function renderGrades(root: HTMLElement) {
     renderIcon(iconWrap, 'bookOpen').attr('class', 'w-5 h-5 text-white')
 
     const textDiv = leftDiv.append('div').attr('class', 'text-left min-w-0')
-    textDiv.append('p').attr('class', 'text-sm font-semibold text-brand-900 truncate').text(entry.courseName)
-    textDiv.append('p').attr('class', 'text-xs text-brand-400').text(`${entry.teacher} · ${entry.semester}`)
+    textDiv.append('p').attr('class', 'text-sm font-semibold text-gray-900 truncate').text(entry.courseName)
+    textDiv.append('p').attr('class', 'text-xs text-gray-400').text(`${entry.teacher} · ${entry.semester}`)
 
     const rightDiv = btn.append('div').attr('class', 'flex items-center gap-3 flex-shrink-0')
     const scoreWrap = rightDiv.append('div').attr('class', 'text-right')
     const scoreSpan = scoreWrap.append('span')
       .attr('class', `text-lg font-bold ${getGradeColor(entry.totalScore)}`)
       .text(String(entry.totalScore))
-    scoreWrap.append('span').attr('class', 'text-xs text-brand-400').text('分')
+    scoreWrap.append('span').attr('class', 'text-xs text-gray-400').text('分')
     const badgeP = scoreWrap.append('p').attr('class', 'text-[10px]')
     badgeP.append('span')
       .attr('class', `px-1.5 py-0.5 rounded ${getGradeBadge(entry.totalScore)}`)
       .text(getGradeLevel(entry.totalScore))
 
-    renderIcon(rightDiv, 'chevronRight').attr('class', 'w-4 h-4 text-brand-400')
+    renderIcon(rightDiv, 'chevronRight').attr('class', 'w-4 h-4 text-gray-400')
   })
 }
 

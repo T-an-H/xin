@@ -22,7 +22,7 @@
           <p class="text-sm font-medium text-gray-900 truncate">{{ f.name }}</p>
           <p class="text-xs text-gray-400">{{ formatSize(f.size) }} · {{ f.uploadedBy }} · {{ formatDate(f.uploadedAt) }}</p>
         </div>
-        <button @click="handleDownload(f)" class="p-2 rounded-lg hover:bg-brand-600/10 text-brand-600 transition-colors" title="下载">
+        <button @click="handleDownload(f)" class="p-2 rounded-lg hover:bg-brand-600/10 text-gray-600 transition-colors" title="下载">
           <Download class="w-4 h-4" />
         </button>
         <button @click="store.deleteCloudFile(f.id)" class="p-2 rounded-lg hover:bg-brand-600/10 text-red-400 transition-colors" title="删除">

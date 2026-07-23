@@ -104,11 +104,11 @@ function renderLogin(root: HTMLElement) {
   const mobileLogo = mobileBrand.append('div')
     .attr('class', 'w-16 h-16 rounded-2xl bg-brand-700 flex items-center justify-center mx-auto mb-4')
   renderIcon(mobileLogo, 'graduationCap', 'w-8 h-8 text-white')
-  mobileBrand.append('h2').attr('class', 'text-xl font-bold text-brand-900').text('EduManage')
+  mobileBrand.append('h2').attr('class', 'text-xl font-bold text-gray-900').text('EduManage')
 
   // ---- 欢迎标题 (桌面) ----
-  rightPanel.append('h2').attr('class', 'text-2xl font-bold text-brand-900 mb-2 hidden lg:block').text('欢迎登录')
-  rightPanel.append('p').attr('class', 'text-brand-400 mb-6 hidden lg:block').text('请选择角色并输入账号信息')
+  rightPanel.append('h2').attr('class', 'text-2xl font-bold text-gray-900 mb-2 hidden lg:block').text('欢迎登录')
+  rightPanel.append('p').attr('class', 'text-gray-400 mb-6 hidden lg:block').text('请选择角色并输入账号信息')
 
   // ===== 角色选择按钮 =====
   const roleGrid = rightPanel.append('div').attr('class', 'grid grid-cols-3 gap-3 mb-6')
@@ -125,10 +125,10 @@ function renderLogin(root: HTMLElement) {
       })
 
     renderIcon(btn, r.id === 'admin' ? 'userCog' : r.id === 'teacher' ? 'graduationCap' : 'users',
-      `w-6 h-6 mx-auto mb-1 ${isSelected ? 'text-brand-900' : 'text-brand-400'}`)
+      `w-6 h-6 mx-auto mb-1 ${isSelected ? 'text-gray-900' : 'text-gray-400'}`)
 
     btn.append('span')
-      .attr('class', `text-sm font-medium block ${isSelected ? 'text-brand-900' : 'text-brand-400'}`)
+      .attr('class', `text-sm font-medium block ${isSelected ? 'text-gray-900' : 'text-gray-400'}`)
       .text(r.label)
   })
 
@@ -137,10 +137,10 @@ function renderLogin(root: HTMLElement) {
 
   // 用户名
   const usernameGroup = form.append('div')
-  usernameGroup.append('label').attr('class', 'block text-sm font-medium text-brand-800 mb-1.5').text('用户名')
+  usernameGroup.append('label').attr('class', 'block text-sm font-medium text-gray-800 mb-1.5').text('用户名')
 
   const usernameInputWrapper = usernameGroup.append('div').attr('class', 'relative')
-  renderIcon(usernameInputWrapper, 'user', 'absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400')
+  renderIcon(usernameInputWrapper, 'user', 'absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400')
   usernameInputWrapper.append('input')
     .attr('type', 'text')
     .attr('placeholder', '请输入用户名')
@@ -153,10 +153,10 @@ function renderLogin(root: HTMLElement) {
 
   // 密码
   const passwordGroup = form.append('div')
-  passwordGroup.append('label').attr('class', 'block text-sm font-medium text-brand-800 mb-1.5').text('密码')
+  passwordGroup.append('label').attr('class', 'block text-sm font-medium text-gray-800 mb-1.5').text('密码')
 
   const passwordInputWrapper = passwordGroup.append('div').attr('class', 'relative')
-  renderIcon(passwordInputWrapper, 'lock', 'absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400')
+  renderIcon(passwordInputWrapper, 'lock', 'absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400')
   const pwInput = passwordInputWrapper.append('input')
     .attr('type', showPassword.value ? 'text' : 'password')
     .attr('placeholder', '请输入密码')
@@ -169,7 +169,7 @@ function renderLogin(root: HTMLElement) {
 
   const togglePwBtn = passwordInputWrapper.append('button')
     .attr('type', 'button')
-    .attr('class', 'absolute right-3 top-1/2 -translate-y-1/2 text-brand-400 hover:text-brand-600')
+    .attr('class', 'absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:KEEP_WARN_600')
     .on('click', () => {
       showPassword.value = !showPassword.value
       pwInput.attr('type', showPassword.value ? 'text' : 'password')
@@ -193,16 +193,16 @@ function renderLogin(root: HTMLElement) {
   submitBtn.append('span').text('登录')
 
   // 提示文字
-  form.append('p').attr('class', 'text-center text-xs text-brand-400')
+  form.append('p').attr('class', 'text-center text-xs text-gray-400')
     .text('演示账号：任意用户名和密码即可登录体验')
 
   // 教师角色提示
   if (showTeacherHint()) {
     const hintBox = form.append('div')
       .attr('class', 'bg-brand-400/10 border border-brand-400/50 rounded-lg p-3 text-xs text-brand-600')
-    hintBox.append('p').text('授课导师：王老师、李老师、陈老师 ……')
-    hintBox.append('p').text('企业导师：张导师、李导师')
-    hintBox.append('p').text('学院领导：刘院长、陈院长')
+    hintBox.append('p').text('授课导师：王老师、李老师、陈老师、张老师、刘老师、赵老师、孙老师、周老师、钱老师、吴老师、郑老师')
+    hintBox.append('p').text('企业导师：张导师、李导师、王导师、陈导师')
+    hintBox.append('p').text('学院领导：刘院长(授课导师+领导)、陈院长、张院长(企业导师+领导)')
   }
 
   // 监听 error 变化

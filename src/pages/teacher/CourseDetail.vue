@@ -916,10 +916,10 @@ const tabList = [
 
 // ---- 常量 ----
 const LEVEL_OPTIONS = [
-  { label: 'A (优秀)', range: [90, 100], color: 'bg-brand-600/15 text-brand-800 border-brand-600' },
-  { label: 'B (良好)', range: [80, 89],  color: 'bg-brand-600/15 text-brand-800 border-brand-600' },
-  { label: 'C (中等)', range: [70, 79],  color: 'bg-brand-600/15 text-brand-800 border-brand-600' },
-  { label: 'D (及格)', range: [60, 69],  color: 'bg-brand-600/15 text-brand-800 border-brand-600' },
+  { label: 'A (优秀)', range: [90, 100], color: 'bg-brand-600/15 text-gray-800 border-brand-600' },
+  { label: 'B (良好)', range: [80, 89],  color: 'bg-brand-600/15 text-gray-800 border-brand-600' },
+  { label: 'C (中等)', range: [70, 79],  color: 'bg-brand-600/15 text-gray-800 border-brand-600' },
+  { label: 'D (及格)', range: [60, 69],  color: 'bg-brand-600/15 text-gray-800 border-brand-600' },
 ]
 const ALL_EVAL_TYPES: EvalType[] = ['self', 'intra_group', 'inter_group', 'teacher', 'mentor']
 const EVAL_TEMPLATE_KEYS = Object.keys(EvalTemplateLabels) as EvalTemplate[]
@@ -978,6 +978,7 @@ const gradeSearch = ref('')
 const totalSearch = ref('')
 const showWeightReminderModal = ref(false)
 const pendingFinalExamSelect = ref('')
+const groupExcelInput = ref<HTMLInputElement | null>(null)
 
 function getStudentInitial(name: string): string {
   const ch = name.charAt(0)
@@ -1630,7 +1631,7 @@ function getScoreDisplay(studentId: string, sessionNumber: number, type: EvalTyp
 
 function scoreCellClass(studentId: string, sessionNumber: number, type: EvalType): string {
   const v = getAvgScore(studentId, sessionNumber, type)
-  if (v === null) return 'text-brand-400/60'
+  if (v === null) return 'text-gray-400/60'
   if (v >= 85) return 'text-brand-600'
   if (v >= 60) return 'text-brand-600'
   return 'text-brand-600'
@@ -1650,21 +1651,21 @@ function getStudentTotalAvg(studentId: string): string {
 function totalScoreColor(val: string | number): string {
   if (val === '-') return '#9ca3af'
   const n = parseInt(String(val))
-  if (n >= 85) return '#1E88E5'
-  if (n >= 60) return '#1E88E5'
-  return '#1E88E5'
+  if (n >= 85) return '#429fc4'
+  if (n >= 60) return '#429fc4'
+  return '#429fc4'
 }
 
 function getEnrollStatus(studentId: string): { label: string; color: string; progress: number } {
   const enr = store.enrollments.find((e) => e.courseId === courseId.value && e.studentId === studentId)
-  if (!enr) return { label: '未知', color: 'bg-brand-400/10 text-brand-400', progress: 0 }
+  if (!enr) return { label: '未知', color: 'bg-brand-400/10 text-gray-400', progress: 0 }
   const map: Record<string, { label: string; color: string }> = {
-    enrolled:     { label: '已报名',    color: 'bg-brand-600/10 text-brand-600' },
-    in_progress:  { label: '学习中',    color: 'bg-brand-400/10 text-brand-600' },
-    completed:    { label: '已完成',    color: 'bg-brand-400/10 text-brand-600' },
-    dropped:      { label: '已退课',    color: 'bg-brand-600/10 text-brand-600' },
+    enrolled:     { label: '已报名',    color: 'bg-brand-600/10 text-gray-600' },
+    in_progress:  { label: '学习中',    color: 'bg-brand-400/10 text-gray-600' },
+    completed:    { label: '已完成',    color: 'bg-brand-400/10 text-gray-600' },
+    dropped:      { label: '已退课',    color: 'bg-brand-600/10 text-gray-600' },
   }
-  return { ...map[enr.status] || { label: '未知', color: 'bg-brand-400/10 text-brand-400' }, progress: enr.progress || 0 }
+  return { ...map[enr.status] || { label: '未知', color: 'bg-brand-400/10 text-gray-400' }, progress: enr.progress || 0 }
 }
 
 const handleSetConfig = (updates: Partial<import('@/types').EvaluationConfig>) => {
@@ -2232,12 +2233,12 @@ function render() {
   } else if (activeTab.value === 'grades') {
     // 成绩管理 Tab - 显示提示
     const panel = container.append('div')
-      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-6 text-center text-brand-400')
+      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-6 text-center text-gray-400')
     panel.append('p').text('成绩管理内容加载中...')
   } else if (activeTab.value === 'students') {
     // 学员管理 Tab - 显示提示
     const panel = container.append('div')
-      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-6 text-center text-brand-400')
+      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-6 text-center text-gray-400')
     panel.append('p').text('学员管理内容加载中...')
   }
 }
@@ -2248,21 +2249,21 @@ function renderHeader(container: d3.Selection<any, any, any, any>) {
   const backBtn = topRow.append('button')
     .attr('class', 'p-2 rounded-lg hover:bg-brand-400/10 transition-colors')
     .on('click', () => router.back())
-  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-brand-400')
+  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-gray-400')
 
   const infoDiv = topRow.append('div').attr('class', 'flex-1')
-  infoDiv.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text(course.value?.title || '课程详情')
-  infoDiv.append('p').attr('class', 'text-brand-400 mt-1').text(`${course.value?.id} · ${course.value?.duration}课时`)
+  infoDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text(course.value?.title || '课程详情')
+  infoDiv.append('p').attr('class', 'text-gray-400 mt-1').text(`${course.value?.id} · ${course.value?.duration}课时`)
 
-  const statusClass = course.value?.status === 'active' ? 'bg-brand-600/10 text-brand-600' : 'bg-brand-400/10 text-brand-400'
+  const statusClass = course.value?.status === 'active' ? 'bg-brand-600/10 text-gray-600' : 'bg-brand-400/10 text-gray-400'
   topRow.append('span')
     .attr('class', `text-xs px-2 py-0.5 rounded-full ${statusClass}`)
     .text(course.value?.status === 'active' ? '进行中' : '已结束')
 }
 
 function renderReadOnlyBanner(container: d3.Selection<any, any, any, any>) {
-  const banner = container.append('div').attr('class', 'flex items-center gap-2 px-4 py-3 bg-brand-400/10 border border-brand-400/30 rounded-xl text-sm text-brand-400')
-  renderIcon(banner, 'eye', 'w-4 h-4 text-brand-400')
+  const banner = container.append('div').attr('class', 'flex items-center gap-2 px-4 py-3 bg-brand-400/10 border border-brand-400/30 rounded-xl text-sm text-gray-400')
+  renderIcon(banner, 'eye', 'w-4 h-4 text-gray-400')
   banner.append('span').html('该课程已结束，当前为<strong>只读查看</strong>模式，无法进行配置修改操作')
 }
 
@@ -2271,7 +2272,7 @@ function renderTabBar(container: d3.Selection<any, any, any, any>) {
   tabList.forEach((tab) => {
     const isActive = activeTab.value === tab.key
     const btn = tabBar.append('button')
-      .attr('class', `px-5 py-2.5 text-sm font-medium rounded-t-lg transition-all ${isActive ? 'bg-white text-brand-600 border border-b-0 border-brand-400/30 -mb-px' : 'text-brand-400 hover:text-brand-800'}`)
+      .attr('class', `px-5 py-2.5 text-sm font-medium rounded-t-lg transition-all ${isActive ? 'bg-white text-gray-600 border border-b-0 border-brand-400/30 -mb-px' : 'text-gray-400 hover:text-gray-800'}`)
       .on('click', () => { activeTab.value = tab.key; render() })
     renderIcon(btn, tab.icon, 'w-4 h-4 inline mr-1.5')
     btn.append('span').text(tab.label)
@@ -2293,8 +2294,8 @@ function renderCommentsTab(container: d3.Selection<any, any, any, any>) {
 function renderEvalManagementCard(container: d3.Selection<any, any, any, any>) {
   const card = container.append('div')
     .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-5')
-  card.append('h3').attr('class', 'text-sm font-semibold text-brand-900 mb-3').text('评价管理')
-  card.append('p').attr('class', 'text-sm text-brand-400').text('评价管理功能内容加载中...')
+  card.append('h3').attr('class', 'text-sm font-semibold text-gray-900 mb-3').text('评价管理')
+  card.append('p').attr('class', 'text-sm text-gray-400').text('评价管理功能内容加载中...')
 }
 
 function renderEvalConfigCard(container: d3.Selection<any, any, any, any>) {
@@ -2309,33 +2310,33 @@ function renderEvalConfigCard(container: d3.Selection<any, any, any, any>) {
     })
 
   const left = headerBtn.append('div').attr('class', 'flex items-center gap-2')
-  renderIcon(left, 'settings', 'w-5 h-5 text-brand-400')
-  left.append('h2').attr('class', 'font-semibold text-brand-900').text('评价方案配置')
+  renderIcon(left, 'settings', 'w-5 h-5 text-gray-400')
+  left.append('h2').attr('class', 'font-semibold text-gray-900').text('评价方案配置')
 
   const right = headerBtn.append('div').attr('class', 'flex items-center gap-3')
 
   // 锁定标签
   if (evalConfigLocked.value || isMentor.value) {
-    const lockSpan = right.append('span').attr('class', 'text-xs px-2 py-0.5 rounded-full bg-brand-400/10 text-brand-400 border border-brand-400/30')
+    const lockSpan = right.append('span').attr('class', 'text-xs px-2 py-0.5 rounded-full bg-brand-400/10 text-gray-400 border border-brand-400/30')
     renderIcon(lockSpan, 'lock', 'w-3 h-3 inline mr-0.5')
     lockSpan.append('span').text('仅查看')
   }
 
-  right.append('span').attr('class', 'text-xs text-brand-400')
+  right.append('span').attr('class', 'text-xs text-gray-400')
     .text(`${selectedConfig.value ? EvalTemplateLabels[selectedConfig.value.template] : '默认方案'} · ${selectedConfig.value ? EvalFrequencyLabels[selectedConfig.value.frequency] : '默认频率'}`)
 
   if (!isReadOnly.value && !evalConfigLocked.value && !isMentor.value) {
-    right.append('span').attr('class', 'text-xs text-brand-400 hover:text-brand-600')
+    right.append('span').attr('class', 'text-xs text-gray-400 hover:text-gray-600')
       .text(showSettings.value ? '收起 ▲' : '展开 ▼')
   }
   if (isReadOnly.value || evalConfigLocked.value || isMentor.value) {
-    right.append('span').attr('class', 'text-xs text-brand-400/60').text('仅查看')
+    right.append('span').attr('class', 'text-xs text-gray-400/60').text('仅查看')
   }
 
   // 锁定提示
   if (evalConfigLocked.value) {
-    const lockHint = card.append('div').attr('class', 'mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10 border border-brand-400/30 rounded-lg text-xs text-brand-400')
-    renderIcon(lockHint, 'lock', 'w-3.5 h-3.5 text-brand-400')
+    const lockHint = card.append('div').attr('class', 'mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10 border border-brand-400/30 rounded-lg text-xs text-gray-400')
+    renderIcon(lockHint, 'lock', 'w-3.5 h-3.5 text-gray-400')
     if (selectedConfig.value) {
       lockHint.append('span').text('评价方案已在第一节课开始前配置完成，已锁定不可修改。')
     } else {
@@ -2348,11 +2349,11 @@ function renderEvalConfigCard(container: d3.Selection<any, any, any, any>) {
   ALL_EVAL_TYPES.forEach((t) => {
     if (!selectedConfig.value || !TEMPLATE_EVAL_TYPES[selectedConfig.value.template].includes(t)) {
       tagWrap.append('span')
-        .attr('class', 'text-xs px-2.5 py-1 rounded-full bg-brand-400/10 text-brand-400/60 border border-brand-400/30')
+        .attr('class', 'text-xs px-2.5 py-1 rounded-full bg-brand-400/10 text-gray-400/60 border border-brand-400/30')
         .text(`${EvalTypeLabels[t]} ✗`)
     } else if (((t === 'intra_group' || t === 'inter_group') && !courseHasGroups.value) || (t === 'mentor' && selectedConfig.value && !selectedConfig.value.hasMentor)) {
       const span = tagWrap.append('span')
-        .attr('class', 'text-xs px-2.5 py-1 rounded-full bg-brand-400/10 text-brand-400 border border-brand-400/50')
+        .attr('class', 'text-xs px-2.5 py-1 rounded-full bg-brand-400/10 text-gray-400 border border-brand-400/50')
       renderIcon(span, 'eyeOff', 'w-3 h-3 inline mr-0.5')
       span.append('span').text(`${EvalTypeLabels[t]}（自动隐藏）`)
     } else {
@@ -2367,7 +2368,7 @@ function renderEvalConfigCard(container: d3.Selection<any, any, any, any>) {
   if (showSettings.value && !isReadOnly.value && !evalConfigLocked.value && !isMentor.value) {
     renderEvalSettings(card)
   } else if ((isReadOnly.value || evalConfigLocked.value) && showSettings.value) {
-    const readonlyArea = card.append('div').attr('class', 'border-t border-brand-400/20 mt-3 pt-4 text-sm text-brand-400 text-center py-4')
+    const readonlyArea = card.append('div').attr('class', 'border-t border-brand-400/20 mt-3 pt-4 text-sm text-gray-400 text-center py-4')
     renderIcon(readonlyArea, 'eyeOff', 'w-5 h-5 inline mr-1')
     readonlyArea.append('span').text(isReadOnly.value ? '已结束课程不可修改配置' : '第一节课已开始，评价方案已锁定不可修改')
   }
@@ -2378,7 +2379,7 @@ function renderEvalSettings(card: d3.Selection<any, any, any, any>) {
 
   // 评价模板
   const tplDiv = area.append('div')
-  tplDiv.append('p').attr('class', 'text-sm font-medium text-brand-800 mb-2').text('评价模板')
+  tplDiv.append('p').attr('class', 'text-sm font-medium text-gray-800 mb-2').text('评价模板')
   const tplGrid = tplDiv.append('div').attr('class', 'grid grid-cols-1 md:grid-cols-2 gap-2')
 
   EVAL_TEMPLATE_KEYS.forEach((tpl) => {
@@ -2387,18 +2388,18 @@ function renderEvalSettings(card: d3.Selection<any, any, any, any>) {
       .attr('class', `text-left p-3 rounded-lg border transition-all ${isSelected ? 'border-brand-600 bg-brand-400/10' : 'border-brand-400/30 bg-white hover:border-brand-400'}`)
       .on('click', () => { handleSetConfig({ template: tpl }); render() })
 
-    btn.append('span').attr('class', 'text-sm font-medium text-brand-900').text(EvalTemplateLabels[tpl])
-    btn.append('p').attr('class', 'text-xs text-brand-400 mt-0.5').text(EvalTemplateDescs[tpl])
+    btn.append('span').attr('class', 'text-sm font-medium text-gray-900').text(EvalTemplateLabels[tpl])
+    btn.append('p').attr('class', 'text-xs text-gray-400 mt-0.5').text(EvalTemplateDescs[tpl])
 
     const tagRow = btn.append('div').attr('class', 'flex gap-1 mt-1')
     TEMPLATE_EVAL_TYPES[tpl].forEach((et) => {
-      tagRow.append('span').attr('class', 'text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-brand-400').text(EvalTypeLabels[et])
+      tagRow.append('span').attr('class', 'text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-gray-400').text(EvalTypeLabels[et])
     })
   })
 
   // 评价频率
   const freqDiv = area.append('div')
-  freqDiv.append('p').attr('class', 'text-sm font-medium text-brand-800 mb-2').text('评价频率')
+  freqDiv.append('p').attr('class', 'text-sm font-medium text-gray-800 mb-2').text('评价频率')
   const freqGrid = freqDiv.append('div').attr('class', 'grid grid-cols-1 md:grid-cols-2 gap-2')
 
   EVAL_FREQUENCY_KEYS.forEach((freq) => {
@@ -2407,16 +2408,16 @@ function renderEvalSettings(card: d3.Selection<any, any, any, any>) {
       .attr('class', `text-left p-3 rounded-lg border transition-all ${isSelected ? 'border-brand-600 bg-brand-400/10' : 'border-brand-400/30 bg-white hover:border-brand-400'}`)
       .on('click', () => { handleSetConfig({ frequency: freq }); render() })
 
-    btn.append('span').attr('class', 'text-sm font-medium text-brand-900').text(EvalFrequencyLabels[freq])
-    btn.append('p').attr('class', 'text-xs text-brand-400 mt-0.5').text(EvalFrequencyDescs[freq])
-    btn.append('span').attr('class', 'text-xs text-brand-400 mt-0.5 block')
+    btn.append('span').attr('class', 'text-sm font-medium text-gray-900').text(EvalFrequencyLabels[freq])
+    btn.append('p').attr('class', 'text-xs text-gray-400 mt-0.5').text(EvalFrequencyDescs[freq])
+    btn.append('span').attr('class', 'text-xs text-gray-400 mt-0.5 block')
       .text(`共 ${courseId.value ? store.getEvalSessions(courseId.value) : 0} 次评价`)
   })
 
   // 自定义次数
   if (selectedConfig.value?.frequency === 'custom') {
     const customDiv = area.append('div').attr('class', 'mt-2')
-    customDiv.append('label').attr('class', 'text-xs text-brand-400').text('自定义评价次数：')
+    customDiv.append('label').attr('class', 'text-xs text-gray-400').text('自定义评价次数：')
     customDiv.append('input')
       .attr('type', 'number').attr('min', '1').attr('max', '20')
       .attr('class', 'ml-2 w-16 px-2 py-1 border border-brand-400/30 rounded-lg text-sm')
@@ -2430,16 +2431,16 @@ function renderEvalSettings(card: d3.Selection<any, any, any, any>) {
 
   // 企业导师开关
   const mentorRow = area.append('div').attr('class', 'flex items-center gap-3')
-  mentorRow.append('label').attr('class', 'text-sm font-medium text-brand-800').text('企业导师参与评价')
+  mentorRow.append('label').attr('class', 'text-sm font-medium text-gray-800').text('企业导师参与评价')
   const toggle = mentorRow.append('input')
     .attr('type', 'checkbox')
-    .attr('class', 'w-4 h-4 text-brand-600 border-brand-400/50 rounded focus:ring-brand-600')
+    .attr('class', 'w-4 h-4 text-gray-600 border-brand-400/50 rounded focus:ring-brand-600')
     .property('checked', selectedConfig.value?.hasMentor ?? false)
     .on('change', (e) => {
       handleSetConfig({ hasMentor: (e.target as HTMLInputElement).checked })
       render()
     })
-  mentorRow.append('label').attr('class', 'ml-2 text-sm text-brand-400').text('(企业导师可以对学员进行评价)')
+  mentorRow.append('label').attr('class', 'ml-2 text-sm text-gray-400').text('(企业导师可以对学员进行评价)')
 }
 
 // ===== 生命周期 =====

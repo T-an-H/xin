@@ -48,9 +48,9 @@ const getTierBadge = (courseId: string) => {
   const record = store.getStudentTier(courseId, student.value.id)
   if (!record) return null
   const map: Record<string, { class: string; label: string }> = {
-    basic: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-600/15 text-brand-800 border border-brand-400/50', label: '基础层' },
-    advanced: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-600/15 text-brand-800 border border-brand-400', label: '进阶层' },
-    excellent: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-600/15 text-brand-800 border border-brand-400', label: '卓越层' },
+    basic: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-600/15 text-gray-800 border border-brand-400/50', label: '基础层' },
+    advanced: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-600/15 text-gray-800 border border-brand-400', label: '进阶层' },
+    excellent: { class: 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-600/15 text-gray-800 border border-brand-400', label: '卓越层' },
   }
   return map[record.tier] || null
 }
@@ -64,15 +64,15 @@ const progressBarColor = (progress: number) => {
 const statusBadgeClass = (status: string) => {
   switch (status) {
     case 'enrolled':
-      return 'bg-brand-600/10 text-brand-600 border border-brand-400'
+      return 'bg-brand-600/10 text-gray-600 border border-brand-400'
     case 'in_progress':
       return 'bg-brand-400/10 text-emerald-600 border border-brand-400'
     case 'completed':
-      return 'bg-brand-400/10 text-brand-600 border border-brand-400/30'
+      return 'bg-brand-400/10 text-gray-600 border border-brand-400/30'
     case 'dropped':
-      return 'bg-brand-600/10 text-brand-600 border border-brand-400'
+      return 'bg-brand-600/10 text-gray-600 border border-brand-400'
     default:
-      return 'bg-brand-400/10 text-brand-600 border border-brand-400/30'
+      return 'bg-brand-400/10 text-gray-600 border border-brand-400/30'
   }
 }
 
@@ -112,7 +112,7 @@ function renderCourses(root: HTMLElement) {
 
   // Header
   const header = container.append('div')
-  header.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text('我的课程')
+  header.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text('我的课程')
   header.append('p').attr('class', 'text-gray-500 mt-1').text('查看已选课程的学习进度')
 
   // Grid
@@ -120,8 +120,8 @@ function renderCourses(root: HTMLElement) {
 
   const enrollments = enrolledCourses.value
   if (enrollments.length === 0) {
-    const emptyDiv = grid.append('div').attr('class', 'col-span-full text-center py-16 text-brand-400')
-    renderIcon(emptyDiv, 'bookOpen', 'w-12 h-12 mx-auto mb-4 text-brand-400')
+    const emptyDiv = grid.append('div').attr('class', 'col-span-full text-center py-16 text-gray-400')
+    renderIcon(emptyDiv, 'bookOpen', 'w-12 h-12 mx-auto mb-4 text-gray-400')
     emptyDiv.append('p').text('暂无已选课程')
     return
   }
@@ -144,8 +144,8 @@ function renderCourses(root: HTMLElement) {
     if (pendingEval) {
       const evalBadge = card.append('div').attr('class', 'absolute top-3 right-3 z-10')
       const span = evalBadge.append('span').attr('class', 'relative inline-flex')
-      renderIcon(span, 'alertCircle', 'w-5 h-5 text-brand-600')
-      span.append('span').attr('class', 'absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-600 rounded-full ring-2 ring-white animate-pulse')
+      renderIcon(span, 'alertCircle', 'w-5 h-5 text-gray-600')
+      span.append('span').attr('class', 'absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse')
     }
 
     // AI 分层标记
@@ -191,8 +191,8 @@ function renderCourses(root: HTMLElement) {
 
     // 课程大纲
     const descSection = contentDiv.append('div')
-    descSection.append('p').attr('class', 'text-xs font-semibold text-brand-400 uppercase tracking-wider mb-1').text('课程大纲')
-    descSection.append('p').attr('class', 'text-sm text-brand-600 line-clamp-2 leading-relaxed')
+    descSection.append('p').attr('class', 'text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1').text('课程大纲')
+    descSection.append('p').attr('class', 'text-sm text-gray-600 line-clamp-2 leading-relaxed')
       .text(course?.description || '暂无描述')
 
     // 老师信息
@@ -203,10 +203,10 @@ function renderCourses(root: HTMLElement) {
       .attr('alt', teacherName)
       .attr('class', 'w-8 h-8 rounded-full bg-gray-100 object-cover')
     const teacherInfo = teacherDiv.append('div').attr('class', 'flex-1 min-w-0')
-    teacherInfo.append('p').attr('class', 'text-sm font-medium text-brand-900 truncate').text(teacherName)
+    teacherInfo.append('p').attr('class', 'text-sm font-medium text-gray-900 truncate').text(teacherName)
     const teacherContact = getTeacherInfo(teacherName)
     if (teacherContact) {
-      teacherInfo.append('p').attr('class', 'text-xs text-brand-400 truncate').text(teacherContact.email || '')
+      teacherInfo.append('p').attr('class', 'text-xs text-gray-400 truncate').text(teacherContact.email || '')
     }
 
     // 进度条
@@ -227,7 +227,7 @@ function renderCourses(root: HTMLElement) {
     badgeSpan.append('span').text(statusLabel(enrollment.status))
 
     const actionLink = footerDiv.append('span')
-      .attr('class', `inline-flex items-center gap-1 text-xs font-medium transition-colors ${ended ? 'text-brand-400' : 'text-brand-600 group-hover:text-brand-800'}`)
+      .attr('class', `inline-flex items-center gap-1 text-xs font-medium transition-colors ${ended ? 'text-gray-400' : 'text-gray-600 group-hover:text-gray-800'}`)
     actionLink.text(ended ? '查看记录' : '进入学习')
     renderIcon(actionLink, 'arrowRight', 'w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5')
   })

@@ -3,14 +3,14 @@
 
 
     <!-- 已结束只读提示 -->
-    <div v-if="isReadOnly" class="flex items-center gap-2 px-4 py-3 bg-brand-400/5 border border-brand-400/30 rounded-xl text-sm text-brand-400">
-      <Eye class="w-4 h-4 text-brand-400" />
+    <div v-if="isReadOnly" class="flex items-center gap-2 px-4 py-3 bg-brand-400/5 border border-brand-400/30 rounded-xl text-sm text-gray-400">
+      <Eye class="w-4 h-4 text-gray-400" />
       <span>该课程已结束，当前为<strong>只读查看</strong>模式</span>
     </div>
 
     <div class="flex gap-1 bg-brand-400/10 p-1 rounded-xl overflow-x-auto">
       <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
-        :class="`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-brand-900 shadow-sm' : 'text-brand-400 hover:text-brand-800'}`">
+        :class="`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-800'}`">
         <component :is="tab.icon" class="w-4 h-4" />
         {{ tab.label }}
       </button>
@@ -49,37 +49,37 @@
               <p class="text-sm text-red-600 mb-4">第二节课已开始，AI 分层测试逾期未完成，已自动分配到基础层</p>
               <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
                 <Layers class="w-4 h-4 text-amber-500" />
-                <span class="text-sm font-bold text-brand-800">基础层</span>
+                <span class="text-sm font-bold text-gray-800">基础层</span>
               </div>
-              <p class="text-xs text-brand-400 mt-4">本学期不可修改，后续任务、资源、作业将根据基础层进行适配</p>
+              <p class="text-xs text-gray-400 mt-4">本学期不可修改，后续任务、资源、作业将根据基础层进行适配</p>
             </div>
 
             <!-- 已分层 → 永久锁定展示 -->
             <div v-else>
               <!-- 当前层级 -->
               <div>
-                <h3 class="text-sm font-semibold text-brand-800 mb-3">AI 学习层级评估</h3>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">AI 学习层级评估</h3>
                 <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
                   <div class="flex items-center justify-between mb-4">
                     <div>
-                      <p class="text-xs text-brand-400 mb-1">当前学习层级</p>
+                      <p class="text-xs text-gray-400 mb-1">当前学习层级</p>
                       <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
                         :class="tierBadgeClass">
                         <Layers class="w-4 h-4" />
                         {{ tierLabel }}
                         <span v-if="isAutoAssigned" class="text-[10px] opacity-75">(自动分配)</span>
                       </span>
-                      <span class="ml-2 text-[10px] text-brand-400">已锁定 · 该学期不可修改</span>
+                      <span class="ml-2 text-[10px] text-gray-400">已锁定 · 该学期不可修改</span>
                     </div>
                     <div class="text-right">
-                      <p class="text-xs text-brand-400">分层测试得分</p>
+                      <p class="text-xs text-gray-400">分层测试得分</p>
                       <p class="text-2xl font-bold text-blue-600">{{ myTierScore }}</p>
-                      <p class="text-xs text-brand-400">/ {{ totalQuestions * 10 }}分</p>
+                      <p class="text-xs text-gray-400">/ {{ totalQuestions * 10 }}分</p>
                     </div>
                   </div>
 
                   <!-- 锁定提示 -->
-                  <div class="mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10/80 rounded-lg text-xs text-brand-400">
+                  <div class="mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10/80 rounded-lg text-xs text-gray-400">
                     <Lock class="w-3.5 h-3.5" />
                     <span>AI 分层结果已锁定，本学期不可更改。后续任务、资源、作业将根据 {{ tierLabel }} 进行适配</span>
                   </div>
@@ -88,7 +88,7 @@
 
               <!-- AI 学习建议 -->
               <div>
-                <h3 class="text-sm font-semibold text-brand-800 mb-3">AI 学习建议</h3>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">AI 学习建议</h3>
                 <div class="space-y-3">
                   <div v-for="(tip, i) in aiTips" :key="i"
                     class="flex items-start gap-3 p-3 rounded-lg border border-brand-400/20 bg-brand-400/5">
@@ -96,8 +96,8 @@
                       <span class="text-xs font-bold text-blue-600">{{ i + 1 }}</span>
                     </div>
                     <div>
-                      <p class="text-sm font-medium text-brand-900">{{ tip.title }}</p>
-                      <p class="text-xs text-brand-400 mt-0.5">{{ tip.desc }}</p>
+                      <p class="text-sm font-medium text-gray-900">{{ tip.title }}</p>
+                      <p class="text-xs text-gray-400 mt-0.5">{{ tip.desc }}</p>
                     </div>
                   </div>
                 </div>
@@ -105,13 +105,13 @@
 
               <!-- 分层对比 -->
               <div>
-                <h3 class="text-sm font-semibold text-brand-800 mb-3">层级对照</h3>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3">层级对照</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div v-for="ct in tierComparison" :key="ct.level"
                     class="p-3 rounded-lg border"
                     :class="ct.level === myTier ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200' : 'border-brand-400/20'">
                     <p class="text-xs font-semibold mb-1" :class="ct.color">{{ ct.label }}</p>
-                    <p class="text-xs text-brand-400">{{ ct.desc }}</p>
+                    <p class="text-xs text-gray-400">{{ ct.desc }}</p>
                   </div>
                 </div>
               </div>
@@ -125,8 +125,8 @@
               <div class="space-y-6">
                 <!-- 进度 -->
                 <div class="flex items-center justify-between">
-                  <span class="text-sm text-brand-400">已答 {{ answeredCount }}/{{ totalQuestions }} 题</span>
-                  <span class="text-xs text-brand-400">每题 10 分，满分 {{ totalQuestions * 10 }} 分</span>
+                  <span class="text-sm text-gray-400">已答 {{ answeredCount }}/{{ totalQuestions }} 题</span>
+                  <span class="text-xs text-gray-400">每题 10 分，满分 {{ totalQuestions * 10 }} 分</span>
                 </div>
                 <div class="w-full h-1.5 bg-brand-400/10 rounded-full overflow-hidden">
                   <div class="h-full bg-blue-500 rounded-full transition-all"
@@ -137,10 +137,10 @@
                 <div v-for="(q, i) in testQuestions" :key="q.id"
                   class="p-4 rounded-lg border"
                   :class="testAnswers[q.id] !== undefined ? 'border-blue-200 bg-blue-50/30' : 'border-brand-400/20'">
-                  <p class="text-sm font-medium text-brand-900 mb-3">
+                  <p class="text-sm font-medium text-gray-900 mb-3">
                     <span class="text-blue-600 font-bold">{{ i + 1 }}.</span>
                     {{ q.question }}
-                    <span class="ml-1 text-[10px] text-brand-400">({{ q.type === 'true_false' ? '判断题' : '单选题' }})</span>
+                    <span class="ml-1 text-[10px] text-gray-400">({{ q.type === 'true_false' ? '判断题' : '单选题' }})</span>
                   </p>
                   <div class="space-y-1.5">
                     <button v-for="(opt, oi) in q.options" :key="oi"
@@ -148,7 +148,7 @@
                       class="w-full text-left px-3 py-2 rounded-lg text-sm border transition-all"
                       :class="testAnswers[q.id] === (q.type === 'true_false' ? (oi === 0) : oi)
                         ? 'border-blue-400 bg-blue-100 text-blue-700 font-medium'
-                        : 'border-brand-400/30 hover:border-brand-400/60 text-brand-800'">
+                        : 'border-brand-400/30 hover:border-brand-400/60 text-gray-800'">
                       {{ opt }}
                     </button>
                   </div>
@@ -160,7 +160,7 @@
                 <span v-else class="text-xs text-emerald-500">所有题目已作答</span>
                 <button @click="submitAITest" :disabled="!allAnswered"
                   class="px-6 py-2 rounded-lg text-sm font-medium transition-colors"
-                  :class="allAnswered ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-brand-400/10 text-brand-400 cursor-not-allowed'">
+                  :class="allAnswered ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-brand-400/10 text-gray-400 cursor-not-allowed'">
                   提交并判定层级
                 </button>
               </div>
@@ -174,8 +174,8 @@
                   <Award class="w-10 h-10" :class="testScore >= 80 ? 'text-emerald-500' : testScore >= 60 ? 'text-blue-500' : 'text-amber-500'" />
                 </div>
                 <div>
-                  <p class="text-4xl font-bold text-brand-900">{{ testScore }}<span class="text-lg text-brand-400">/{{ totalQuestions * 10 }}</span></p>
-                  <p class="text-sm text-brand-400 mt-1">得分</p>
+                  <p class="text-4xl font-bold text-gray-900">{{ testScore }}<span class="text-lg text-gray-400">/{{ totalQuestions * 10 }}</span></p>
+                  <p class="text-sm text-gray-400 mt-1">得分</p>
                 </div>
                 <div>
                   <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-base font-bold"
@@ -184,7 +184,7 @@
                     {{ store.determineTier(testScore) === 'excellent' ? '卓越层' : store.determineTier(testScore) === 'advanced' ? '进阶层' : '基础层' }}
                   </span>
                 </div>
-                <p class="text-xs text-brand-400">本次分层结果已在系统中锁定，本学期不可修改</p>
+                <p class="text-xs text-gray-400">本次分层结果已在系统中锁定，本学期不可修改</p>
                 <button @click="closeAITest"
                   class="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors inline-flex items-center gap-2">
                   <CheckCircle class="w-4 h-4" />
@@ -198,20 +198,20 @@
           <div v-if="activeTab === 'knowledge_graph'" class="space-y-5">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-base font-semibold text-brand-800">知识点掌握图谱</h3>
-                <p class="text-xs text-brand-400">基于学习进度与评价数据自动生成 · 泡泡越大表示知识越重要 · 颜色越深表示掌握度越高</p>
+                <h3 class="text-base font-semibold text-gray-800">知识点掌握图谱</h3>
+                <p class="text-xs text-gray-400">基于学习进度与评价数据自动生成 · 泡泡越大表示知识越重要 · 颜色越深表示掌握度越高</p>
               </div>
-              <span class="text-xs text-brand-400">点击泡泡查看详情</span>
+              <span class="text-xs text-gray-400">点击泡泡查看详情</span>
             </div>
 
             <!-- 泡泡视图 -->
             <!-- 分类图例 + 关联图例 -->
-              <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-brand-400 items-center">
+              <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-400 items-center">
                 <span v-for="cat in categoryColors" :key="cat.key" class="flex items-center gap-1.5">
                   <span class="w-3 h-3 rounded-full" :style="{ background: cat.mid }" />
                   {{ cat.label }}
                 </span>
-                <span class="text-brand-400/60">|</span>
+                <span class="text-gray-400/60">|</span>
                 <span v-for="rel in relationLegend" :key="rel.key" class="flex items-center gap-1.5">
                   <svg width="20" height="4" class="overflow-visible"><line x1="0" y1="2" x2="20" y2="2" :stroke="rel.color" stroke-width="2" :stroke-dasharray="rel.dash" /></svg>
                   {{ rel.label }}
@@ -295,12 +295,12 @@
               <div v-if="selectedBubble && bubbleNode(selectedBubble)" class="bg-brand-400/5 rounded-xl p-4 border border-brand-400/30 space-y-2">
                 <div class="flex items-center gap-2">
                   <span class="w-3 h-3 rounded-full" :style="{ background: bubbleColor(bubbleNode(selectedBubble)?.mastery ?? 50, bubbleNode(selectedBubble)?.category ?? 'foundation') }" />
-                  <p class="text-sm font-bold text-brand-800">{{ bubbleNode(selectedBubble)?.label }}</p>
+                  <p class="text-sm font-bold text-gray-800">{{ bubbleNode(selectedBubble)?.label }}</p>
                   <span class="text-xs px-1.5 py-0.5 rounded bg-brand-400/10 text-brand-600">{{ bubbleNode(selectedBubble)?.chapter }}</span>
                 </div>
-                <p class="text-xs text-brand-400">{{ bubbleNode(selectedBubble)?.description }}</p>
+                <p class="text-xs text-gray-400">{{ bubbleNode(selectedBubble)?.description }}</p>
                 <div class="flex items-center gap-3 text-xs">
-                  <span class="text-brand-400">掌握度</span>
+                  <span class="text-gray-400">掌握度</span>
                   <div class="flex-1 h-2 bg-brand-400/10 rounded-full overflow-hidden">
                     <div class="h-full rounded-full" :style="{ width: (bubbleNode(selectedBubble)?.mastery ?? 0) + '%', background: bubbleColor(bubbleNode(selectedBubble)?.mastery ?? 50, bubbleNode(selectedBubble)?.category ?? 'foundation') }" />
                   </div>
@@ -308,13 +308,13 @@
                 </div>
                 <!-- 选中节点的关联 -->
                 <div v-if="bubbleEdges(selectedBubble).length > 0" class="pt-1 border-t border-brand-400/30">
-                  <p class="text-[11px] text-brand-400 mb-1">关联关系</p>
+                  <p class="text-[11px] text-gray-400 mb-1">关联关系</p>
                   <div v-for="edge in bubbleEdges(selectedBubble)" :key="edge.source + edge.target"
                     class="text-xs text-brand-600 flex items-center gap-1.5">
                     <span :class="edge.source === selectedBubble ? 'font-semibold' : ''">{{ nodeLabel(edge.source) }}</span>
-                    <ArrowRight class="w-3 h-3 text-brand-400" />
+                    <ArrowRight class="w-3 h-3 text-gray-400" />
                     <span class="px-1 py-0.5 rounded text-[10px]" :class="relationChipClass(edge.relation)">{{ edge.label }}</span>
-                    <ArrowRight class="w-3 h-3 text-brand-400" />
+                    <ArrowRight class="w-3 h-3 text-gray-400" />
                     <span :class="edge.target === selectedBubble ? 'font-semibold' : ''">{{ nodeLabel(edge.target) }}</span>
                   </div>
                 </div>
@@ -325,67 +325,67 @@
 
           <!-- ===== 任务 ===== -->
           <div v-if="activeTab === 'tasks'" class="space-y-4">
-            <h3 class="text-sm font-semibold text-brand-800">课程任务</h3>
+            <h3 class="text-sm font-semibold text-gray-800">课程任务</h3>
             <div class="space-y-2">
               <div v-for="task in courseTasks" :key="task.id"
                 class="flex items-center justify-between p-3 rounded-lg border border-brand-400/20 hover:bg-brand-400/5">
                 <div class="flex items-center gap-3">
                   <CheckCircle v-if="task.completed" class="w-5 h-5 text-emerald-500" />
-                  <Circle v-else class="w-5 h-5 text-brand-400/60" />
+                  <Circle v-else class="w-5 h-5 text-gray-400/60" />
                   <div>
-                    <p class="text-sm font-medium text-brand-900">{{ task.title }}</p>
-                    <p v-if="task.dueDate" class="text-xs text-brand-400">截止：{{ task.dueDate }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
+                    <p v-if="task.dueDate" class="text-xs text-gray-400">截止：{{ task.dueDate }}</p>
                   </div>
                 </div>
                 <span v-if="task.score !== undefined" class="text-sm font-bold text-blue-600">{{ task.score }}分</span>
               </div>
-              <div v-if="courseTasks.length === 0" class="text-center py-8 text-brand-400">暂无任务</div>
+              <div v-if="courseTasks.length === 0" class="text-center py-8 text-gray-400">暂无任务</div>
             </div>
           </div>
 
           <!-- ===== 资源 ===== -->
           <div v-if="activeTab === 'resources'" class="space-y-4">
-            <h3 class="text-sm font-semibold text-brand-800">课程资源</h3>
+            <h3 class="text-sm font-semibold text-gray-800">课程资源</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div v-for="res in courseResources" :key="res.id"
                 class="flex items-center gap-3 p-3 rounded-lg border border-brand-400/20 hover:bg-brand-400/5">
                 <div class="w-10 h-10 rounded-lg bg-brand-400/5 flex items-center justify-center">
-                  <FileText class="w-5 h-5 text-brand-400" />
+                  <FileText class="w-5 h-5 text-gray-400" />
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-brand-900">{{ res.title }}</p>
-                  <p class="text-xs text-brand-400">{{ res.type }} · {{ res.size }}</p>
+                  <p class="text-sm font-medium text-gray-900">{{ res.title }}</p>
+                  <p class="text-xs text-gray-400">{{ res.type }} · {{ res.size }}</p>
                 </div>
               </div>
-              <div v-if="courseResources.length === 0" class="col-span-full text-center py-8 text-brand-400">暂无资源</div>
+              <div v-if="courseResources.length === 0" class="col-span-full text-center py-8 text-gray-400">暂无资源</div>
             </div>
           </div>
 
           <!-- ===== 作业 ===== -->
           <div v-if="activeTab === 'homework'" class="space-y-4">
-            <h3 class="text-sm font-semibold text-brand-800">课程作业</h3>
+            <h3 class="text-sm font-semibold text-gray-800">课程作业</h3>
             <div class="space-y-2">
               <div v-for="hw in courseHomework" :key="hw.id"
                 class="flex items-center justify-between p-3 rounded-lg border border-brand-400/20 hover:bg-brand-400/5">
                 <div class="flex items-center gap-3">
                   <FileText class="w-5 h-5 text-blue-500" />
                   <div>
-                    <p class="text-sm font-medium text-brand-900">{{ hw.title }}</p>
-                    <p class="text-xs text-brand-400">截止：{{ hw.dueDate }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ hw.title }}</p>
+                    <p class="text-xs text-gray-400">截止：{{ hw.dueDate }}</p>
                   </div>
                 </div>
                 <span v-if="hw.submitted" class="text-xs text-emerald-500">已提交</span>
                 <span v-else class="text-xs text-amber-500">未提交</span>
               </div>
-              <div v-if="courseHomework.length === 0" class="text-center py-8 text-brand-400">暂无作业</div>
+              <div v-if="courseHomework.length === 0" class="text-center py-8 text-gray-400">暂无作业</div>
             </div>
           </div>
 
           <!-- ===== 评价填写 ===== -->
           <div v-if="activeTab === 'evaluations'" class="space-y-4">
-            <h3 class="text-sm font-semibold text-brand-800">课程评价</h3>
-            <div v-if="isReadOnly" class="bg-brand-400/5 border border-brand-400/30 rounded-xl p-6 text-center text-sm text-brand-400">
-              <Eye class="w-8 h-8 mx-auto mb-2 text-brand-400/60" />
+            <h3 class="text-sm font-semibold text-gray-800">课程评价</h3>
+            <div v-if="isReadOnly" class="bg-brand-400/5 border border-brand-400/30 rounded-xl p-6 text-center text-sm text-gray-400">
+              <Eye class="w-8 h-8 mx-auto mb-2 text-gray-400/60" />
               <p>课程已结束，评价填写功能已关闭</p>
               <p class="text-xs mt-1">如需查看评价记录，请在"综合评价"中查看</p>
             </div>
@@ -397,15 +397,15 @@
           <div v-if="activeTab === 'eval_overview'" class="space-y-6">
             <!-- 综合成绩卡片 -->
             <div>
-              <h3 class="text-sm font-semibold text-brand-800 mb-3">综合评价</h3>
+              <h3 class="text-sm font-semibold text-gray-800 mb-3">综合评价</h3>
               <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
                 <div class="flex items-center justify-between mb-4">
                   <div>
-                    <p class="text-xs text-brand-400 mb-1">课程总评</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ totalScore ?? '-' }}<span class="text-base text-brand-400">分</span></p>
+                    <p class="text-xs text-gray-400 mb-1">课程总评</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ totalScore ?? '-' }}<span class="text-base text-gray-400">分</span></p>
                   </div>
                   <div class="text-right">
-                    <p class="text-xs text-brand-400">班级平均</p>
+                    <p class="text-xs text-gray-400">班级平均</p>
                     <p class="text-xl font-semibold text-brand-600">{{ classAvgScore }}分</p>
                   </div>
                 </div>
@@ -415,7 +415,7 @@
                   <div v-if="totalScore" class="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all"
                     :style="{ width: Math.min(totalScore, 100) + '%' }" />
                 </div>
-                <div class="flex justify-between text-xs text-brand-400 mt-1">
+                <div class="flex justify-between text-xs text-gray-400 mt-1">
                   <span>0</span>
                   <span class="text-red-400">平均{{ classAvgScore }}</span>
                   <span>100</span>
@@ -425,7 +425,7 @@
 
             <!-- 评价细分 -->
             <div>
-              <h3 class="text-sm font-semibold text-brand-800 mb-3">评价维度细分</h3>
+              <h3 class="text-sm font-semibold text-gray-800 mb-3">评价维度细分</h3>
               <div class="space-y-3">
                 <div v-for="dim in evalDimensions" :key="dim.label"
                   class="flex items-center gap-3 p-3 rounded-lg border border-brand-400/20">
@@ -434,19 +434,19 @@
                     <component :is="dim.icon" class="w-4 h-4" :class="dim.iconColor" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-brand-900">{{ dim.label }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ dim.label }}</p>
                     <div class="flex items-center gap-2 mt-1">
                       <div class="flex-1 bg-brand-400/10 rounded-full h-2 overflow-hidden">
                         <div class="h-full rounded-full transition-all duration-500" :class="dim.barColor"
                           :style="{ width: (dim.score / (dim.maxScore || 100) * 100) + '%' }" />
                       </div>
                       <span class="text-xs font-medium text-brand-600 w-12 text-right">
-                        {{ dim.score }}<span class="text-brand-400">/{{ dim.maxScore || 100 }}</span>
+                        {{ dim.score }}<span class="text-gray-400">/{{ dim.maxScore || 100 }}</span>
                       </span>
                     </div>
                   </div>
                 </div>
-                <div v-if="evalDimensions.length === 0" class="text-center py-6 text-brand-400">暂无评价数据</div>
+                <div v-if="evalDimensions.length === 0" class="text-center py-6 text-gray-400">暂无评价数据</div>
               </div>
             </div>
 
@@ -462,7 +462,9 @@
         </div>
       </div>
 
-      <!-- ===== 右侧栏 ===== -->
+      <!-- ===== 右侧栏（D3 渲染） ===== -->
+      <div class="lg:col-span-1" id="course-learn-sidebar"></div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -492,7 +494,15 @@ onMounted(() => {
   if (myStudent.value) {
     store.autoAssignOverdueBasicTier(courseId, myStudent.value.id)
   }
+  // 初始渲染 D3 知识图谱
+  const root = document.getElementById('student-course-learn-root')
+  if (root) renderCourseLearn(root)
 })
+
+function reRender() {
+  const root = document.getElementById('student-course-learn-root')
+  if (root) renderCourseLearn(root)
+}
 
 const tabs = [
   { id: 'ai_tier', label: 'AI分层', icon: 'layers' },
@@ -613,7 +623,7 @@ const tierLabel = computed(() => {
 })
 
 const tierBadgeClass = computed(() => {
-  if (!tierFinalized.value) return 'bg-brand-400/10 text-brand-400 border border-brand-400/30'
+  if (!tierFinalized.value) return 'bg-brand-400/10 text-gray-400 border border-brand-400/30'
   const map = {
     basic: 'bg-brand-400/10 text-brand-600 border border-brand-400',
     advanced: 'bg-brand-600/10 text-brand-600 border border-brand-400',
@@ -908,7 +918,7 @@ const SVG_CY = 460
 const categoryRings = computed(() => {
   const rings: { rx: number; ry: number; color: string; label: string }[] = []
   const radii = [145, 240, 330, 415]
-  const ringColors = ['#64B5F6', '#64B5F6', '#64B5F6', '#64B5F6']
+  const ringColors = ['#5eb6b9', '#5eb6b9', '#5eb6b9', '#5eb6b9']
   const ringLabels = ['基础知识', '核心知识', '进阶能力', '综合能力']
   for (let i = 0; i < radii.length; i++) {
     rings.push({ rx: radii[i], ry: radii[i] * 0.78, color: ringColors[i], label: ringLabels[i] })
@@ -917,17 +927,17 @@ const categoryRings = computed(() => {
 })
 
 const relationLegend = [
-  { key: 'prerequisite', label: '前置依赖', color: '#1E88E5', dash: '' },
-  { key: 'related_to', label: '相关联', color: '#64B5F6', dash: '5,4' },
-  { key: 'extends', label: '拓展延伸', color: '#1E88E5', dash: '3,5' },
-  { key: 'part_of', label: '组成关系', color: '#1E88E5', dash: '7,4' },
+  { key: 'prerequisite', label: '前置依赖', color: '#429fc4', dash: '' },
+  { key: 'related_to', label: '相关联', color: '#5eb6b9', dash: '5,4' },
+  { key: 'extends', label: '拓展延伸', color: '#429fc4', dash: '3,5' },
+  { key: 'part_of', label: '组成关系', color: '#429fc4', dash: '7,4' },
 ]
 
 const categoryColors = [
-  { key: 'foundation', label: '基础知识', light: '#aac4dd', mid: '#64B5F6', deep: '#1E88E5' },
-  { key: 'core', label: '核心知识', light: '#aac4dd', mid: '#64B5F6', deep: '#1E88E5' },
-  { key: 'advanced', label: '进阶能力', light: '#aac4dd', mid: '#64B5F6', deep: '#1E88E5' },
-  { key: 'comprehensive', label: '综合能力', light: '#aac4dd', mid: '#64B5F6', deep: '#1E88E5' },
+  { key: 'foundation', label: '基础知识', light: '#80b8d7', mid: '#5eb6b9', deep: '#429fc4' },
+  { key: 'core', label: '核心知识', light: '#80b8d7', mid: '#5eb6b9', deep: '#429fc4' },
+  { key: 'advanced', label: '进阶能力', light: '#80b8d7', mid: '#5eb6b9', deep: '#429fc4' },
+  { key: 'comprehensive', label: '综合能力', light: '#80b8d7', mid: '#5eb6b9', deep: '#429fc4' },
 ]
 
 function categoryColorMap(cat: string): { light: string; mid: string; deep: string } {
@@ -1051,10 +1061,10 @@ const renderedEdges = computed<RenderedEdge[]>(() => {
   }
 
   const edgeStyles: Record<string, { color: string; dash: string; width: number }> = {
-    prerequisite: { color: '#1E88E5', dash: '', width: 2 },
-    related_to: { color: '#64B5F6', dash: '5,3', width: 1.5 },
-    extends: { color: '#1E88E5', dash: '3,4', width: 1.5 },
-    part_of: { color: '#1E88E5', dash: '7,3', width: 1.5 },
+    prerequisite: { color: '#429fc4', dash: '', width: 2 },
+    related_to: { color: '#5eb6b9', dash: '5,3', width: 1.5 },
+    extends: { color: '#429fc4', dash: '3,4', width: 1.5 },
+    part_of: { color: '#429fc4', dash: '7,3', width: 1.5 },
   }
 
   const result: RenderedEdge[] = []
@@ -1124,7 +1134,7 @@ function relationChipClass(relation: string): string {
     extends: 'bg-brand-600/10 text-brand-600',
     part_of: 'bg-brand-400/10 text-brand-600',
   }
-  return map[relation] || 'bg-brand-400/10 text-brand-400'
+  return map[relation] || 'bg-brand-400/10 text-gray-400'
 }
 
 // ===== 综合评价 =====
@@ -1163,11 +1173,11 @@ const evalDimensions = computed(() => {
 
 // ===== 任务内容渲染 =====
 function renderTasksContent(container: d3.Selection<any, any, any, any>) {
-  container.append('h3').attr('class', 'text-sm font-semibold text-brand-800').text('课程任务')
+  container.append('h3').attr('class', 'text-sm font-semibold text-gray-800').text('课程任务')
   const list = container.append('div').attr('class', 'space-y-2')
 
   if (courseTasks.value.length === 0) {
-    list.append('div').attr('class', 'text-center py-8 text-brand-400').text('暂无任务')
+    list.append('div').attr('class', 'text-center py-8 text-gray-400').text('暂无任务')
     return
   }
 
@@ -1179,15 +1189,15 @@ function renderTasksContent(container: d3.Selection<any, any, any, any>) {
       renderIcon(left, 'checkCircle', 'w-5 h-5 text-brand-600')
     } else {
       // Empty circle
-      left.append('svg').attr('class', 'w-5 h-5 text-brand-400')
+      left.append('svg').attr('class', 'w-5 h-5 text-gray-400')
         .attr('viewBox', '0 0 24 24').attr('fill', 'none').attr('stroke', 'currentColor')
         .attr('stroke-width', '2')
         .append('circle').attr('cx', '12').attr('cy', '12').attr('r', '10')
     }
     const info = left.append('div')
-    info.append('p').attr('class', 'text-sm font-medium text-brand-900').text(task.title)
+    info.append('p').attr('class', 'text-sm font-medium text-gray-900').text(task.title)
     if (task.dueDate) {
-      info.append('p').attr('class', 'text-xs text-brand-400').text(`截止：${task.dueDate}`)
+      info.append('p').attr('class', 'text-xs text-gray-400').text(`截止：${task.dueDate}`)
     }
 
     if (task.score !== undefined) {
@@ -1198,31 +1208,31 @@ function renderTasksContent(container: d3.Selection<any, any, any, any>) {
 
 // ===== 资源内容渲染 =====
 function renderResourcesContent(container: d3.Selection<any, any, any, any>) {
-  container.append('h3').attr('class', 'text-sm font-semibold text-brand-800').text('课程资源')
+  container.append('h3').attr('class', 'text-sm font-semibold text-gray-800').text('课程资源')
   const grid = container.append('div').attr('class', 'grid grid-cols-1 md:grid-cols-2 gap-3')
 
   if (courseResources.value.length === 0) {
-    grid.append('div').attr('class', 'col-span-full text-center py-8 text-brand-400').text('暂无资源')
+    grid.append('div').attr('class', 'col-span-full text-center py-8 text-gray-400').text('暂无资源')
     return
   }
 
   courseResources.value.forEach((res) => {
     const card = grid.append('div').attr('class', 'flex items-center gap-3 p-3 rounded-lg border border-brand-400/20 hover:bg-brand-400/5')
     const iconBox = card.append('div').attr('class', 'w-10 h-10 rounded-lg bg-brand-400/10 flex items-center justify-center')
-    renderIcon(iconBox, 'fileText', 'w-5 h-5 text-brand-400')
+    renderIcon(iconBox, 'fileText', 'w-5 h-5 text-gray-400')
     const info = card.append('div')
-    info.append('p').attr('class', 'text-sm font-medium text-brand-900').text(res.title)
-    info.append('p').attr('class', 'text-xs text-brand-400').text(`${res.type} · ${res.size}`)
+    info.append('p').attr('class', 'text-sm font-medium text-gray-900').text(res.title)
+    info.append('p').attr('class', 'text-xs text-gray-400').text(`${res.type} · ${res.size}`)
   })
 }
 
 // ===== 作业内容渲染 =====
 function renderHomeworkContent(container: d3.Selection<any, any, any, any>) {
-  container.append('h3').attr('class', 'text-sm font-semibold text-brand-800').text('课程作业')
+  container.append('h3').attr('class', 'text-sm font-semibold text-gray-800').text('课程作业')
   const list = container.append('div').attr('class', 'space-y-2')
 
   if (courseHomework.value.length === 0) {
-    list.append('div').attr('class', 'text-center py-8 text-brand-400').text('暂无作业')
+    list.append('div').attr('class', 'text-center py-8 text-gray-400').text('暂无作业')
     return
   }
 
@@ -1231,8 +1241,8 @@ function renderHomeworkContent(container: d3.Selection<any, any, any, any>) {
     const left = row.append('div').attr('class', 'flex items-center gap-3')
     renderIcon(left, 'fileText', 'w-5 h-5 text-brand-600')
     const info = left.append('div')
-    info.append('p').attr('class', 'text-sm font-medium text-brand-900').text(hw.title)
-    info.append('p').attr('class', 'text-xs text-brand-400').text(`截止：${hw.dueDate}`)
+    info.append('p').attr('class', 'text-sm font-medium text-gray-900').text(hw.title)
+    info.append('p').attr('class', 'text-xs text-gray-400').text(`截止：${hw.dueDate}`)
 
     if (hw.submitted) {
       row.append('span').attr('class', 'text-xs text-brand-600').text('已提交')
@@ -1244,10 +1254,10 @@ function renderHomeworkContent(container: d3.Selection<any, any, any, any>) {
 
 // ===== 评价填写内容渲染 =====
 function renderEvaluationsContent(container: d3.Selection<any, any, any, any>) {
-  container.append('h3').attr('class', 'text-sm font-semibold text-brand-800').text('课程评价')
+  container.append('h3').attr('class', 'text-sm font-semibold text-gray-800').text('课程评价')
   if (isReadOnly.value) {
-    const readOnlyBox = container.append('div').attr('class', 'bg-brand-400/10 border border-brand-400/30 rounded-xl p-6 text-center text-sm text-brand-400')
-    renderIcon(readOnlyBox, 'eye', 'w-8 h-8 mx-auto mb-2 text-brand-400')
+    const readOnlyBox = container.append('div').attr('class', 'bg-brand-400/10 border border-brand-400/30 rounded-xl p-6 text-center text-sm text-gray-400')
+    renderIcon(readOnlyBox, 'eye', 'w-8 h-8 mx-auto mb-2 text-gray-400')
     readOnlyBox.append('p').text('课程已结束，评价填写功能已关闭')
     readOnlyBox.append('p').attr('class', 'text-xs mt-1').text('如需查看评价记录，请在"综合评价"中查看')
   }
@@ -1257,19 +1267,19 @@ function renderEvaluationsContent(container: d3.Selection<any, any, any, any>) {
 // ===== 综合评价内容渲染 =====
 function renderEvalOverviewContent(container: d3.Selection<any, any, any, any>) {
   const section1 = container.append('div')
-  section1.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('综合评价')
+  section1.append('h3').attr('class', 'text-sm font-semibold text-gray-800 mb-3').text('综合评价')
 
   const scoreCard = section1.append('div').attr('class', 'bg-gradient-to-br from-brand-400/5 to-brand-400/5 rounded-xl p-5 border border-brand-400/20')
   const scoreRow = scoreCard.append('div').attr('class', 'flex items-center justify-between mb-4')
 
   const scoreLeft = scoreRow.append('div')
-  scoreLeft.append('p').attr('class', 'text-xs text-brand-400 mb-1').text('课程总评')
+  scoreLeft.append('p').attr('class', 'text-xs text-gray-400 mb-1').text('课程总评')
   const scoreVal = scoreLeft.append('p').attr('class', 'text-3xl font-bold text-brand-600')
   scoreVal.text(String(totalScore.value ?? '-'))
-  scoreVal.append('span').attr('class', 'text-base text-brand-400').text('分')
+  scoreVal.append('span').attr('class', 'text-base text-gray-400').text('分')
 
   const scoreRight = scoreRow.append('div').attr('class', 'text-right')
-  scoreRight.append('p').attr('class', 'text-xs text-brand-400').text('班级平均')
+  scoreRight.append('p').attr('class', 'text-xs text-gray-400').text('班级平均')
   scoreRight.append('p').attr('class', 'text-xl font-semibold text-brand-600').text(`${classAvgScore.value}分`)
 
   // 分数条
@@ -1280,18 +1290,18 @@ function renderEvalOverviewContent(container: d3.Selection<any, any, any, any>) 
     barContainer.append('div').attr('class', 'h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all')
       .style('width', `${Math.min(totalScore.value, 100)}%`)
   }
-  const barLabels = scoreCard.append('div').attr('class', 'flex justify-between text-xs text-brand-400 mt-1')
+  const barLabels = scoreCard.append('div').attr('class', 'flex justify-between text-xs text-gray-400 mt-1')
   barLabels.append('span').text('0')
-  barLabels.append('span').style('color', '#1E88E5').text(`平均${classAvgScore.value}`)
+  barLabels.append('span').style('color', '#429fc4').text(`平均${classAvgScore.value}`)
   barLabels.append('span').text('100')
 
   // 评价维度细分
   const dimSection = container.append('div')
-  dimSection.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('评价维度细分')
+  dimSection.append('h3').attr('class', 'text-sm font-semibold text-gray-800 mb-3').text('评价维度细分')
   const dimList = dimSection.append('div').attr('class', 'space-y-3')
 
   if (evalDimensions.value.length === 0) {
-    dimList.append('div').attr('class', 'text-center py-6 text-brand-400').text('暂无评价数据')
+    dimList.append('div').attr('class', 'text-center py-6 text-gray-400').text('暂无评价数据')
   } else {
     evalDimensions.value.forEach((dim) => {
       const dimRow = dimList.append('div').attr('class', 'flex items-center gap-3 p-3 rounded-lg border border-brand-400/20')
@@ -1302,14 +1312,14 @@ function renderEvalOverviewContent(container: d3.Selection<any, any, any, any>) 
       renderIcon(iconBox, dim.icon as any, `w-4 h-4 ${dim.iconColor}`)
 
       const dimInfo = dimRow.append('div').attr('class', 'flex-1 min-w-0')
-      dimInfo.append('p').attr('class', 'text-sm font-medium text-brand-900').text(dim.label)
+      dimInfo.append('p').attr('class', 'text-sm font-medium text-gray-900').text(dim.label)
 
       const progressRow = dimInfo.append('div').attr('class', 'flex items-center gap-2 mt-1')
       const pct = (dim.score / (dim.maxScore || 100)) * 100
       const barBg = progressRow.append('div').attr('class', 'flex-1 bg-brand-400/10 rounded-full h-2 overflow-hidden')
       barBg.append('div').attr('class', 'h-full rounded-full transition-all duration-500')
         .style('width', `${pct}%`)
-        .style('background', '#1E88E5')
+        .style('background', '#429fc4')
       progressRow.append('span').attr('class', 'text-xs font-medium text-brand-600 w-12 text-right')
         .text(`${dim.score}/${dim.maxScore || 100}`)
     })
@@ -1318,7 +1328,7 @@ function renderEvalOverviewContent(container: d3.Selection<any, any, any, any>) 
   // 成绩权重说明
   const cfg = currentCfg.value
   if (cfg) {
-    const cfgBox = container.append('div').attr('class', 'bg-brand-400/10 rounded-xl p-4 border border-brand-400/20 text-sm text-brand-800')
+    const cfgBox = container.append('div').attr('class', 'bg-brand-400/10 rounded-xl p-4 border border-brand-400/20 text-sm text-gray-800')
     cfgBox.append('p').attr('class', 'font-medium mb-1').text('成绩构成')
     cfgBox.append('p').text(`总成绩 = 平时成绩(${cfg.regularWeight}%) + 期中成绩(${cfg.midtermWeight}%) + 期末成绩(${cfg.finalWeight}%)`)
     cfgBox.append('p').attr('class', 'text-xs text-brand-600 mt-1')
@@ -1330,14 +1340,14 @@ function renderEvalOverviewContent(container: d3.Selection<any, any, any, any>) 
 function renderSidebar(container: d3.Selection<any, any, any, any>) {
   // AI 学习助手
   const aiCard = container.append('div').attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-4')
-  aiCard.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('AI 学习助手')
+  aiCard.append('h3').attr('class', 'text-sm font-semibold text-gray-800 mb-3').text('AI 学习助手')
   const aiBox = aiCard.append('div').attr('class', 'bg-gradient-to-br from-brand-400/5 to-brand-400/5 rounded-lg p-3 text-xs text-brand-600')
   aiBox.append('p').attr('class', 'font-medium mb-1').text('智能推荐')
   aiBox.append('p').text(aiAssistantTip.value)
 
   // 预习画像
   const profileCard = container.append('div').attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-4')
-  profileCard.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('预习画像')
+  profileCard.append('h3').attr('class', 'text-sm font-semibold text-gray-800 mb-3').text('预习画像')
   const profileContent = profileCard.append('div').attr('class', 'space-y-2')
 
   const pp = previewProfile.value
@@ -1345,23 +1355,23 @@ function renderSidebar(container: d3.Selection<any, any, any, any>) {
   // 预习完成度
   const completeRow = profileContent.append('div')
   const completeLabel = completeRow.append('div').attr('class', 'flex justify-between text-xs')
-  completeLabel.append('span').attr('class', 'text-brand-400').text('预习完成度')
+  completeLabel.append('span').attr('class', 'text-gray-400').text('预习完成度')
   completeLabel.append('span').attr('class', 'font-medium').text(`${pp.previewComplete}%`)
   completeRow.append('div').attr('class', 'h-2 bg-brand-400/10 rounded-full overflow-hidden')
-    .append('div').attr('class', 'h-full rounded-full').style('width', `${pp.previewComplete}%`).style('background', '#1E88E5')
+    .append('div').attr('class', 'h-full rounded-full').style('width', `${pp.previewComplete}%`).style('background', '#429fc4')
 
   // 知识点掌握
   const masteryRow = profileContent.append('div')
   const masteryLabel = masteryRow.append('div').attr('class', 'flex justify-between text-xs')
-  masteryLabel.append('span').attr('class', 'text-brand-400').text('知识点掌握')
+  masteryLabel.append('span').attr('class', 'text-gray-400').text('知识点掌握')
   masteryLabel.append('span').attr('class', 'font-medium').text(`${pp.knowledgeMastery}%`)
   masteryRow.append('div').attr('class', 'h-2 bg-brand-400/10 rounded-full overflow-hidden')
-    .append('div').attr('class', 'h-full rounded-full').style('width', `${pp.knowledgeMastery}%`).style('background', '#1E88E5')
+    .append('div').attr('class', 'h-full rounded-full').style('width', `${pp.knowledgeMastery}%`).style('background', '#429fc4')
 
   // 学习时长
   const hoursRow = profileContent.append('div')
   const hoursLabel = hoursRow.append('div').attr('class', 'flex justify-between text-xs')
-  hoursLabel.append('span').attr('class', 'text-brand-400').text('学习时长')
+  hoursLabel.append('span').attr('class', 'text-gray-400').text('学习时长')
   hoursLabel.append('span').attr('class', 'font-medium').text(`${pp.studyHours}h`)
 }
 
@@ -1455,14 +1465,14 @@ function renderHeader(container: d3.Selection<any, any, any, any>, c: any, readO
   const backBtn = topRow.append('button')
     .attr('class', 'p-2 rounded-lg hover:bg-brand-400/10 transition-colors')
     .on('click', () => router.back())
-  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-brand-400')
+  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-gray-400')
 
   const infoDiv = topRow.append('div').attr('class', 'flex-1')
-  infoDiv.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text(c?.title || '')
-  infoDiv.append('p').attr('class', 'text-brand-400 mt-1').text(`${c?.id || ''} · ${c?.teacher || ''}`)
+  infoDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text(c?.title || '')
+  infoDiv.append('p').attr('class', 'text-gray-400 mt-1').text(`${c?.id || ''} · ${c?.teacher || ''}`)
 
   if (readOnly) {
-    const badge = topRow.append('span').attr('class', 'text-xs px-3 py-1 rounded-full bg-brand-400/10 text-brand-400 border border-brand-400/30')
+    const badge = topRow.append('span').attr('class', 'text-xs px-3 py-1 rounded-full bg-brand-400/10 text-gray-400 border border-brand-400/30')
     const badgeIcon = badge.append('span').attr('class', 'inline-flex items-center')
     renderIcon(badgeIcon, 'eye', 'w-3 h-3 mr-1')
     badge.append('span').text('课程已结束')
@@ -1471,8 +1481,8 @@ function renderHeader(container: d3.Selection<any, any, any, any>, c: any, readO
 
 // ===== 只读提示 =====
 function renderReadOnlyBanner(container: d3.Selection<any, any, any, any>) {
-  const banner = container.append('div').attr('class', 'flex items-center gap-2 px-4 py-3 bg-brand-400/10 border border-brand-400/30 rounded-xl text-sm text-brand-400')
-  renderIcon(banner, 'eye', 'w-4 h-4 text-brand-400')
+  const banner = container.append('div').attr('class', 'flex items-center gap-2 px-4 py-3 bg-brand-400/10 border border-brand-400/30 rounded-xl text-sm text-gray-400')
+  renderIcon(banner, 'eye', 'w-4 h-4 text-gray-400')
   banner.append('span').html('该课程已结束，当前为<strong>只读查看</strong>模式')
 }
 
@@ -1483,7 +1493,7 @@ function renderTabBar(container: d3.Selection<any, any, any, any>) {
   tabs.forEach((tab) => {
     const isActive = activeTab.value === tab.id
     const btn = tabBar.append('button')
-      .attr('class', `flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${isActive ? 'bg-white text-brand-900 shadow-sm' : 'text-brand-400 hover:text-brand-800'}`)
+      .attr('class', `flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${isActive ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-800'}`)
       .on('click', () => {
         activeTab.value = tab.id
         reRender()
@@ -1505,15 +1515,15 @@ function renderAITierContent(container: d3.Selection<any, any, any, any>) {
   if (!firstClassEnded.value) {
     // 未到开始条件
     const box = contentDiv.append('div').attr('class', 'bg-brand-400/10 border border-brand-400/20 rounded-xl p-8 text-center')
-    renderIcon(box, 'layers', 'w-12 h-12 mx-auto mb-3 text-brand-400')
-    box.append('h3').attr('class', 'text-lg font-semibold text-brand-800 mb-2').text('AI 分层测试')
+    renderIcon(box, 'layers', 'w-12 h-12 mx-auto mb-3 text-gray-400')
+    box.append('h3').attr('class', 'text-lg font-semibold text-gray-800 mb-2').text('AI 分层测试')
     box.append('p').attr('class', 'text-sm text-brand-600').text('第一节课尚未结束，AI 分层测试将在第一节课结束后开启')
-    box.append('p').attr('class', 'text-xs text-brand-400 mt-1').text('届时将根据第一节课内容生成 10 道测试题，依据得分判定学习层级')
+    box.append('p').attr('class', 'text-xs text-gray-400 mt-1').text('届时将根据第一节课内容生成 10 道测试题，依据得分判定学习层级')
   } else if (firstClassEnded.value && !tierFinalized.value) {
     // 条件已满足但未测试
     const box = contentDiv.append('div').attr('class', 'bg-gradient-to-br from-brand-400/5 to-brand-400/5 border border-brand-400 rounded-xl p-8 text-center')
     renderIcon(box, 'sparkles', 'w-12 h-12 mx-auto mb-3 text-brand-600')
-    box.append('h3').attr('class', 'text-lg font-semibold text-brand-800 mb-2').text('AI 分层测试已开放')
+    box.append('h3').attr('class', 'text-lg font-semibold text-gray-800 mb-2').text('AI 分层测试已开放')
     box.append('p').attr('class', 'text-sm text-brand-600 mb-6').text('完成 10 道测试题（单选+判断），系统将根据得分判定你的学习层级')
 
     const startBtn = box.append('button')
@@ -1530,39 +1540,39 @@ function renderAITierContent(container: d3.Selection<any, any, any, any>) {
 function renderTierFinalizedContent(container: d3.Selection<any, any, any, any>) {
   // 当前层级
   const section1 = container.append('div')
-  section1.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('AI 学习层级评估')
+  section1.append('h3').attr('class', 'text-sm font-semibold text-gray-800 mb-3').text('AI 学习层级评估')
 
   const tierCard = section1.append('div').attr('class', 'bg-gradient-to-br from-brand-400/5 to-brand-400/5 rounded-xl p-5 border border-brand-400/20')
 
   const tierRow = tierCard.append('div').attr('class', 'flex items-center justify-between mb-4')
   const tierLeft = tierRow.append('div')
-  tierLeft.append('p').attr('class', 'text-xs text-brand-400 mb-1').text('当前学习层级')
+  tierLeft.append('p').attr('class', 'text-xs text-gray-400 mb-1').text('当前学习层级')
 
   const tierBadge = tierLeft.append('span').attr('class', 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold')
   // Apply tierBadgeClass-like styling via D3
   if (!tierFinalized.value) {
-    tierBadge.attr('class', 'bg-brand-400/10 text-brand-400 border border-brand-400/30')
+    tierBadge.attr('class', 'bg-brand-400/10 text-gray-400 border border-brand-400/30')
   } else {
     tierBadge.attr('class', 'bg-brand-600/10 text-brand-600 border border-brand-400')
   }
   renderIcon(tierBadge, 'layers', 'w-4 h-4')
   tierBadge.append('span').text(tierLabel.value)
 
-  tierLeft.append('span').attr('class', 'ml-2 text-[10px] text-brand-400').text('已锁定 · 该学期不可修改')
+  tierLeft.append('span').attr('class', 'ml-2 text-[10px] text-gray-400').text('已锁定 · 该学期不可修改')
 
   const tierRight = tierRow.append('div').attr('class', 'text-right')
-  tierRight.append('p').attr('class', 'text-xs text-brand-400').text('分层测试得分')
+  tierRight.append('p').attr('class', 'text-xs text-gray-400').text('分层测试得分')
   tierRight.append('p').attr('class', 'text-2xl font-bold text-brand-600').text(String(myTierScore.value))
-  tierRight.append('p').attr('class', 'text-xs text-brand-400').text(`/ ${totalQuestions.value * 10}分`)
+  tierRight.append('p').attr('class', 'text-xs text-gray-400').text(`/ ${totalQuestions.value * 10}分`)
 
   // 锁定提示
-  const lockNotice = tierCard.append('div').attr('class', 'mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10 rounded-lg text-xs text-brand-400')
+  const lockNotice = tierCard.append('div').attr('class', 'mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10 rounded-lg text-xs text-gray-400')
   renderIcon(lockNotice, 'lock', 'w-3.5 h-3.5')
   lockNotice.append('span').text(`AI 分层结果已锁定，本学期不可更改。后续任务、资源、作业将根据 ${tierLabel.value} 进行适配`)
 
   // AI 学习建议
   const tipsSection = container.append('div')
-  tipsSection.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('AI 学习建议')
+  tipsSection.append('h3').attr('class', 'text-sm font-semibold text-gray-800 mb-3').text('AI 学习建议')
 
   const tipsList = tipsSection.append('div').attr('class', 'space-y-3')
   aiTips.value.forEach((tip, i) => {
@@ -1571,20 +1581,20 @@ function renderTierFinalizedContent(container: d3.Selection<any, any, any, any>)
     numCircle.append('span').attr('class', 'text-xs font-bold text-brand-600').text(String(i + 1))
 
     const tipContent = tipRow.append('div')
-    tipContent.append('p').attr('class', 'text-sm font-medium text-brand-900').text(tip.title)
-    tipContent.append('p').attr('class', 'text-xs text-brand-400 mt-0.5').text(tip.desc)
+    tipContent.append('p').attr('class', 'text-sm font-medium text-gray-900').text(tip.title)
+    tipContent.append('p').attr('class', 'text-xs text-gray-400 mt-0.5').text(tip.desc)
   })
 
   // 分层对比
   const compareSection = container.append('div')
-  compareSection.append('h3').attr('class', 'text-sm font-semibold text-brand-800 mb-3').text('层级对照')
+  compareSection.append('h3').attr('class', 'text-sm font-semibold text-gray-800 mb-3').text('层级对照')
 
   const compareGrid = compareSection.append('div').attr('class', 'grid grid-cols-1 sm:grid-cols-3 gap-3')
   tierComparison.value.forEach((ct) => {
     const isActive = ct.level === myTier.value
     const card = compareGrid.append('div').attr('class', `p-3 rounded-lg border ${isActive ? 'border-brand-400 bg-brand-600/10 ring-1 ring-brand-400' : 'border-brand-400/20'}`)
     card.append('p').attr('class', `text-xs font-semibold mb-1 ${ct.color}`).text(ct.label)
-    card.append('p').attr('class', 'text-xs text-brand-400').text(ct.desc)
+    card.append('p').attr('class', 'text-xs text-gray-400').text(ct.desc)
   })
 }
 
@@ -1595,9 +1605,9 @@ function renderKnowledgeGraphContent(container: d3.Selection<any, any, any, any>
   // 头部说明
   const header = contentDiv.append('div').attr('class', 'flex items-center justify-between')
   const headerLeft = header.append('div')
-  headerLeft.append('h3').attr('class', 'text-base font-semibold text-brand-800').text('知识点掌握图谱')
-  headerLeft.append('p').attr('class', 'text-xs text-brand-400').text('基于学习进度与评价数据自动生成 · 泡泡越大表示知识越重要 · 颜色越深表示掌握度越高')
-  header.append('span').attr('class', 'text-xs text-brand-400').text('点击泡泡查看详情')
+  headerLeft.append('h3').attr('class', 'text-base font-semibold text-gray-800').text('知识点掌握图谱')
+  headerLeft.append('p').attr('class', 'text-xs text-gray-400').text('基于学习进度与评价数据自动生成 · 泡泡越大表示知识越重要 · 颜色越深表示掌握度越高')
+  header.append('span').attr('class', 'text-xs text-gray-400').text('点击泡泡查看详情')
 
   // 图例
   renderGraphLegend(contentDiv)
@@ -1612,7 +1622,7 @@ function renderKnowledgeGraphContent(container: d3.Selection<any, any, any, any>
 }
 
 function renderGraphLegend(container: d3.Selection<any, any, any, any>) {
-  const legend = container.append('div').attr('class', 'flex flex-wrap gap-x-5 gap-y-2 text-xs text-brand-400 items-center')
+  const legend = container.append('div').attr('class', 'flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-400 items-center')
 
   categoryColors.forEach((cat) => {
     const item = legend.append('span').attr('class', 'flex items-center gap-1.5')
@@ -1620,7 +1630,7 @@ function renderGraphLegend(container: d3.Selection<any, any, any, any>) {
     item.append('span').text(cat.label)
   })
 
-  legend.append('span').attr('class', 'text-brand-400/60').text('|')
+  legend.append('span').attr('class', 'text-gray-400/60').text('|')
 
   relationLegend.forEach((rel) => {
     const item = legend.append('span').attr('class', 'flex items-center gap-1.5')
@@ -1649,7 +1659,7 @@ function renderGraphSVG(container: d3.Selection<any, any, any, any>) {
     .attr('patternUnits', 'userSpaceOnUse')
     .append('path')
     .attr('d', 'M 40 0 L 0 0 0 40')
-    .attr('fill', 'none').attr('stroke', '#64B5F6').attr('stroke-width', 0.5).attr('stroke-opacity', 0.3)
+    .attr('fill', 'none').attr('stroke', '#5eb6b9').attr('stroke-width', 0.5).attr('stroke-opacity', 0.3)
 
   defs.append('filter').attr('id', 'kg-glow')
     .append('feGaussianBlur').attr('stdDeviation', 3)
@@ -1747,7 +1757,7 @@ function renderGraphSVG(container: d3.Selection<any, any, any, any>) {
   if (positionedNodes.value.length === 0) {
     svg.append('text')
       .attr('x', '50%').attr('y', '50%')
-      .attr('font-size', 14).attr('fill', '#64B5F6')
+      .attr('font-size', 14).attr('fill', '#5eb6b9')
       .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
       .text('暂无知识点数据')
   }
@@ -1762,13 +1772,13 @@ function renderBubbleDetail(container: d3.Selection<any, any, any, any>) {
 
   const headerRow = detail.append('div').attr('class', 'flex items-center gap-2')
   headerRow.append('span').attr('class', 'w-3 h-3 rounded-full').style('background', bubbleColor(node.mastery, node.category))
-  headerRow.append('p').attr('class', 'text-sm font-bold text-brand-800').text(node.label)
+  headerRow.append('p').attr('class', 'text-sm font-bold text-gray-800').text(node.label)
   headerRow.append('span').attr('class', 'text-xs px-1.5 py-0.5 rounded bg-brand-400/10 text-brand-600').text(node.chapter)
 
-  detail.append('p').attr('class', 'text-xs text-brand-400').text(node.description)
+  detail.append('p').attr('class', 'text-xs text-gray-400').text(node.description)
 
   const masteryRow = detail.append('div').attr('class', 'flex items-center gap-3 text-xs')
-  masteryRow.append('span').attr('class', 'text-brand-400').text('掌握度')
+  masteryRow.append('span').attr('class', 'text-gray-400').text('掌握度')
   masteryRow.append('div').attr('class', 'flex-1 h-2 bg-brand-400/10 rounded-full overflow-hidden')
     .append('div').attr('class', 'h-full rounded-full')
     .style('width', `${node.mastery}%`)
@@ -1779,18 +1789,18 @@ function renderBubbleDetail(container: d3.Selection<any, any, any, any>) {
   const edges = bubbleEdges(selectedBubble.value!)
   if (edges.length > 0) {
     const edgeSection = detail.append('div').attr('class', 'pt-1 border-t border-brand-400/20')
-    edgeSection.append('p').attr('class', 'text-[11px] text-brand-400 mb-1').text('关联关系')
+    edgeSection.append('p').attr('class', 'text-[11px] text-gray-400 mb-1').text('关联关系')
     edges.forEach((edge) => {
       const edgeRow = edgeSection.append('div').attr('class', 'text-xs text-brand-600 flex items-center gap-1.5')
       const srcSpan = edgeRow.append('span').attr('class', edge.source === selectedBubble.value ? 'font-semibold' : '').text(nodeLabel(edge.source))
-      edgeRow.append('span').attr('class', 'w-3 h-3 text-brand-400')
-      renderIcon(edgeRow, 'arrowRight', 'w-3 h-3 text-brand-400')
+      edgeRow.append('span').attr('class', 'w-3 h-3 text-gray-400')
+      renderIcon(edgeRow, 'arrowRight', 'w-3 h-3 text-gray-400')
       const relChip = edgeRow.append('span').attr('class', 'px-1 py-0.5 rounded text-[10px]')
       const chipClasses = relationChipClass(edge.relation).split(' ')
       chipClasses.forEach((cls) => relChip.attr('class', (relChip.attr('class') || '') + ' ' + cls))
       relChip.text(edge.label)
-      edgeRow.append('span').attr('class', 'w-3 h-3 text-brand-400')
-      renderIcon(edgeRow, 'arrowRight', 'w-3 h-3 text-brand-400')
+      edgeRow.append('span').attr('class', 'w-3 h-3 text-gray-400')
+      renderIcon(edgeRow, 'arrowRight', 'w-3 h-3 text-gray-400')
       const tgtSpan = edgeRow.append('span').attr('class', edge.target === selectedBubble.value ? 'font-semibold' : '').text(nodeLabel(edge.target))
     })
   }

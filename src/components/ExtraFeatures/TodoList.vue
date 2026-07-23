@@ -5,16 +5,16 @@
       <p class="text-xs font-medium text-blue-400 uppercase tracking-wider flex items-center gap-1">
         <Settings class="w-3.5 h-3.5" />
         配置提醒
-        <span class="text-xs font-normal text-brand-400">（请在课前完成配置）</span>
+        <span class="text-xs font-normal text-gray-400">（请在课前完成配置）</span>
       </p>
       <div v-for="cfg in pendingConfigCourses" :key="cfg.courseId"
         class="flex items-center gap-3 p-3 bg-brand-600/10 rounded-lg border border-brand-400 shadow-sm group">
         <div class="flex-shrink-0 w-8 h-8 rounded-full bg-brand-600/15 flex items-center justify-center">
-          <Settings class="w-4 h-4 text-brand-600" />
+          <Settings class="w-4 h-4 text-gray-600" />
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-blue-900 truncate">{{ cfg.courseTitle }}</p>
-          <p class="text-xs text-brand-600">未配置：{{ cfg.missing.join('、') }}</p>
+          <p class="text-xs text-gray-600">未配置：{{ cfg.missing.join('、') }}</p>
         </div>
         <router-link to="/teacher/courses"
           class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-800 transition-colors">
@@ -29,16 +29,16 @@
       <p class="text-xs font-medium text-red-400 uppercase tracking-wider flex items-center gap-1">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
         评价待办
-        <span class="text-xs font-normal text-brand-400">（{{ pendingEvalReminders.length }}项待评价）</span>
+        <span class="text-xs font-normal text-gray-400">（{{ pendingEvalReminders.length }}项待评价）</span>
       </p>
       <div v-for="group in evalReminderGroups" :key="group.key"
         class="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200 shadow-sm group">
         <div class="flex-shrink-0 w-8 h-8 rounded-full bg-brand-600/15 flex items-center justify-center">
-          <ClipboardCheck class="w-4 h-4 text-brand-600" />
+          <ClipboardCheck class="w-4 h-4 text-gray-600" />
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-amber-900 truncate">{{ group.courseTitle }}</p>
-          <p class="text-xs text-brand-600">{{ group.label }}</p>
+          <p class="text-xs text-gray-600">{{ group.label }}</p>
         </div>
         <router-link :to="group.link"
           class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-800 transition-colors">
@@ -82,13 +82,13 @@
     </div>
 
     <div v-if="activeTodos.length > 0" class="space-y-1.5">
-      <p class="text-xs font-medium text-brand-400 uppercase tracking-wider">待完成</p>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">待完成</p>
       <div v-for="t in activeTodos" :key="t.id" class="flex items-center gap-3 p-3 bg-white rounded-lg border border-brand-400/20 shadow-sm group">
         <button @click="store.updateTodo(t.id, { completed: true })" class="flex-shrink-0">
-          <Circle class="w-5 h-5 text-brand-400/60 hover:text-brand-600 transition-colors" />
+          <Circle class="w-5 h-5 text-gray-400/60 hover:text-gray-600 transition-colors" />
         </button>
-        <span class="flex-1 text-sm text-brand-900">{{ t.title }}</span>
-        <span v-if="t.dueDate" class="text-xs text-brand-400">{{ t.dueDate }}</span>
+        <span class="flex-1 text-sm text-gray-900">{{ t.title }}</span>
+        <span v-if="t.dueDate" class="text-xs text-gray-400">{{ t.dueDate }}</span>
         <button @click="store.deleteTodo(t.id)" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-brand-600/10 text-red-400 transition-all">
           <X class="w-4 h-4" />
         </button>
@@ -96,19 +96,19 @@
     </div>
 
     <div v-if="doneTodos.length > 0" class="space-y-1.5">
-      <p class="text-xs font-medium text-brand-400 uppercase tracking-wider">已完成</p>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">已完成</p>
       <div v-for="t in doneTodos" :key="t.id" class="flex items-center gap-3 p-3 bg-brand-400/10 rounded-lg border border-brand-400/20">
         <button @click="store.updateTodo(t.id, { completed: false })" class="flex-shrink-0">
-          <CheckCircle class="w-5 h-5 text-brand-600" />
+          <CheckCircle class="w-5 h-5 text-gray-600" />
         </button>
-        <span class="flex-1 text-sm text-brand-400 line-through">{{ t.title }}</span>
+        <span class="flex-1 text-sm text-gray-400 line-through">{{ t.title }}</span>
         <button @click="store.deleteTodo(t.id)" class="p-1 rounded hover:bg-brand-600/10 text-red-400 transition-colors">
           <X class="w-4 h-4" />
         </button>
       </div>
     </div>
 
-    <div v-if="myTodos.length === 0 && pendingEvalReminders.length === 0 && pendingAITierTests.length === 0" class="text-center py-12 text-brand-400">
+    <div v-if="myTodos.length === 0 && pendingEvalReminders.length === 0 && pendingAITierTests.length === 0" class="text-center py-12 text-gray-400">
       <CheckCircle class="w-12 h-12 mx-auto mb-3 opacity-50" />
       <p>暂无待办事项</p>
     </div>

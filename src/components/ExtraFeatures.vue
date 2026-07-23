@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-2xl font-bold text-brand-900">额外功能</h1>
-      <p class="text-brand-400 mt-1">云盘 · 待办 · 在线文档 · 笔记</p>
+      <h1 class="text-2xl font-bold text-gray-900">额外功能</h1>
+      <p class="text-gray-400 mt-1">云盘 · 待办 · 在线文档 · 笔记</p>
     </div>
 
     <div class="flex gap-1 bg-brand-400/10 p-1 rounded-xl">
@@ -10,7 +10,7 @@
         v-for="tab in tabs"
         :key="tab.id"
         @click="activeTab = tab.id"
-        :class="`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-white text-brand-900 shadow-sm' : 'text-brand-400 hover:text-brand-800'}`"
+        :class="`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-800'}`"
       >
         <component :is="tab.icon" class="w-4 h-4" />
         <span class="relative">

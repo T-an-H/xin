@@ -20,7 +20,7 @@ const getGrade = (courseId: string) => {
 }
 
 const getGradeColor = (score: number | null) => {
-  if (score === null || score === undefined) return 'text-brand-400'
+  if (score === null || score === undefined) return 'text-gray-400'
   if (score >= 90) return 'text-emerald-600'
   if (score >= 80) return 'text-blue-600'
   if (score >= 70) return 'text-amber-600'
@@ -68,15 +68,15 @@ function renderProgress(root: HTMLElement) {
 
   // Header
   const header = container.append('div')
-  header.append('h1').attr('class', 'text-2xl font-bold text-brand-900').text('学习进度')
-  header.append('p').attr('class', 'text-brand-400 mt-1').text('查看各课程学习进度和成绩')
+  header.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text('学习进度')
+  header.append('p').attr('class', 'text-gray-400 mt-1').text('查看各课程学习进度和成绩')
 
   // Enrollments list
   const listDiv = container.append('div').attr('class', 'space-y-4')
 
   const enrollments = myEnrollments.value
   if (enrollments.length === 0) {
-    listDiv.append('div').attr('class', 'text-center py-12 text-brand-400').text('暂无课程数据')
+    listDiv.append('div').attr('class', 'text-center py-12 text-gray-400').text('暂无课程数据')
     return
   }
 
@@ -89,10 +89,10 @@ function renderProgress(root: HTMLElement) {
     // Header row with course name and grade
     const headerRow = card.append('div').attr('class', 'flex items-center justify-between mb-3')
     const leftSide = headerRow.append('div').attr('class', 'flex items-center gap-3')
-    renderIcon(leftSide, 'bookOpen', 'w-5 h-5 text-brand-600')
+    renderIcon(leftSide, 'bookOpen', 'w-5 h-5 text-gray-600')
     const nameDiv = leftSide.append('div')
-    nameDiv.append('h3').attr('class', 'font-semibold text-brand-900').text(getCourseName(courseId))
-    nameDiv.append('p').attr('class', 'text-xs text-brand-400').text(getCourseCode(courseId))
+    nameDiv.append('h3').attr('class', 'font-semibold text-gray-900').text(getCourseName(courseId))
+    nameDiv.append('p').attr('class', 'text-xs text-gray-400').text(getCourseCode(courseId))
 
     headerRow.append('span')
       .attr('class', `text-lg font-bold ${getGradeColor(gradeVal)}`)
@@ -104,12 +104,12 @@ function renderProgress(root: HTMLElement) {
     // Progress bar helper
     function addBar(label: string, value: number, barColor: string) {
       const row = barsContainer.append('div').attr('class', 'flex items-center gap-2')
-      row.append('span').attr('class', 'text-xs text-brand-400 w-16').text(label)
+      row.append('span').attr('class', 'text-xs text-gray-400 w-16').text(label)
       const barTrack = row.append('div').attr('class', 'flex-1 h-2 bg-brand-400/10 rounded-full overflow-hidden')
       barTrack.append('div')
         .attr('class', `h-full rounded-full ${barColor}`)
         .style('width', `${value}%`)
-      row.append('span').attr('class', 'text-xs text-brand-400 w-8').text(`${value}`)
+      row.append('span').attr('class', 'text-xs text-gray-400 w-8').text(`${value}`)
     }
 
     addBar('学习进度', getProgress(courseId), 'bg-brand-600')

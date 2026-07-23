@@ -1,5 +1,5 @@
 <template>
-  <div id="d3-layout-root" class="flex min-h-screen bg-brand-400/10">
+  <div id="d3-layout-root" class="flex min-h-screen bg-white">
     <Sidebar />
     <main class="flex-1 overflow-auto">
       <div class="p-6 max-w-7xl mx-auto">

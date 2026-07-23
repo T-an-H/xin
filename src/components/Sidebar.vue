@@ -13,8 +13,8 @@ const route = useRoute()
 const router = useRouter()
 
 const adminNavItems = [
-  { to: '/admin/categories', icon: BarChart3, label: '分类管理' },
-  { to: '/admin/students', icon: Users, label: '学员管理' },
+  { to: '/admin/categories', icon: 'barChart3' as const, label: '分类管理' },
+  { to: '/admin/students', icon: 'users' as const, label: '学员管理' },
 ]
 
 const teacherNavItems = [
@@ -24,11 +24,11 @@ const teacherNavItems = [
 ]
 
 const studentNavItems = [
-  { to: '/student/profile', icon: User, label: '个人画像' },
-  { to: '/student/schedule', icon: Calendar, label: '我的课表' },
-  { to: '/student/courses', icon: BookOpen, label: '我的课程' },
-  { to: '/student/grades', icon: Award, label: '成绩管理' },
-  { to: '/student/extra', icon: Lightbulb, label: '额外功能' },
+  { to: '/student/profile', icon: 'user' as const, label: '个人画像' },
+  { to: '/student/schedule', icon: 'calendar' as const, label: '我的课表' },
+  { to: '/student/courses', icon: 'bookOpen' as const, label: '我的课程' },
+  { to: '/student/grades', icon: 'award' as const, label: '成绩管理' },
+  { to: '/student/extra', icon: 'lightbulb' as const, label: '额外功能' },
 ]
 
 const mentorNavItems = [
@@ -55,11 +55,6 @@ const config = computed(() => roleConfig[store.currentRole || 'admin'])
 const hasLeaderAccess = computed(() => {
   return store.currentRole === 'leader' || store.secondaryRoles.includes('leader')
 })
-
-const leaderExtraItems = [
-  { to: '/leader/courses', icon: 'eye' as const, label: '学院课程' },
-  { to: '/leader/students', icon: 'users' as const, label: '学院学员' },
-]
 
 const hasPendingEvalTodos = computed(() => {
   if (store.currentRole === 'student') {
@@ -104,7 +99,7 @@ function renderNavLink(
   const active = isActive(item)
   const link = container.append('a')
     .attr('href', 'javascript:void(0)')
-    .attr('class', `flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${active ? 'bg-brand-600/50 text-white font-medium' : 'text-brand-400 hover:text-white hover:bg-brand-900'}`)
+    .attr('class', `flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${active ? 'bg-white/15 text-white font-medium' : 'text-gray-300 hover:text-white hover:bg-black/10'}`)
     .on('click', () => router.push(item.to))
 
   renderIcon(link, item.icon as any, 'w-5 h-5 flex-shrink-0')
@@ -114,7 +109,7 @@ function renderNavLink(
 
   if (showExtraBadge(item)) {
     span.append('span')
-      .attr('class', 'absolute -top-2 -right-3 w-2.5 h-2.5 bg-brand-600 rounded-full ring-2 ring-brand-700')
+      .attr('class', 'absolute -top-2 -right-3 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white/50')
   }
 }
 
@@ -126,7 +121,7 @@ function renderSidebar() {
 
   // ---- aside ----
   const aside = root.append('aside')
-    .attr('class', 'w-64 bg-brand-700 text-white flex flex-col h-screen sticky top-0')
+    .attr('class', 'w-64 bg-brand-750 text-white flex flex-col h-screen sticky top-0')
 
   // ---- header ----
   const header = aside.append('div')
@@ -147,30 +142,46 @@ function renderSidebar() {
   const nav = aside.append('nav')
     .attr('class', 'flex-1 p-4 space-y-1')
 
-  // 主菜单项
-  cfg.items.forEach((item) => {
-    renderNavLink(nav, item as any)
-  })
+  // 构建合并后的菜单项列表，保持各自原有顺序
+  let fullItems: any[]
 
-  // leader 附加菜单项
-  if (hasLeaderAccess.value) {
-    nav.append('div')
-      .attr('class', 'pt-3 pb-1 border-t border-white/5 mt-3')
-    nav.append('p')
-      .attr('class', 'px-4 text-[10px] text-brand-400 uppercase tracking-wider')
-      .text('学院管理')
-
-    leaderExtraItems.forEach((item) => {
-      renderNavLink(nav, item as any)
-    })
+  if (store.currentRole === 'leader') {
+    // 以 leader 身份登入：先加 teacher/mentor 菜单，最后加 leader 菜单
+    fullItems = []
+    const leader = store.leaders.find((l) => l.name === store.currentUser)
+    if (leader?.asTeacher) {
+      fullItems.push({ separator: true, label: '教学管理' } as any)
+      teacherNavItems.forEach((item) => fullItems.push(item))
+    }
+    if (leader?.asMentor) {
+      fullItems.push({ separator: true, label: '企业导师管理' } as any)
+      mentorNavItems.forEach((item) => fullItems.push(item))
+    }
+    cfg.items.forEach((item) => fullItems.push(item))
+  } else {
+    fullItems = [...cfg.items]
+    // 非 leader 主角色但有 leader 副角色时，追加 leader 菜单
+    if (hasLeaderAccess.value) {
+      fullItems.push({ separator: true, label: '学院管理' } as any)
+      leaderNavItems.forEach((item) => fullItems.push(item))
+    }
   }
+
+  fullItems.forEach((item: any) => {
+    if (item.separator) {
+      nav.append('div').attr('class', 'pt-3 pb-1 mt-3')
+      nav.append('p').attr('class', 'px-4 text-[10px] text-gray-400 uppercase tracking-wider').text(item.label)
+      return
+    }
+    renderNavLink(nav, item)
+  })
 
   // ---- footer ----
   const footer = aside.append('div')
     .attr('class', 'p-4 border-t border-white/10')
 
   footer.append('button')
-    .attr('class', 'flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-brand-400 hover:text-white hover:bg-brand-900 transition-all duration-200 w-full')
+    .attr('class', 'flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-black/10 transition-all duration-200 w-full')
     .on('click', () => {
       store.logout()
       router.replace('/login')
