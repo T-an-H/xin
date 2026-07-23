@@ -27,30 +27,17 @@
         </div>
 
         <h2 class="text-2xl font-bold text-gray-900 mb-2 hidden lg:block">欢迎登录</h2>
-        <p class="text-gray-500 mb-6 hidden lg:block">请选择角色并输入账号信息</p>
-
-        <!-- Role selection -->
-        <div class="grid grid-cols-3 gap-3 mb-6">
-          <button
-            v-for="r in roles"
-            :key="r.id"
-            @click="selectedRole = r.id"
-            :class="['p-3 rounded-xl border-2 text-center transition-all', selectedRole === r.id ? r.color + ' shadow-md' : 'border-gray-100 hover:border-gray-200 bg-white']"
-          >
-            <component :is="r.icon" :class="['w-6 h-6 mx-auto mb-1', selectedRole === r.id ? 'text-gray-900' : 'text-gray-400']" />
-            <span :class="['text-sm font-medium block', selectedRole === r.id ? 'text-gray-900' : 'text-gray-500']">{{ r.label }}</span>
-          </button>
-        </div>
+        <p class="text-gray-500 mb-8 hidden lg:block">输入账号密码，系统自动识别身份</p>
 
         <form @submit.prevent="handleLogin" class="space-y-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">用户名</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">账号</label>
             <div class="relative">
               <User class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
-                v-model="username"
+                v-model="account"
                 type="text"
-                placeholder="请输入用户名"
+                placeholder="请输入账号"
                 class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
                 @input="error = ''"
               />
@@ -78,21 +65,24 @@
 
           <button
             type="submit"
-            class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2"
+            :disabled="loading"
+            :class="['w-full py-3 font-medium rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2', loading ? 'bg-amber-400 cursor-not-allowed' : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/25']"
           >
-            <LogIn class="w-5 h-5" />
-            登录
+            <template v-if="loading">
+              <LoaderCircle class="w-5 h-5 animate-spin" />
+              登录中...
+            </template>
+            <template v-else>
+              <LogIn class="w-5 h-5" />
+              登录
+            </template>
           </button>
 
-          <p class="text-center text-xs text-gray-400">
-            演示账号：任意用户名和密码即可登录体验
-          </p>
-
-          <!-- 教师角色提示 -->
-          <div v-if="selectedRole === 'teacher'" class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-600">
-            <p>授课导师：王老师、李老师、陈老师 ……</p>
-            <p>企业导师：张导师、李导师</p>
-            <p>学院领导：刘院长、陈院长</p>
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-600">
+            <p class="font-medium mb-1">测试账号（密码统一：666666）</p>
+            <p>管理员：admin</p>
+            <p>教师：teacher-wang、teacher-li</p>
+            <p>学生：S2024001（张明）、202511053250（李傲天）</p>
           </div>
         </form>
       </div>
@@ -104,66 +94,49 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { User, Lock, Eye, EyeOff, LogIn, GraduationCap, Users, UserCog } from 'lucide-vue-next'
-
-type LoginRole = 'admin' | 'teacher' | 'student'
+import { User, Lock, Eye, EyeOff, LogIn, GraduationCap, LoaderCircle } from 'lucide-vue-next'
+import { unifiedLogin } from '@/api'
 
 const router = useRouter()
 const store = useAppStore()
 
-const username = ref('')
+const account = ref('')
 const password = ref('')
 const showPassword = ref(false)
-const selectedRole = ref<LoginRole>('admin')
 const error = ref('')
+const loading = ref(false)
 
-const roles: { id: LoginRole; label: string; icon: any; desc: string; color: string }[] = [
-  { id: 'admin', label: '管理员', icon: UserCog, desc: '课程、学员、排课、数据管理', color: 'ring-amber-500 border-amber-500 bg-amber-50' },
-  { id: 'teacher', label: '教师', icon: GraduationCap, desc: '授课导师 / 企业导师 / 学院领导', color: 'ring-emerald-500 border-emerald-500 bg-emerald-50' },
-  { id: 'student', label: '学生', icon: Users, desc: '我的课程、课表、学习进度', color: 'ring-blue-500 border-blue-500 bg-blue-50' },
-]
-
-/**
- * 根据用户名自动检测教师类别的具体角色
- * 优先级：teacher > mentor > leader
- */
-function detectTeacherRole(username: string): { role: 'teacher' | 'mentor' | 'leader'; portal: string } {
-  if (store.teachers.some((t) => t.name === username)) {
-    return { role: 'teacher', portal: '/teacher/courses' }
-  }
-  if (store.mentors.some((m) => m.name === username)) {
-    return { role: 'mentor', portal: '/mentor/courses' }
-  }
-  if (store.leaders.some((l) => l.name === username)) {
-    return { role: 'leader', portal: '/leader/courses' }
-  }
-  // 兜底：当作授课导师
-  return { role: 'teacher', portal: '/teacher/courses' }
-}
-
-const handleLogin = () => {
-  if (!username.value.trim() || !password.value.trim()) {
-    error.value = '请输入用户名和密码'
+const handleLogin = async () => {
+  if (!account.value.trim() || !password.value.trim()) {
+    error.value = '请输入账号和密码'
     return
   }
 
-  switch (selectedRole.value) {
-    case 'admin': {
-      store.login(username.value, 'admin')
-      router.push('/admin/categories')
-      break
+  loading.value = true
+  error.value = ''
+
+  try {
+    const res = await unifiedLogin(account.value, password.value)
+
+    // 保存 token
+    localStorage.setItem('token', res.token)
+    localStorage.setItem('userInfo', JSON.stringify(res.user))
+
+    // 确定角色（处理教师子角色：授课导师/企业导师/学院领导）
+    let role = res.user.role
+    if (role === 'teacher' && res.user.sub_role) {
+      role = res.user.sub_role
     }
-    case 'teacher': {
-      const { role, portal } = detectTeacherRole(username.value)
-      store.login(username.value, role)
-      router.push(portal)
-      break
-    }
-    case 'student': {
-      store.login(username.value, 'student')
-      router.push('/student/courses')
-      break
-    }
+
+    // 调用 store.login 让应用状态同步
+    store.login(res.user.name, role)
+
+    // 跳转到对应页面
+    router.push(res.portal)
+  } catch (e: any) {
+    error.value = e.message || '登录失败，请检查账号和密码'
   }
+
+  loading.value = false
 }
 </script>

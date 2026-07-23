@@ -1,5 +1,11 @@
 <template>
-  <div v-if="!student" class="text-center py-12 text-gray-400">学生不存在</div>
+  <div v-if="loading" class="text-center py-12 text-gray-400">
+    <div class="flex items-center justify-center gap-2">
+      <LoaderCircle class="w-5 h-5 animate-spin text-blue-500" />
+      <span>加载中...</span>
+    </div>
+  </div>
+  <div v-else-if="!student" class="text-center py-12 text-gray-400">学生不存在</div>
   <div v-else class="space-y-6">
     <div class="flex items-center gap-4">
       <router-link to="/admin/students" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
@@ -30,19 +36,33 @@
       </div>
 
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-fit">
-        <h3 class="text-sm font-semibold text-gray-800 mb-3">学习统计</h3>
-        <div class="space-y-3">
-          <div class="flex justify-between text-sm">
-            <span class="text-gray-600">已选课程</span>
-            <span class="font-medium">{{ enrolledCourses.length }}</span>
+        <h3 class="text-sm font-semibold text-gray-800 mb-3">个人资料</h3>
+        <div class="space-y-3 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-500">学号</span>
+            <span class="font-medium">{{ student.studentId }}</span>
           </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-gray-600">平均进度</span>
-            <span class="font-medium">{{ avgProgress }}%</span>
+          <div class="flex justify-between">
+            <span class="text-gray-500">姓名</span>
+            <span class="font-medium">{{ student.name }}</span>
           </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-gray-600">平均成绩</span>
-            <span class="font-medium">{{ avgScore }}分</span>
+          <div class="flex justify-between">
+            <span class="text-gray-500">班级</span>
+            <span class="font-medium">{{ student.className }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">状态</span>
+            <span :class="student.status === 'active' ? 'text-green-600' : 'text-red-600'">
+              {{ student.status === 'active' ? '正常' : '禁用' }}
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">邮箱</span>
+            <span class="font-medium">{{ student.email || '-' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">电话</span>
+            <span class="font-medium">{{ student.phone || '-' }}</span>
           </div>
         </div>
       </div>
@@ -50,32 +70,49 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { ArrowLeft, BookOpen } from 'lucide-vue-next'
+import { ArrowLeft, BookOpen, LoaderCircle } from 'lucide-vue-next'
 
 const route = useRoute()
 const store = useAppStore()
 
-const student = computed(() => store.students.find((s) => s.id === route.params.id))
-const enrolledCourses = computed(() => store.enrollments.filter((e) => e.studentId === student.value?.id))
+const student = ref<any>(null)
+const loading = ref(true)
+
+async function loadStudent() {
+  loading.value = true
+  try {
+    const res = await fetch(`http://localhost:3000/api/students/${route.params.id}`)
+    const data = await res.json()
+    if (data.success) {
+      student.value = data.student
+    }
+  } catch (e) {
+    console.error('加载学生详情失败:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 已选课程仍从 mock 数据获取（根据学号匹配）
+const enrolledCourses = computed(() => {
+  if (!student.value) return []
+  return store.enrollments.filter((e) => {
+    const mockStudent = store.students.find((s) => s.studentId === student.value?.studentId)
+    return mockStudent && e.studentId === mockStudent.id
+  })
+})
 
 const getCourseName = (id: string) => store.courses.find((c) => c.id === id)?.title || '未知'
 const getCourseProgress = (courseId: string) => {
-  const grade = store.grades.find((g) => g.studentId === student.value?.id && g.courseId === courseId)
-  return grade ? Math.min(100, Math.round(grade.totalScore)) : 0
+  if (!student.value) return 0
+  const mockStudent = store.students.find((s) => s.studentId === student.value?.studentId)
+  if (!mockStudent) return 0
+  const enrollment = store.enrollments.find((e) => e.studentId === mockStudent.id && e.courseId === courseId)
+  return enrollment?.progress || 0
 }
 
-const avgProgress = computed(() => {
-  if (enrolledCourses.value.length === 0) return 0
-  const total = enrolledCourses.value.reduce((s, e) => s + getCourseProgress(e.courseId), 0)
-  return Math.round(total / enrolledCourses.value.length)
-})
-
-const avgScore = computed(() => {
-  const grades = store.grades.filter((g) => g.studentId === student.value?.id)
-  if (grades.length === 0) return 0
-  return Math.round(grades.reduce((s, g) => s + g.totalScore, 0) / grades.length)
-})
+onMounted(loadStudent)
 </script>
