@@ -4,7 +4,8 @@ import type {
   Course, Category, Student, Schedule, Enrollment, Teacher, Grade,
   CloudFile, TodoItem, OnlineDoc, Note, Evaluation, EvaluationConfig,
   StudentGroup, EvalAnomaly, EvalReminder, GradeWeightConfig, DetailedGrade,
-  Mentor, Leader, AITierQuestion, StudentTierRecord, EvalType
+  Mentor, Leader, AITierQuestion, StudentTierRecord, EvalType,
+  Homework, HomeworkSubmission
 } from '@/types'
 import { getDefaultGradeConfig, TEMPLATE_EVAL_TYPES } from '@/types'
 import {
@@ -20,7 +21,13 @@ import {
   studentGroups as mockStudentGroups,
   detailedGrades as mockDetailedGrades,
   mentors as mockMentors,
-  leaders as mockLeaders
+  leaders as mockLeaders,
+  onlineDocs as mockOnlineDocs,
+  notes as mockNotes,
+  todoItems as mockTodos,
+  cloudFiles as mockCloudFiles,
+  homework as mockHomework,
+  homeworkSubmissions as mockHomeworkSubmissions
 } from '@/data/mockData'
 
 type UserRole = 'admin' | 'teacher' | 'student' | 'mentor' | 'leader' | null
@@ -51,16 +58,18 @@ export const useAppStore = defineStore('app', () => {
   const enrollments = ref<Enrollment[]>(loadFromStorage('enrollments', mockEnrollments))
   const teachers = ref<Teacher[]>(loadFromStorage('teachers', mockTeachers))
   const grades = ref<Grade[]>(loadFromStorage('grades', mockGrades))
-  const cloudFiles = ref<CloudFile[]>(loadFromStorage<CloudFile[]>('cloudFiles', []))
-  const todos = ref<TodoItem[]>(loadFromStorage<TodoItem[]>('todos', []))
-  const onlineDocs = ref<OnlineDoc[]>(loadFromStorage<OnlineDoc[]>('onlineDocs', []))
-  const notes = ref<Note[]>(loadFromStorage<Note[]>('notes', []))
+  const cloudFiles = ref<CloudFile[]>(loadFromStorage<CloudFile[]>('cloudFiles', mockCloudFiles))
+  const todos = ref<TodoItem[]>(loadFromStorage<TodoItem[]>('todos', mockTodos))
+  const onlineDocs = ref<OnlineDoc[]>(loadFromStorage<OnlineDoc[]>('onlineDocs', mockOnlineDocs))
+  const notes = ref<Note[]>(loadFromStorage<Note[]>('notes', mockNotes))
   const evaluations = ref<Evaluation[]>(loadFromStorage<Evaluation[]>('evaluations', mockEvaluations))
   const evalConfigs = ref<EvaluationConfig[]>(loadFromStorage<EvaluationConfig[]>('evalConfigs', mockEvalConfigs))
   const studentGroups = ref<StudentGroup[]>(loadFromStorage<StudentGroup[]>('studentGroups', mockStudentGroups))
   const evalReminders = ref<EvalReminder[]>(loadFromStorage<EvalReminder[]>('evalReminders', []))
   const gradeConfigs = ref<Record<string, GradeWeightConfig>>(loadFromStorage<Record<string, GradeWeightConfig>>('gradeConfigs', {}))
   const detailedGrades = ref<DetailedGrade[]>(loadFromStorage<DetailedGrade[]>('detailedGrades', mockDetailedGrades))
+  const homework = ref<Homework[]>(loadFromStorage<Homework[]>('homework', mockHomework))
+  const homeworkSubmissions = ref<HomeworkSubmission[]>(loadFromStorage<HomeworkSubmission[]>('homeworkSubmissions', mockHomeworkSubmissions))
   const isLoggedIn = ref<boolean>(loadFromStorage<boolean>('isLoggedIn', false))
   const currentUser = ref<string | null>(loadFromStorage<string | null>('currentUser', null))
   const currentRole = ref<UserRole>(loadFromStorage<UserRole>('currentRole', null))
@@ -338,6 +347,42 @@ export const useAppStore = defineStore('app', () => {
   function deleteNote(id: string) {
     notes.value = notes.value.filter((n) => n.id !== id)
     saveToStorage('notes', notes.value)
+  }
+
+  // ====== 作业系统 ======
+
+  function addHomework(hw: Homework) {
+    homework.value = [...homework.value, hw]
+    saveToStorage('homework', homework.value)
+  }
+
+  function updateHomework(id: string, data: Partial<Homework>) {
+    homework.value = homework.value.map((h) => (h.id === id ? { ...h, ...data } : h))
+    saveToStorage('homework', homework.value)
+  }
+
+  function deleteHomework(id: string) {
+    homework.value = homework.value.filter((h) => h.id !== id)
+    saveToStorage('homework', homework.value)
+  }
+
+  function getCourseHomework(courseId: string): Homework[] {
+    return homework.value.filter((h) => h.courseId === courseId)
+  }
+
+  function getCourseCloudFiles(courseId: string): CloudFile[] {
+    return cloudFiles.value.filter((f) => f.courseId === courseId)
+  }
+
+  function submitHomework(submission: HomeworkSubmission) {
+    homeworkSubmissions.value = [...homeworkSubmissions.value, submission]
+    saveToStorage('homeworkSubmissions', homeworkSubmissions.value)
+  }
+
+  function getHomeworkSubmission(homeworkId: string, studentId: string): HomeworkSubmission | undefined {
+    return homeworkSubmissions.value.find(
+      (s) => s.homeworkId === homeworkId && s.studentId === studentId
+    )
   }
 
   // ====== 评价系统 ======
@@ -1250,6 +1295,7 @@ export const useAppStore = defineStore('app', () => {
     cloudFiles, todos, onlineDocs, notes,
     evaluations, evalConfigs, studentGroups, evalReminders,
     gradeConfigs, detailedGrades,
+    homework, homeworkSubmissions,
     isLoggedIn, currentUser, currentRole,
     hasEvalReminders,
     mentors, leaders, secondaryRoles,
@@ -1268,6 +1314,9 @@ export const useAppStore = defineStore('app', () => {
     addTodo, updateTodo, deleteTodo,
     addOnlineDoc, updateOnlineDoc, deleteOnlineDoc,
     addNote, updateNote, deleteNote,
+    addHomework, updateHomework, deleteHomework,
+    getCourseHomework, getCourseCloudFiles,
+    submitHomework, getHomeworkSubmission,
     addEvaluation, updateEvaluation, deleteEvaluation,
     setEvalConfig, addStudentGroup, addStudent, updateStudent, updateStudentGroup, deleteStudentGroup,
     detectAnomalies, getEvalSessions, hasGroups,
