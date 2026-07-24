@@ -143,6 +143,7 @@ export interface CloudFile {
   dataUrl: string;
   uploadedAt: string;
   uploadedBy: string;
+  courseId?: string;
 }
 
 export interface TodoItem {
@@ -171,6 +172,34 @@ export interface Note {
   createdAt: string;
   updatedAt: string;
   createdBy: string;
+  attachments?: {
+    fileName: string;
+    fileSize: number;
+    fileType: string;
+    dataUrl: string;
+  }[];
+}
+
+export interface Homework {
+  id: string;
+  courseId: string;
+  title: string;
+  description?: string;
+  dueDate: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface HomeworkSubmission {
+  id: string;
+  homeworkId: string;
+  courseId: string;
+  studentId: string;
+  submittedAt: string;
+  fileName: string;
+  fileDataUrl: string;
+  fileSize: number;
+  fileType: string;
 }
 
 // ========== 评价系统 ==========

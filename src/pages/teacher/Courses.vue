@@ -63,6 +63,12 @@
           <Users class="w-4 h-4 inline mr-1.5" />学员进度
         </button>
         <button
+          @click="activeTab = 'resources'"
+          :class="`px-5 py-2.5 text-sm font-medium rounded-t-lg transition-all ${activeTab === 'resources' ? 'bg-white text-blue-600 border border-b-0 border-gray-200 -mb-px' : 'text-gray-500 hover:text-gray-700'}`"
+        >
+          <FileText class="w-4 h-4 inline mr-1.5" />课程资源
+        </button>
+        <button
           @click="activeTab = 'evaluation'"
           :class="`px-5 py-2.5 text-sm font-medium rounded-t-lg transition-all ${activeTab === 'evaluation' ? 'bg-white text-blue-600 border border-b-0 border-gray-200 -mb-px' : 'text-gray-500 hover:text-gray-700'}`"
         >
@@ -130,7 +136,42 @@
         </div>
       </div>
 
-      <!-- Tab 2: 评价管理 -->
+      <!-- Tab 2: 课程资源 -->
+      <div v-if="activeTab === 'resources'" class="space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-semibold text-gray-900">课程资源管理</h2>
+            <p class="text-xs text-gray-400">上传的资源将在学生端课程学习页面展示</p>
+          </div>
+          <label class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer transition-colors">
+            <Upload class="w-4 h-4" />
+            <span>上传文件</span>
+            <input type="file" @change="handleFileUpload" class="hidden" />
+          </label>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div v-for="file in courseResources" :key="file.id" class="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
+                  <FileText class="w-5 h-5 text-gray-500" />
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">{{ file.name }}</p>
+                  <p class="text-xs text-gray-400">{{ formatFileSize(file.size) }} · {{ file.uploadedAt }}</p>
+                </div>
+              </div>
+              <button @click="handleDeleteFile(file.id)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除文件">
+                <Trash2 class="w-4 h-4" />
+              </button>
+            </div>
+            <div v-if="courseResources.length === 0" class="col-span-full text-center py-8 text-gray-400">暂无课程资源，点击上方按钮上传</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: 评价管理 -->
       <div v-if="activeTab === 'evaluation'" class="space-y-6">
         <!-- 评价方案设置（折叠式） -->
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
@@ -360,7 +401,8 @@ import { ref, computed, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import {
   BookOpen, ChevronDown, ChevronUp, Users, ClipboardCheck,
-  Search, Settings, RefreshCw, AlertTriangle, Eye, EyeOff
+  Search, Settings, RefreshCw, AlertTriangle, Eye, EyeOff,
+  FileText, Upload, Trash2
 } from 'lucide-vue-next'
 import {
   EvalTemplateLabels, EvalTemplateDescs, TEMPLATE_EVAL_TYPES,
@@ -385,7 +427,7 @@ const OVERDUE_RULE_KEYS = Object.keys(OverdueRuleLabels) as OverdueRule[]
 
 // 课程选择 & Tab
 const selectedCourseId = ref<string | null>(null)
-const activeTab = ref<'progress' | 'evaluation'>('progress')
+const activeTab = ref<'progress' | 'resources' | 'evaluation'>('progress')
 
 // 学员进度
 const search = ref('')
@@ -437,7 +479,47 @@ const displayEnrollments = computed(() => {
 const getCourseTitle = (id: string) => store.courses.find((c) => c.id === id)?.title || '未知'
 const getStudentName = (id: string) => store.students.find((s) => s.id === id)?.name || '未知'
 
+const courseResources = computed(() => {
+  if (!selectedCourseId.value) return []
+  return store.getCourseCloudFiles(selectedCourseId.value)
+})
 
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+const handleFileUpload = (event: Event) => {
+  if (!selectedCourseId.value) {
+    alert('请先选择一门课程')
+    return
+  }
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  store.addCloudFile({
+    id: `file-${Date.now()}`,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    dataUrl: 'https://example.com/files/' + file.name,
+    uploadedAt: new Date().toISOString().split('T')[0],
+    uploadedBy: store.currentUser || '教师',
+    courseId: selectedCourseId.value,
+  })
+
+  target.value = ''
+  alert('文件上传成功！学生可在课程学习页面查看')
+}
+
+const handleDeleteFile = (fileId: string) => {
+  if (confirm('确定要删除这个文件吗？')) {
+    store.deleteCloudFile(fileId)
+    alert('文件已删除')
+  }
+}
 
 const statusLabels: Record<string, string> = {
   enrolled: '已报名', in_progress: '学习中', completed: '已完成', dropped: '已退课',

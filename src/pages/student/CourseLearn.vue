@@ -41,18 +41,26 @@
 
           <!-- 资源 -->
           <div v-if="activeTab === 'resources'" class="space-y-4">
-            <h3 class="text-sm font-semibold text-gray-800">课程资源</h3>
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-gray-800">课程资源</h3>
+              <span class="text-xs text-gray-400">教师上传的资源，可下载学习</span>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div v-for="res in courseResources" :key="res.id" class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50">
-                <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
-                  <FileText class="w-5 h-5 text-gray-500" />
+              <div v-for="res in courseResources" :key="res.id" class="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
+                    <FileText class="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ res.name }}</p>
+                    <p class="text-xs text-gray-400">{{ getFileTypeName(res.type) }} · {{ formatFileSize(res.size) }} · 上传者：{{ res.uploadedBy }}</p>
+                  </div>
                 </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-900">{{ res.title }}</p>
-                  <p class="text-xs text-gray-400">{{ res.type }} · {{ res.size }}</p>
-                </div>
+                <button @click="downloadFile(res)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="下载文件">
+                  <Download class="w-4 h-4" />
+                </button>
               </div>
-              <div v-if="courseResources.length === 0" class="col-span-full text-center py-8 text-gray-400">暂无资源</div>
+              <div v-if="courseResources.length === 0" class="col-span-full text-center py-8 text-gray-400">暂无课程资源</div>
             </div>
           </div>
 
@@ -64,18 +72,39 @@
 
           <!-- 作业 -->
           <div v-if="activeTab === 'homework'" class="space-y-4">
-            <h3 class="text-sm font-semibold text-gray-800">课程作业</h3>
-            <div class="space-y-2">
-              <div v-for="hw in courseHomework" :key="hw.id" class="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50">
-                <div class="flex items-center gap-3">
-                  <FileText class="w-5 h-5 text-blue-500" />
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-gray-800">课程作业</h3>
+              <span class="text-xs text-gray-400">{{ submittedCount }}/{{ courseHomework.length }} 已提交</span>
+            </div>
+            <div class="space-y-3">
+              <div v-for="hw in courseHomework" :key="hw.id" class="p-4 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                <div class="flex items-start justify-between mb-2">
                   <div>
                     <p class="text-sm font-medium text-gray-900">{{ hw.title }}</p>
-                    <p class="text-xs text-gray-400">截止：{{ hw.dueDate }}</p>
+                    <p v-if="hw.description" class="text-xs text-gray-500 mt-1">{{ hw.description }}</p>
+                    <p class="text-xs text-gray-400 mt-2">截止：{{ hw.dueDate }} · 创建者：{{ hw.createdBy }}</p>
                   </div>
+                  <span v-if="isHomeworkSubmitted(hw.id)" class="px-2 py-1 text-xs font-medium text-emerald-600 bg-emerald-50 rounded-full">已提交</span>
+                  <span v-else class="px-2 py-1 text-xs font-medium text-amber-600 bg-amber-50 rounded-full">未提交</span>
                 </div>
-                <span v-if="hw.submitted" class="text-xs text-emerald-500">已提交</span>
-                <span v-else class="text-xs text-amber-500">未提交</span>
+                <div v-if="isHomeworkSubmitted(hw.id)" class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                  <FileText class="w-4 h-4 text-gray-400" />
+                  <span class="text-xs text-gray-500">已提交：{{ getSubmissionFileName(hw.id) }}</span>
+                  <button @click="downloadSubmission(hw.id)" class="ml-auto p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                    <Download class="w-4 h-4" />
+                  </button>
+                </div>
+                <div v-else class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                  <label class="flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg cursor-pointer transition-colors">
+                    <Upload class="w-4 h-4" />
+                    <span>选择文件</span>
+                    <input type="file" :data-homework-id="hw.id" @change="handleFileSelect($event, hw.id)" class="hidden" />
+                  </label>
+                  <button v-if="selectedFiles[hw.id]" @click="submitHomework(hw)" class="px-3 py-2 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+                    提交作业
+                  </button>
+                  <span v-if="selectedFiles[hw.id]" class="text-xs text-gray-500">{{ selectedFiles[hw.id].name }}</span>
+                </div>
               </div>
               <div v-if="courseHomework.length === 0" class="text-center py-8 text-gray-400">暂无作业</div>
             </div>
@@ -123,8 +152,9 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { ArrowLeft, BookOpen, FileText, ClipboardCheck, Edit3, CheckCircle, Circle, BarChart3 } from 'lucide-vue-next'
+import { ArrowLeft, BookOpen, FileText, ClipboardCheck, Edit3, CheckCircle, Circle, BarChart3, Download, Upload } from 'lucide-vue-next'
 import StudentEvaluation from '@/components/StudentEvaluation.vue'
+import type { CloudFile } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -132,6 +162,7 @@ const store = useAppStore()
 const courseId = route.params.id as string
 const myStudent = computed(() => store.students.find((s) => s.name === store.currentUser))
 const activeTab = ref('tasks')
+const selectedFiles = ref<Record<string, File>>({})
 
 const tabs = [
   { id: 'tasks', label: '任务', icon: Edit3 },
@@ -151,22 +182,87 @@ const courseTasks = computed(() => {
   return tasks
 })
 
-const courseResources = computed(() => {
-  const resources = [
-    { id: '1', title: '课程大纲.pdf', type: 'PDF', size: '2.3 MB' },
-    { id: '2', title: '第1章课件.pptx', type: 'PPT', size: '5.1 MB' },
-    { id: '3', title: '参考书目.pdf', type: 'PDF', size: '1.8 MB' },
-    { id: '4', title: '练习题集.docx', type: 'DOC', size: '0.5 MB' },
-  ]
-  return resources
+const courseResources = computed(() => store.getCourseCloudFiles(courseId))
+
+const courseHomework = computed(() => store.getCourseHomework(courseId))
+
+const submittedCount = computed(() => {
+  if (!myStudent.value) return 0
+  return courseHomework.value.filter((hw) =>
+    store.getHomeworkSubmission(hw.id, myStudent.value!.id)
+  ).length
 })
 
-const courseHomework = computed(() => {
-  const homework = [
-    { id: '1', title: '第1章课后作业', dueDate: '2025-03-20', submitted: true },
-    { id: '2', title: '第2章课后作业', dueDate: '2025-03-27', submitted: true },
-    { id: '3', title: '第3章课后作业', dueDate: '2025-04-03', submitted: false },
-  ]
-  return homework
-})
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+function getFileTypeName(type: string): string {
+  const extMap: Record<string, string> = {
+    'application/pdf': 'PDF',
+    'application/docx': 'DOC',
+    'application/zip': 'ZIP',
+    'application/fig': 'FIG',
+    'text/markdown': 'MD',
+    'text/csv': 'CSV',
+    'application/ipynb': 'IPYNB',
+    'text/typescript': 'TS',
+    'application/pptx': 'PPT',
+  }
+  return extMap[type] || '文件'
+}
+
+function downloadFile(file: CloudFile) {
+  alert(`开始下载：${file.name}`)
+}
+
+function isHomeworkSubmitted(homeworkId: string): boolean {
+  if (!myStudent.value) return false
+  return !!store.getHomeworkSubmission(homeworkId, myStudent.value.id)
+}
+
+function getSubmissionFileName(homeworkId: string): string {
+  if (!myStudent.value) return ''
+  const submission = store.getHomeworkSubmission(homeworkId, myStudent.value.id)
+  return submission?.fileName || ''
+}
+
+function downloadSubmission(homeworkId: string) {
+  if (!myStudent.value) return
+  const submission = store.getHomeworkSubmission(homeworkId, myStudent.value.id)
+  if (submission) {
+    alert(`开始下载已提交作业：${submission.fileName}`)
+  }
+}
+
+function handleFileSelect(event: Event, homeworkId: string) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file) {
+    selectedFiles.value[homeworkId] = file
+  }
+}
+
+function submitHomework(hw: typeof courseHomework.value[0]) {
+  if (!myStudent.value || !selectedFiles.value[hw.id]) return
+  
+  const file = selectedFiles.value[hw.id]
+  
+  store.submitHomework({
+    id: `sub-${Date.now()}`,
+    homeworkId: hw.id,
+    courseId: courseId,
+    studentId: myStudent.value.id,
+    submittedAt: new Date().toISOString().split('T')[0],
+    fileName: file.name,
+    fileDataUrl: 'https://example.com/submissions/' + file.name,
+    fileSize: file.size,
+    fileType: file.type,
+  })
+  
+  delete selectedFiles.value[hw.id]
+  alert('作业提交成功！')
+}
 </script>

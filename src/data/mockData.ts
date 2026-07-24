@@ -162,15 +162,42 @@ export const evaluationConfigs: import('@/types').EvaluationConfig[] = [
   { courseId: 'course-1', template: 'all', frequency: 'biweekly', hasMentor: true, overdueRule: 'average' },
   { courseId: 'course-2', template: 'standard', frequency: 'per_unit', hasMentor: false, overdueRule: 'average' },
   { courseId: 'course-3', template: 'simple', frequency: 'biweekly', hasMentor: false, overdueRule: 'none' },
+  { courseId: 'course-4', template: 'standard', frequency: 'biweekly', hasMentor: false, overdueRule: 'average' },
+  { courseId: 'course-5', template: 'all', frequency: 'per_unit', hasMentor: true, overdueRule: 'average' },
+  { courseId: 'course-6', template: 'simple', frequency: 'biweekly', hasMentor: false, overdueRule: 'none' },
+  { courseId: 'course-9', template: 'standard', frequency: 'per_unit', hasMentor: false, overdueRule: 'average' },
+  { courseId: 'course-10', template: 'simple', frequency: 'biweekly', hasMentor: false, overdueRule: 'none' },
+  { courseId: 'course-11', template: 'standard', frequency: 'biweekly', hasMentor: false, overdueRule: 'average' },
+  { courseId: 'course-12', template: 'simple', frequency: 'biweekly', hasMentor: false, overdueRule: 'none' },
   { courseId: 'course-14', template: 'project', frequency: 'project_milestone', hasMentor: true, overdueRule: 'average' },
+  { courseId: 'course-15', template: 'standard', frequency: 'biweekly', hasMentor: false, overdueRule: 'average' },
+  { courseId: 'course-16', template: 'simple', frequency: 'biweekly', hasMentor: false, overdueRule: 'none' },
+  { courseId: 'course-17', template: 'standard', frequency: 'biweekly', hasMentor: false, overdueRule: 'average' },
+  { courseId: 'course-18', template: 'project', frequency: 'project_milestone', hasMentor: true, overdueRule: 'average' },
+  { courseId: 'course-19', template: 'project', frequency: 'project_milestone', hasMentor: true, overdueRule: 'average' },
+  { courseId: 'course-20', template: 'standard', frequency: 'per_unit', hasMentor: false, overdueRule: 'average' },
 ];
 
 export const studentGroups: import('@/types').StudentGroup[] = [
   { id: 'grp-1', courseId: 'course-1', name: '第一组', memberIds: ['stu-1', 'stu-2', 'stu-3', 'stu-4'] },
   { id: 'grp-2', courseId: 'course-1', name: '第二组', memberIds: ['stu-5', 'stu-6', 'stu-7', 'stu-8'] },
   { id: 'grp-3', courseId: 'course-1', name: '第三组', memberIds: ['stu-9', 'stu-10', 'stu-11', 'stu-12'] },
-  { id: 'grp-4', courseId: 'course-14', name: 'A组', memberIds: ['stu-1', 'stu-17', 'stu-19'] },
-  { id: 'grp-5', courseId: 'course-14', name: 'B组', memberIds: ['stu-2', 'stu-18', 'stu-20'] },
+  { id: 'grp-4', courseId: 'course-1', name: '第四组', memberIds: ['stu-13', 'stu-15', 'stu-16'] },
+  { id: 'grp-5', courseId: 'course-1', name: '第五组', memberIds: ['stu-17', 'stu-18', 'stu-19'] },
+  { id: 'grp-6', courseId: 'course-2', name: 'A组', memberIds: ['stu-3', 'stu-4', 'stu-16'] },
+  { id: 'grp-7', courseId: 'course-2', name: 'B组', memberIds: ['stu-6', 'stu-10', 'stu-12'] },
+  { id: 'grp-8', courseId: 'course-3', name: '设计一组', memberIds: ['stu-5', 'stu-14', 'stu-19'] },
+  { id: 'grp-9', courseId: 'course-4', name: 'TS学习小组', memberIds: ['stu-1', 'stu-6', 'stu-11'] },
+  { id: 'grp-10', courseId: 'course-5', name: 'ML团队', memberIds: ['stu-7', 'stu-8', 'stu-20'] },
+  { id: 'grp-11', courseId: 'course-14', name: 'A组', memberIds: ['stu-1', 'stu-17', 'stu-19'] },
+  { id: 'grp-12', courseId: 'course-14', name: 'B组', memberIds: ['stu-2', 'stu-18', 'stu-20'] },
+  { id: 'grp-13', courseId: 'course-14', name: 'C组', memberIds: ['stu-3', 'stu-5', 'stu-15'] },
+  { id: 'grp-14', courseId: 'course-15', name: '数据分析组', memberIds: ['stu-1', 'stu-18', 'stu-21'] },
+  { id: 'grp-15', courseId: 'course-16', name: '沟通训练组', memberIds: ['stu-1', 'stu-19'] },
+  { id: 'grp-16', courseId: 'course-17', name: '英语学习组', memberIds: ['stu-2', 'stu-21'] },
+  { id: 'grp-17', courseId: 'course-18', name: 'Docker实践组', memberIds: ['stu-17', 'stu-20'] },
+  { id: 'grp-18', courseId: 'course-19', name: '架构设计组', memberIds: ['stu-1', 'stu-18'] },
+  { id: 'grp-19', courseId: 'course-20', name: '产品组', memberIds: ['stu-20', 'stu-21'] },
 ];
 
 export const evaluations: import('@/types').Evaluation[] = [
@@ -204,6 +231,37 @@ export const evaluations: import('@/types').Evaluation[] = [
   { id: 'ev-17', courseId: 'course-1', studentId: 'stu-5', sessionNumber: 1, type: 'intra_group', score: 70, evaluatorId: 'stu-6', evaluatorName: '孙明', createdAt: '2026-07-10' },
   { id: 'ev-18', courseId: 'course-1', studentId: 'stu-5', sessionNumber: 1, type: 'inter_group', score: 65, evaluatorId: 'stu-1', evaluatorName: '张明', createdAt: '2026-07-11' },
   { id: 'ev-19', courseId: 'course-1', studentId: 'stu-5', sessionNumber: 1, type: 'teacher', score: 72, evaluatorId: 't-1', evaluatorName: '王老师', comment: '与自评差异较大', createdAt: '2026-07-12' },
+
+  // 更多 course-1 学生评价（第2次）
+  { id: 'ev-20', courseId: 'course-1', studentId: 'stu-2', sessionNumber: 2, type: 'self', score: 88, evaluatorId: 'stu-2', evaluatorName: '李华', createdAt: '2026-07-14' },
+  { id: 'ev-21', courseId: 'course-1', studentId: 'stu-2', sessionNumber: 2, type: 'teacher', score: 90, evaluatorId: 't-1', evaluatorName: '王老师', comment: '保持良好表现', createdAt: '2026-07-15' },
+  { id: 'ev-22', courseId: 'course-1', studentId: 'stu-3', sessionNumber: 2, type: 'self', score: 82, evaluatorId: 'stu-3', evaluatorName: '王芳', createdAt: '2026-07-14' },
+  { id: 'ev-23', courseId: 'course-1', studentId: 'stu-3', sessionNumber: 2, type: 'intra_group', score: 80, evaluatorId: 'stu-4', evaluatorName: '赵磊', createdAt: '2026-07-14' },
+  { id: 'ev-24', courseId: 'course-1', studentId: 'stu-3', sessionNumber: 2, type: 'teacher', score: 85, evaluatorId: 't-1', evaluatorName: '王老师', createdAt: '2026-07-15' },
+
+  // course-15（数据可视化）评价
+  { id: 'ev-25', courseId: 'course-15', studentId: 'stu-1', sessionNumber: 1, type: 'self', score: 90, evaluatorId: 'stu-1', evaluatorName: '张明', createdAt: '2026-07-20' },
+  { id: 'ev-26', courseId: 'course-15', studentId: 'stu-1', sessionNumber: 1, type: 'teacher', score: 88, evaluatorId: 't-9', evaluatorName: '钱老师', comment: '可视化效果出色', createdAt: '2026-07-21' },
+  { id: 'ev-27', courseId: 'course-15', studentId: 'stu-18', sessionNumber: 1, type: 'self', score: 85, evaluatorId: 'stu-18', evaluatorName: '慕容枫', createdAt: '2026-07-21' },
+  { id: 'ev-28', courseId: 'course-15', studentId: 'stu-18', sessionNumber: 1, type: 'teacher', score: 82, evaluatorId: 't-9', evaluatorName: '钱老师', createdAt: '2026-07-22' },
+
+  // course-16（高效沟通）评价
+  { id: 'ev-29', courseId: 'course-16', studentId: 'stu-1', sessionNumber: 1, type: 'self', score: 80, evaluatorId: 'stu-1', evaluatorName: '张明', createdAt: '2026-07-22' },
+  { id: 'ev-30', courseId: 'course-16', studentId: 'stu-1', sessionNumber: 1, type: 'teacher', score: 78, evaluatorId: 't-10', evaluatorName: '吴老师', comment: '表达还需加强', createdAt: '2026-07-23' },
+  { id: 'ev-31', courseId: 'course-16', studentId: 'stu-19', sessionNumber: 1, type: 'self', score: 78, evaluatorId: 'stu-19', evaluatorName: '令狐冲', createdAt: '2026-07-22' },
+  { id: 'ev-32', courseId: 'course-16', studentId: 'stu-19', sessionNumber: 1, type: 'teacher', score: 80, evaluatorId: 't-10', evaluatorName: '吴老师', createdAt: '2026-07-23' },
+
+  // course-17（英语口语）评价
+  { id: 'ev-33', courseId: 'course-17', studentId: 'stu-2', sessionNumber: 1, type: 'self', score: 82, evaluatorId: 'stu-2', evaluatorName: '李华', createdAt: '2026-07-21' },
+  { id: 'ev-34', courseId: 'course-17', studentId: 'stu-2', sessionNumber: 1, type: 'teacher', score: 85, evaluatorId: 't-7', evaluatorName: '孙老师', comment: '口语进步明显', createdAt: '2026-07-22' },
+  { id: 'ev-35', courseId: 'course-17', studentId: 'stu-21', sessionNumber: 1, type: 'self', score: 75, evaluatorId: 'stu-21', evaluatorName: '小龙女', createdAt: '2026-07-23' },
+  { id: 'ev-36', courseId: 'course-17', studentId: 'stu-21', sessionNumber: 1, type: 'teacher', score: 78, evaluatorId: 't-7', evaluatorName: '孙老师', createdAt: '2026-07-24' },
+
+  // course-5（机器学习）更多评价
+  { id: 'ev-37', courseId: 'course-5', studentId: 'stu-7', sessionNumber: 1, type: 'self', score: 72, evaluatorId: 'stu-7', evaluatorName: '孙丽', createdAt: '2026-07-12' },
+  { id: 'ev-38', courseId: 'course-5', studentId: 'stu-7', sessionNumber: 1, type: 'mentor', score: 75, evaluatorId: 'mentor-3', evaluatorName: '刘总工', comment: '基础扎实', createdAt: '2026-07-13' },
+  { id: 'ev-39', courseId: 'course-5', studentId: 'stu-20', sessionNumber: 1, type: 'self', score: 70, evaluatorId: 'stu-20', evaluatorName: '杨过', createdAt: '2026-07-22' },
+  { id: 'ev-40', courseId: 'course-5', studentId: 'stu-20', sessionNumber: 1, type: 'teacher', score: 72, evaluatorId: 't-4', evaluatorName: '张老师', createdAt: '2026-07-23' },
 ];
 
 // ========== 详细成绩数据 ==========
@@ -214,4 +272,113 @@ export const detailedGrades: import('@/types').DetailedGrade[] = [
   { id: 'dg-3', studentId: 'stu-1', courseId: 'course-14', selfEvalScore: 92, peerReviewScore: 88, interGroupScore: 85, teacherScore: 86, mentorScore: 88, gradedAt: '2026-07-22' },
   { id: 'dg-4', studentId: 'stu-1', courseId: 'course-15', selfEvalScore: 88, peerReviewScore: 85, interGroupScore: 82, teacherScore: 90, mentorScore: null, gradedAt: '2026-07-23' },
   { id: 'dg-5', studentId: 'stu-1', courseId: 'course-16', selfEvalScore: 75, peerReviewScore: 78, interGroupScore: null, teacherScore: 80, mentorScore: null, gradedAt: '2026-07-24' },
+  // 更多学生详细成绩
+  { id: 'dg-6', studentId: 'stu-2', courseId: 'course-1', selfEvalScore: 88, peerReviewScore: 85, interGroupScore: 80, teacherScore: 92, mentorScore: 90, gradedAt: '2026-07-15' },
+  { id: 'dg-7', studentId: 'stu-2', courseId: 'course-5', selfEvalScore: 75, peerReviewScore: 78, interGroupScore: 72, teacherScore: 80, mentorScore: null, gradedAt: '2026-07-17' },
+  { id: 'dg-8', studentId: 'stu-2', courseId: 'course-17', selfEvalScore: 82, peerReviewScore: 80, interGroupScore: 78, teacherScore: 85, mentorScore: null, gradedAt: '2026-07-21' },
+  { id: 'dg-9', studentId: 'stu-3', courseId: 'course-2', selfEvalScore: 72, peerReviewScore: 75, interGroupScore: 70, teacherScore: 75, mentorScore: null, gradedAt: '2026-07-16' },
+  { id: 'dg-10', studentId: 'stu-5', courseId: 'course-3', selfEvalScore: 90, peerReviewScore: 85, interGroupScore: 88, teacherScore: 85, mentorScore: null, gradedAt: '2026-07-17' },
+  { id: 'dg-11', studentId: 'stu-17', courseId: 'course-14', selfEvalScore: 85, peerReviewScore: 82, interGroupScore: 80, teacherScore: 82, mentorScore: 85, gradedAt: '2026-07-25' },
+  { id: 'dg-12', studentId: 'stu-17', courseId: 'course-1', selfEvalScore: 80, peerReviewScore: 78, interGroupScore: 75, teacherScore: 82, mentorScore: 80, gradedAt: '2026-07-20' },
+  { id: 'dg-13', studentId: 'stu-18', courseId: 'course-15', selfEvalScore: 85, peerReviewScore: 82, interGroupScore: 80, teacherScore: 88, mentorScore: null, gradedAt: '2026-07-25' },
+  { id: 'dg-14', studentId: 'stu-19', courseId: 'course-3', selfEvalScore: 78, peerReviewScore: 75, interGroupScore: 72, teacherScore: 76, mentorScore: null, gradedAt: '2026-07-24' },
 ];
+
+// ========== 评价异常预警数据 ==========
+
+export const evalAnomalies: import('@/types').EvalAnomaly[] = [
+  { id: 'anom-1', courseId: 'course-1', studentId: 'stu-5', studentName: '陈静', sessionNumber: 1, type: 'self', selfScore: 98, avgScore: 72, diff: 26, warning: '自评分数与平均分差异超过25分，请核实' },
+  { id: 'anom-2', courseId: 'course-2', studentId: 'stu-3', studentName: '王芳', sessionNumber: 1, type: 'self', selfScore: 95, avgScore: 70, diff: 25, warning: '自评分数与平均分差异较大，请核实' },
+  { id: 'anom-3', courseId: 'course-14', studentId: 'stu-17', studentName: '欧阳雪', sessionNumber: 1, type: 'self', selfScore: 88, avgScore: 85, diff: 3, warning: '自评与组间评价存在小幅差异' },
+  { id: 'anom-4', courseId: 'course-1', studentId: 'stu-1', studentName: '张明', sessionNumber: 1, type: 'inter_group', selfScore: 85, avgScore: 80, diff: 5, warning: '自评分数略高于组间评价' },
+];
+
+// ========== 评价待办提醒数据 ==========
+
+export const evalReminders: import('@/types').EvalReminder[] = [
+  { id: 'rem-1', courseId: 'course-1', courseTitle: 'React 前端开发实战', studentId: 'stu-1', sessionNumber: 3, deadline: '2026-07-28', status: 'pending' },
+  { id: 'rem-2', courseId: 'course-1', courseTitle: 'React 前端开发实战', studentId: 'stu-2', sessionNumber: 3, deadline: '2026-07-28', status: 'pending' },
+  { id: 'rem-3', courseId: 'course-2', courseTitle: 'Python 数据分析入门', studentId: 'stu-3', sessionNumber: 2, deadline: '2026-07-26', status: 'pending' },
+  { id: 'rem-4', courseId: 'course-14', courseTitle: 'AI 生成式应用开发', studentId: 'stu-1', sessionNumber: 2, deadline: '2026-07-30', status: 'pending' },
+  { id: 'rem-5', courseId: 'course-3', courseTitle: 'UI/UX 设计思维', studentId: 'stu-5', sessionNumber: 1, deadline: '2026-07-20', status: 'overdue' },
+  { id: 'rem-6', courseId: 'course-15', courseTitle: '数据可视化与商业分析', studentId: 'stu-18', sessionNumber: 1, deadline: '2026-07-25', status: 'pending' },
+  { id: 'rem-7', courseId: 'course-16', courseTitle: '高效沟通与表达训练', studentId: 'stu-19', sessionNumber: 1, deadline: '2026-07-24', status: 'completed' },
+];
+
+// ========== 云盘文件数据 ==========
+
+export const cloudFiles: import('@/types').CloudFile[] = [
+  { id: 'file-1', name: '课程大纲.pdf', size: 2048576, type: 'application/pdf', dataUrl: 'https://example.com/files/syllabus.pdf', uploadedAt: '2026-07-01', uploadedBy: '王老师', courseId: 'course-1' },
+  { id: 'file-2', name: '实验报告模板.docx', size: 512000, type: 'application/docx', dataUrl: 'https://example.com/files/template.docx', uploadedAt: '2026-07-05', uploadedBy: '李老师', courseId: 'course-2' },
+  { id: 'file-3', name: '项目需求说明.pdf', size: 1536000, type: 'application/pdf', dataUrl: 'https://example.com/files/requirements.pdf', uploadedAt: '2026-07-10', uploadedBy: '张明', courseId: 'course-14' },
+  { id: 'file-4', name: '数据分析代码.zip', size: 3072000, type: 'application/zip', dataUrl: 'https://example.com/files/analysis.zip', uploadedAt: '2026-07-12', uploadedBy: '李华', courseId: 'course-2' },
+  { id: 'file-5', name: 'UI设计稿.fig', size: 5120000, type: 'application/fig', dataUrl: 'https://example.com/files/design.fig', uploadedAt: '2026-07-15', uploadedBy: '陈静', courseId: 'course-3' },
+  { id: 'file-6', name: '学习笔记.md', size: 25600, type: 'text/markdown', dataUrl: 'https://example.com/files/notes.md', uploadedAt: '2026-07-18', uploadedBy: '张明', courseId: 'course-1' },
+  { id: 'file-7', name: '期末复习资料.pdf', size: 4096000, type: 'application/pdf', dataUrl: 'https://example.com/files/review.pdf', uploadedAt: '2026-07-20', uploadedBy: '王老师', courseId: 'course-1' },
+  { id: 'file-8', name: 'React入门课件.pdf', size: 3072000, type: 'application/pdf', dataUrl: 'https://example.com/files/react-intro.pdf', uploadedAt: '2026-07-01', uploadedBy: '王老师', courseId: 'course-1' },
+  { id: 'file-9', name: 'Python基础代码示例.zip', size: 512000, type: 'application/zip', dataUrl: 'https://example.com/files/python-examples.zip', uploadedAt: '2026-07-05', uploadedBy: '李老师', courseId: 'course-2' },
+  { id: 'file-10', name: 'TypeScript进阶指南.pdf', size: 2048000, type: 'application/pdf', dataUrl: 'https://example.com/files/ts-guide.pdf', uploadedAt: '2026-07-15', uploadedBy: '王老师', courseId: 'course-4' },
+  { id: 'file-11', name: '机器学习数据集.csv', size: 1024000, type: 'text/csv', dataUrl: 'https://example.com/files/ml-dataset.csv', uploadedAt: '2026-07-18', uploadedBy: '张老师', courseId: 'course-5' },
+  { id: 'file-12', name: 'AI项目示例代码.zip', size: 4096000, type: 'application/zip', dataUrl: 'https://example.com/files/ai-project.zip', uploadedAt: '2026-07-20', uploadedBy: '周老师', courseId: 'course-14' },
+];
+
+// ========== 待办事项数据 ==========
+
+export const todoItems: import('@/types').TodoItem[] = [
+  { id: 'todo-1', title: '完成React课程第三单元作业', completed: false, createdAt: '2026-07-20', dueDate: '2026-07-25', createdBy: '张明' },
+  { id: 'todo-2', title: '提交Python数据分析报告', completed: true, createdAt: '2026-07-18', dueDate: '2026-07-22', createdBy: '李华' },
+  { id: 'todo-3', title: '准备小组演讲PPT', completed: false, createdAt: '2026-07-21', dueDate: '2026-07-28', createdBy: '王芳' },
+  { id: 'todo-4', title: '复习TypeScript高级类型', completed: false, createdAt: '2026-07-22', createdBy: '张明' },
+  { id: 'todo-5', title: '完成AI项目第一阶段代码', completed: false, createdAt: '2026-07-23', dueDate: '2026-07-30', createdBy: '欧阳雪' },
+  { id: 'todo-6', title: '整理学习笔记并分享', completed: true, createdAt: '2026-07-19', createdBy: '李华' },
+  { id: 'todo-7', title: '预约导师面谈时间', completed: false, createdAt: '2026-07-24', dueDate: '2026-07-26', createdBy: '张明' },
+];
+
+// ========== 在线文档数据 ==========
+
+export const onlineDocs: import('@/types').OnlineDoc[] = [
+  { id: 'doc-1', title: 'React学习小组协作文档', content: '# React 学习计划\n\n## 第一周\n- 学习Hooks基础\n- 完成计数器案例\n\n## 第二周\n- 学习useContext\n- 完成主题切换功能', createdBy: '张明', createdAt: '2026-07-01', lastEditedAt: '2026-07-20', lastEditedBy: '李华' },
+  { id: 'doc-2', title: 'Python数据分析项目文档', content: '# 项目概述\n\n## 目标\n分析销售数据并生成可视化报告\n\n## 数据集\n- 销售记录.xlsx\n- 产品信息.csv', createdBy: '李老师', createdAt: '2026-07-05', lastEditedAt: '2026-07-18', lastEditedBy: '王芳' },
+  { id: 'doc-3', title: 'UI/UX设计规范', content: '# 设计规范\n\n## 颜色方案\n- 主色：#3b82f6\n- 辅色：#10b981\n\n## 字体\n- 标题：Inter\n- 正文：Roboto', createdBy: '陈老师', createdAt: '2026-07-10', lastEditedAt: '2026-07-15', lastEditedBy: '陈老师' },
+  { id: 'doc-4', title: 'AI项目技术方案', content: '# 技术方案\n\n## 模型选择\n使用GPT-4进行文本生成\n\n## 架构设计\n- 前端：Vue3 + TypeScript\n- 后端：Node.js + Express', createdBy: '周老师', createdAt: '2026-07-18', lastEditedAt: '2026-07-23', lastEditedBy: '欧阳雪' },
+];
+
+// ========== 笔记数据 ==========
+
+export const notes: import('@/types').Note[] = [
+  { id: 'note-1', title: 'React Hooks学习笔记', content: 'useState用于管理组件内部状态\nuseEffect用于副作用处理\nuseContext用于跨组件数据传递', createdAt: '2026-07-10', updatedAt: '2026-07-15', createdBy: '张明' },
+  { id: 'note-2', title: 'Python Pandas常用操作', content: 'df.read_csv() - 读取CSV文件\ndf.groupby() - 分组聚合\ndf.merge() - 数据合并', createdAt: '2026-07-12', updatedAt: '2026-07-18', createdBy: '李华' },
+  { id: 'note-3', title: '设计思维方法论', content: '用户研究 → 定义问题 → 创意发散 → 原型设计 → 测试验证', createdAt: '2026-07-14', updatedAt: '2026-07-14', createdBy: '王芳' },
+  { id: 'note-4', title: 'TypeScript泛型笔记', content: '泛型函数：function identity<T>(arg: T): T\n泛型接口：interface Container<T>\n泛型类：class GenericNumber<T>', createdAt: '2026-07-16', updatedAt: '2026-07-20', createdBy: '张明' },
+  { id: 'note-5', title: '机器学习算法总结', content: '线性回归：预测连续值\n决策树：分类问题\nSVM：高维数据分类\n神经网络：复杂模式识别', createdAt: '2026-07-18', updatedAt: '2026-07-22', createdBy: '欧阳雪' },
+];
+
+// ========== 仪表盘统计数据 ==========
+
+export const homework: import('@/types').Homework[] = [
+  { id: 'hw-1', courseId: 'course-1', title: '第1章课后作业', description: '完成React基础概念的练习题，包括组件、props、state等基础知识点', dueDate: '2026-07-25', createdAt: '2026-07-10', createdBy: '王老师' },
+  { id: 'hw-2', courseId: 'course-1', title: '第2章课后作业', description: '使用Hooks实现一个计数器应用，包含useState、useEffect', dueDate: '2026-07-30', createdAt: '2026-07-15', createdBy: '王老师' },
+  { id: 'hw-3', courseId: 'course-1', title: '第3章课后作业', description: '实现Context跨组件数据传递案例', dueDate: '2026-08-05', createdAt: '2026-07-20', createdBy: '王老师' },
+  { id: 'hw-4', courseId: 'course-2', title: 'Python数据分析作业一', description: '使用Pandas读取CSV文件并进行数据清洗', dueDate: '2026-07-26', createdAt: '2026-07-12', createdBy: '李老师' },
+  { id: 'hw-5', courseId: 'course-2', title: 'Python数据分析作业二', description: '使用Matplotlib进行数据可视化', dueDate: '2026-08-02', createdAt: '2026-07-18', createdBy: '李老师' },
+  { id: 'hw-6', courseId: 'course-3', title: 'UI设计作业', description: '设计一个移动端App的首页界面', dueDate: '2026-07-28', createdAt: '2026-07-14', createdBy: '陈老师' },
+  { id: 'hw-7', courseId: 'course-4', title: 'TypeScript泛型作业', description: '实现泛型函数和泛型接口', dueDate: '2026-07-27', createdAt: '2026-07-16', createdBy: '王老师' },
+  { id: 'hw-8', courseId: 'course-5', title: '机器学习作业', description: '使用线性回归预测房价', dueDate: '2026-08-03', createdAt: '2026-07-18', createdBy: '张老师' },
+  { id: 'hw-9', courseId: 'course-14', title: 'AI项目阶段性作业', description: '完成AI应用的第一阶段开发', dueDate: '2026-07-31', createdAt: '2026-07-20', createdBy: '周老师' },
+  { id: 'hw-10', courseId: 'course-15', title: '数据可视化作业', description: '创建交互式数据仪表盘', dueDate: '2026-08-01', createdAt: '2026-07-22', createdBy: '钱老师' },
+];
+
+export const homeworkSubmissions: import('@/types').HomeworkSubmission[] = [
+  { id: 'sub-1', homeworkId: 'hw-1', courseId: 'course-1', studentId: 'stu-1', submittedAt: '2026-07-24', fileName: 'React第1章作业.docx', fileDataUrl: 'https://example.com/submissions/react-hw1.docx', fileSize: 512000, fileType: 'application/docx' },
+  { id: 'sub-2', homeworkId: 'hw-1', courseId: 'course-1', studentId: 'stu-2', submittedAt: '2026-07-23', fileName: '第1章作业.pdf', fileDataUrl: 'https://example.com/submissions/hw1-stu2.pdf', fileSize: 1024000, fileType: 'application/pdf' },
+  { id: 'sub-3', homeworkId: 'hw-4', courseId: 'course-2', studentId: 'stu-3', submittedAt: '2026-07-25', fileName: '数据分析作业一.ipynb', fileDataUrl: 'https://example.com/submissions/python-hw1.ipynb', fileSize: 256000, fileType: 'application/ipynb' },
+  { id: 'sub-4', homeworkId: 'hw-6', courseId: 'course-3', studentId: 'stu-5', submittedAt: '2026-07-27', fileName: 'UI设计稿.fig', fileDataUrl: 'https://example.com/submissions/ui-design.fig', fileSize: 5120000, fileType: 'application/fig' },
+  { id: 'sub-5', homeworkId: 'hw-7', courseId: 'course-4', studentId: 'stu-1', submittedAt: '2026-07-26', fileName: 'TypeScript泛型作业.ts', fileDataUrl: 'https://example.com/submissions/ts-generics.ts', fileSize: 10240, fileType: 'text/typescript' },
+];
+
+export const dashboardStats: import('@/types').DashboardStats = {
+  totalCourses: 20,
+  totalStudents: 21,
+  activeCourses: 16,
+  recentEnrollments: 15,
+};
