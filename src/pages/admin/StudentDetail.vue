@@ -76,7 +76,6 @@ import { useAppStore } from '@/stores/app'
 import { ArrowLeft, BookOpen, LoaderCircle } from 'lucide-vue-next'
 
 const route = useRoute()
-const router = useRouter()
 const store = useAppStore()
 
 const student = ref<any>(null)

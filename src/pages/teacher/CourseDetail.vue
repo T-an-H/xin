@@ -889,8 +889,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import GradeConfig from '@/components/GradeConfig.vue'
-import * as d3 from 'd3'
-import { renderIcon } from '@/utils/d3-renderer'
 import {
   EvalTemplateLabels, EvalTemplateDescs, TEMPLATE_EVAL_TYPES,
   EvalTypeLabels, EvalTypeColors, EvalFrequencyLabels,
@@ -1229,18 +1227,15 @@ function handleSelectExam(name: string) {
     if (isConfigDefault) {
       showWeightReminderModal.value = true
       pendingFinalExamSelect.value = name
-      render()
       return
     }
   }
   selectedExam.value = name
-  render()
 }
 
 function handleOpenGradeConfigFromReminder() {
   showWeightReminderModal.value = false
   showGradeConfig.value = true
-  render()
 }
 
 function handleAddExam() {
@@ -1291,7 +1286,7 @@ function handleAddExam() {
   showNewExamModal.value = false
   selectedExam.value = name
   newExamName.value = ''
-  render()
+
 }
 
 function handleSaveExamScores() {
@@ -1323,14 +1318,14 @@ function handleSaveExamScores() {
     }
   })
   examInputs.value = {}
-  render()
+
 }
 
 function handleSubmitExamScores() {
   if (!courseId.value || !selectedExam.value) return
   handleSaveExamScores()
   store.submitExamScores(courseId.value, selectedExam.value)
-  render()
+
 }
 
 function getStudentTotalScore(studentId: string): string | number {
@@ -1491,7 +1486,7 @@ const enabledTypes = computed(() => baseEnabledTypes.value.filter((t) => {
   return true
 }))
 
-const filteredEvalTypes = computed(() => enabledTypes.value.filter((t) => true))
+const filteredEvalTypes = computed(() => enabledTypes.value)
 
 const displaySessions = computed(() => {
   const count = Math.min(totalSessions.value, 3)
@@ -1632,9 +1627,9 @@ function getScoreDisplay(studentId: string, sessionNumber: number, type: EvalTyp
 function scoreCellClass(studentId: string, sessionNumber: number, type: EvalType): string {
   const v = getAvgScore(studentId, sessionNumber, type)
   if (v === null) return 'text-gray-400/60'
-  if (v >= 85) return 'text-brand-600'
-  if (v >= 60) return 'text-brand-600'
-  return 'text-brand-600'
+  if (v >= 85) return 'text-emerald-600 font-medium'
+  if (v >= 60) return 'text-blue-600'
+  return 'text-red-500'
 }
 
 function getStudentTotalAvg(studentId: string): string {
@@ -1651,9 +1646,9 @@ function getStudentTotalAvg(studentId: string): string {
 function totalScoreColor(val: string | number): string {
   if (val === '-') return '#9ca3af'
   const n = parseInt(String(val))
-  if (n >= 85) return '#429fc4'
-  if (n >= 60) return '#429fc4'
-  return '#429fc4'
+  if (n >= 85) return '#22c55e'
+  if (n >= 60) return '#3b82f6'
+  return '#ef4444'
 }
 
 function getEnrollStatus(studentId: string): { label: string; color: string; progress: number } {
@@ -1718,7 +1713,7 @@ const handleBatchEval = (level: string) => {
   })
   evalScoreInputs.value = {}
   store.markSessionEvalRemindersCompleted(courseId.value, session)
-  render()
+
 }
 
 function handleSaveEvalScores() {
@@ -1749,7 +1744,7 @@ function handleSaveEvalScores() {
     }
   })
   evalScoreInputs.value = {}
-  render()
+
 }
 
 function handleSubmitAll() {
@@ -1774,7 +1769,7 @@ function handleSubmitAll() {
   }
 
   store.markSessionEvalRemindersCompleted(courseId.value, session)
-  render()
+
 }
 
 const toggleAll = () => {
@@ -1789,7 +1784,7 @@ const toggleAll = () => {
     }
     selectedStudentIds.value = allIds
   }
-  render()
+
 }
 
 const selectedUnsubmittedCount = computed(() => {
@@ -1800,7 +1795,7 @@ function handleSessionSelect(session: number) {
   if (!courseId.value) return
   store.autoLockPreviousSession(courseId.value, session)
   selectedBatchSession.value = session
-  render()
+
 }
 
 function isSessionDisabled(session: number): boolean {
@@ -1854,7 +1849,7 @@ const handleProcessOverdue = () => {
       store.markEvalReminderCompleted(courseId.value, s!.id, sn)
     }
   }
-  render()
+
 }
 
 function getStudentName(studentId: string): string {
@@ -1878,7 +1873,7 @@ function handleRemoveStudentFromGroup(studentId: string) {
       break
     }
   }
-  render()
+
 }
 
 function handleEditStudent(student: import('@/types').Student) {
@@ -1888,7 +1883,7 @@ function handleEditStudent(student: import('@/types').Student) {
   const group = store.studentGroups.find(g => g.courseId === courseId.value && g.memberIds.includes(student.id))
   editStudentGroupId.value = group?.id || ''
   showEditStudentModal.value = true
-  render()
+
 }
 
 function handleSaveEditStudent() {
@@ -1965,7 +1960,7 @@ function handleSaveEditStudent() {
   editStudentName.value = ''
   editStudentIdField.value = ''
   editStudentGroupId.value = ''
-  render()
+
 }
 
 function handleRemoveStudent(studentId: string) {
@@ -1978,7 +1973,7 @@ function handleRemoveStudent(studentId: string) {
   if (enrollment) {
     store.deleteEnrollment(enrollment.id)
   }
-  render()
+
 }
 
 function handleAddSingleStudent() {
@@ -2016,7 +2011,7 @@ function handleAddSingleStudent() {
   showAddStudentModal.value = false
   newStudentName.value = ''
   newStudentId.value = ''
-  render()
+
 }
 
 async function handleImportStudentsExcel(event: Event) {
@@ -2078,7 +2073,7 @@ function openNewGroupModal() {
   groupFormName.value = ''
   groupFormMembers.value = []
   showGroupModal.value = true
-  render()
+
 }
 
 function openEditGroupModal(group: import('@/types').StudentGroup) {
@@ -2086,7 +2081,7 @@ function openEditGroupModal(group: import('@/types').StudentGroup) {
   groupFormName.value = group.name
   groupFormMembers.value = [...group.memberIds]
   showGroupModal.value = true
-  render()
+
 }
 
 function handleSaveGroup() {
@@ -2112,13 +2107,13 @@ function handleSaveGroup() {
   editingGroup.value = null
   groupFormName.value = ''
   groupFormMembers.value = []
-  render()
+
 }
 
 function handleDeleteGroup(groupId: string) {
   if (!confirm('确定删除该分组？')) return
   store.deleteStudentGroup(groupId)
-  render()
+
 }
 
 async function handleImportGroupsExcel(event: Event) {
@@ -2180,276 +2175,4 @@ async function handleImportGroupsExcel(event: Event) {
   input.value = ''
 }
 
-// ====== D3 渲染函数 ======
-
-function renderFileSpreadsheetIcon(parent: d3.Selection<any, any, any, any>, className?: string) {
-  const svg = parent.append('svg')
-    .attr('viewBox', '0 0 24 24')
-    .attr('fill', 'none')
-    .attr('stroke', 'currentColor')
-    .attr('stroke-width', '2')
-    .attr('stroke-linecap', 'round')
-    .attr('stroke-linejoin', 'round')
-  if (className) svg.attr('class', className)
-  svg.html('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 12h8"/><path d="M8 16h8"/><path d="M8 20h8"/>')
-  return svg
-}
-
-function renderPlusIconSvg(parent: d3.Selection<any, any, any, any>, className?: string) {
-  const svg = parent.append('svg')
-    .attr('viewBox', '0 0 24 24')
-    .attr('fill', 'none')
-    .attr('stroke', 'currentColor')
-    .attr('stroke-width', '2')
-    .attr('stroke-linecap', 'round')
-    .attr('stroke-linejoin', 'round')
-  if (className) svg.attr('class', className)
-  svg.html('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>')
-  return svg
-}
-
-function render() {
-  const root = document.getElementById('teacher-course-detail-root')
-  if (!root) return
-  const sel = d3.select(root)
-  sel.selectAll('*').remove()
-
-  const container = sel.append('div').attr('class', 'space-y-6')
-
-  // ===== 返回按钮 + 课程信息 =====
-  renderHeader(container)
-
-  // ===== 已结束只读提示 =====
-  if (isReadOnly.value) {
-    renderReadOnlyBanner(container)
-  }
-
-  // ===== Tab 切换 =====
-  renderTabBar(container)
-
-  // ===== Tab 内容 =====
-  if (activeTab.value === 'comments') {
-    renderCommentsTab(container)
-  } else if (activeTab.value === 'grades') {
-    // 成绩管理 Tab - 显示提示
-    const panel = container.append('div')
-      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-6 text-center text-gray-400')
-    panel.append('p').text('成绩管理内容加载中...')
-  } else if (activeTab.value === 'students') {
-    // 学员管理 Tab - 显示提示
-    const panel = container.append('div')
-      .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-6 text-center text-gray-400')
-    panel.append('p').text('学员管理内容加载中...')
-  }
-}
-
-function renderHeader(container: d3.Selection<any, any, any, any>) {
-  const topRow = container.append('div').attr('class', 'flex items-center gap-3')
-
-  const backBtn = topRow.append('button')
-    .attr('class', 'p-2 rounded-lg hover:bg-brand-400/10 transition-colors')
-    .on('click', () => router.back())
-  renderIcon(backBtn, 'arrowLeft', 'w-5 h-5 text-gray-400')
-
-  const infoDiv = topRow.append('div').attr('class', 'flex-1')
-  infoDiv.append('h1').attr('class', 'text-2xl font-bold text-gray-900').text(course.value?.title || '课程详情')
-  infoDiv.append('p').attr('class', 'text-gray-400 mt-1').text(`${course.value?.id} · ${course.value?.duration}课时`)
-
-  const statusClass = course.value?.status === 'active' ? 'bg-brand-600/10 text-gray-600' : 'bg-brand-400/10 text-gray-400'
-  topRow.append('span')
-    .attr('class', `text-xs px-2 py-0.5 rounded-full ${statusClass}`)
-    .text(course.value?.status === 'active' ? '进行中' : '已结束')
-}
-
-function renderReadOnlyBanner(container: d3.Selection<any, any, any, any>) {
-  const banner = container.append('div').attr('class', 'flex items-center gap-2 px-4 py-3 bg-brand-400/10 border border-brand-400/30 rounded-xl text-sm text-gray-400')
-  renderIcon(banner, 'eye', 'w-4 h-4 text-gray-400')
-  banner.append('span').html('该课程已结束，当前为<strong>只读查看</strong>模式，无法进行配置修改操作')
-}
-
-function renderTabBar(container: d3.Selection<any, any, any, any>) {
-  const tabBar = container.append('div').attr('class', 'flex gap-1 border-b border-brand-400/30')
-  tabList.forEach((tab) => {
-    const isActive = activeTab.value === tab.key
-    const btn = tabBar.append('button')
-      .attr('class', `px-5 py-2.5 text-sm font-medium rounded-t-lg transition-all ${isActive ? 'bg-white text-gray-600 border border-b-0 border-brand-400/30 -mb-px' : 'text-gray-400 hover:text-gray-800'}`)
-      .on('click', () => { activeTab.value = tab.key; render() })
-    renderIcon(btn, tab.icon, 'w-4 h-4 inline mr-1.5')
-    btn.append('span').text(tab.label)
-  })
-}
-
-function renderCommentsTab(container: d3.Selection<any, any, any, any>) {
-  const tabContent = container.append('div').attr('class', 'space-y-6')
-
-  // 评价方案配置
-  renderEvalConfigCard(tabContent)
-
-  // 评价管理
-  if (!isReadOnly.value) {
-    renderEvalManagementCard(tabContent)
-  }
-}
-
-function renderEvalManagementCard(container: d3.Selection<any, any, any, any>) {
-  const card = container.append('div')
-    .attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-5')
-  card.append('h3').attr('class', 'text-sm font-semibold text-gray-900 mb-3').text('评价管理')
-  card.append('p').attr('class', 'text-sm text-gray-400').text('评价管理功能内容加载中...')
-}
-
-function renderEvalConfigCard(container: d3.Selection<any, any, any, any>) {
-  const card = container.append('div').attr('class', 'bg-white rounded-xl border border-brand-400/20 shadow-sm p-5')
-
-  const headerBtn = card.append('button')
-    .attr('class', 'w-full flex items-center justify-between')
-    .on('click', () => {
-      if (isReadOnly.value || evalConfigLocked.value || isMentor.value) return
-      showSettings.value = !showSettings.value
-      render()
-    })
-
-  const left = headerBtn.append('div').attr('class', 'flex items-center gap-2')
-  renderIcon(left, 'settings', 'w-5 h-5 text-gray-400')
-  left.append('h2').attr('class', 'font-semibold text-gray-900').text('评价方案配置')
-
-  const right = headerBtn.append('div').attr('class', 'flex items-center gap-3')
-
-  // 锁定标签
-  if (evalConfigLocked.value || isMentor.value) {
-    const lockSpan = right.append('span').attr('class', 'text-xs px-2 py-0.5 rounded-full bg-brand-400/10 text-gray-400 border border-brand-400/30')
-    renderIcon(lockSpan, 'lock', 'w-3 h-3 inline mr-0.5')
-    lockSpan.append('span').text('仅查看')
-  }
-
-  right.append('span').attr('class', 'text-xs text-gray-400')
-    .text(`${selectedConfig.value ? EvalTemplateLabels[selectedConfig.value.template] : '默认方案'} · ${selectedConfig.value ? EvalFrequencyLabels[selectedConfig.value.frequency] : '默认频率'}`)
-
-  if (!isReadOnly.value && !evalConfigLocked.value && !isMentor.value) {
-    right.append('span').attr('class', 'text-xs text-gray-400 hover:text-gray-600')
-      .text(showSettings.value ? '收起 ▲' : '展开 ▼')
-  }
-  if (isReadOnly.value || evalConfigLocked.value || isMentor.value) {
-    right.append('span').attr('class', 'text-xs text-gray-400/60').text('仅查看')
-  }
-
-  // 锁定提示
-  if (evalConfigLocked.value) {
-    const lockHint = card.append('div').attr('class', 'mt-3 flex items-center gap-2 px-3 py-2 bg-brand-400/10 border border-brand-400/30 rounded-lg text-xs text-gray-400')
-    renderIcon(lockHint, 'lock', 'w-3.5 h-3.5 text-gray-400')
-    if (selectedConfig.value) {
-      lockHint.append('span').text('评价方案已在第一节课开始前配置完成，已锁定不可修改。')
-    } else {
-      lockHint.append('span').text('第一节课已开始，评价方案未配置，现按默认方案实施，已锁定不可修改。')
-    }
-  }
-
-  // 评价类型标签
-  const tagWrap = card.append('div').attr('class', 'flex flex-wrap gap-2 mt-3 mb-1')
-  ALL_EVAL_TYPES.forEach((t) => {
-    if (!selectedConfig.value || !TEMPLATE_EVAL_TYPES[selectedConfig.value.template].includes(t)) {
-      tagWrap.append('span')
-        .attr('class', 'text-xs px-2.5 py-1 rounded-full bg-brand-400/10 text-gray-400/60 border border-brand-400/30')
-        .text(`${EvalTypeLabels[t]} ✗`)
-    } else if (((t === 'intra_group' || t === 'inter_group') && !courseHasGroups.value) || (t === 'mentor' && selectedConfig.value && !selectedConfig.value.hasMentor)) {
-      const span = tagWrap.append('span')
-        .attr('class', 'text-xs px-2.5 py-1 rounded-full bg-brand-400/10 text-gray-400 border border-brand-400/50')
-      renderIcon(span, 'eyeOff', 'w-3 h-3 inline mr-0.5')
-      span.append('span').text(`${EvalTypeLabels[t]}（自动隐藏）`)
-    } else {
-      const span = tagWrap.append('span')
-        .attr('class', `text-xs px-2.5 py-1 rounded-full border ${EvalTypeColors[t]}`)
-      renderIcon(span, 'eye', 'w-3 h-3 inline mr-0.5')
-      span.append('span').text(EvalTypeLabels[t])
-    }
-  })
-
-  // 配置编辑区域
-  if (showSettings.value && !isReadOnly.value && !evalConfigLocked.value && !isMentor.value) {
-    renderEvalSettings(card)
-  } else if ((isReadOnly.value || evalConfigLocked.value) && showSettings.value) {
-    const readonlyArea = card.append('div').attr('class', 'border-t border-brand-400/20 mt-3 pt-4 text-sm text-gray-400 text-center py-4')
-    renderIcon(readonlyArea, 'eyeOff', 'w-5 h-5 inline mr-1')
-    readonlyArea.append('span').text(isReadOnly.value ? '已结束课程不可修改配置' : '第一节课已开始，评价方案已锁定不可修改')
-  }
-}
-
-function renderEvalSettings(card: d3.Selection<any, any, any, any>) {
-  const area = card.append('div').attr('class', 'border-t border-brand-400/20 mt-3 pt-4 space-y-4')
-
-  // 评价模板
-  const tplDiv = area.append('div')
-  tplDiv.append('p').attr('class', 'text-sm font-medium text-gray-800 mb-2').text('评价模板')
-  const tplGrid = tplDiv.append('div').attr('class', 'grid grid-cols-1 md:grid-cols-2 gap-2')
-
-  EVAL_TEMPLATE_KEYS.forEach((tpl) => {
-    const isSelected = selectedConfig.value?.template === tpl
-    const btn = tplGrid.append('button')
-      .attr('class', `text-left p-3 rounded-lg border transition-all ${isSelected ? 'border-brand-600 bg-brand-400/10' : 'border-brand-400/30 bg-white hover:border-brand-400'}`)
-      .on('click', () => { handleSetConfig({ template: tpl }); render() })
-
-    btn.append('span').attr('class', 'text-sm font-medium text-gray-900').text(EvalTemplateLabels[tpl])
-    btn.append('p').attr('class', 'text-xs text-gray-400 mt-0.5').text(EvalTemplateDescs[tpl])
-
-    const tagRow = btn.append('div').attr('class', 'flex gap-1 mt-1')
-    TEMPLATE_EVAL_TYPES[tpl].forEach((et) => {
-      tagRow.append('span').attr('class', 'text-[10px] px-1.5 py-0.5 rounded bg-brand-400/10 text-gray-400').text(EvalTypeLabels[et])
-    })
-  })
-
-  // 评价频率
-  const freqDiv = area.append('div')
-  freqDiv.append('p').attr('class', 'text-sm font-medium text-gray-800 mb-2').text('评价频率')
-  const freqGrid = freqDiv.append('div').attr('class', 'grid grid-cols-1 md:grid-cols-2 gap-2')
-
-  EVAL_FREQUENCY_KEYS.forEach((freq) => {
-    const isSelected = selectedConfig.value?.frequency === freq
-    const btn = freqGrid.append('button')
-      .attr('class', `text-left p-3 rounded-lg border transition-all ${isSelected ? 'border-brand-600 bg-brand-400/10' : 'border-brand-400/30 bg-white hover:border-brand-400'}`)
-      .on('click', () => { handleSetConfig({ frequency: freq }); render() })
-
-    btn.append('span').attr('class', 'text-sm font-medium text-gray-900').text(EvalFrequencyLabels[freq])
-    btn.append('p').attr('class', 'text-xs text-gray-400 mt-0.5').text(EvalFrequencyDescs[freq])
-    btn.append('span').attr('class', 'text-xs text-gray-400 mt-0.5 block')
-      .text(`共 ${courseId.value ? store.getEvalSessions(courseId.value) : 0} 次评价`)
-  })
-
-  // 自定义次数
-  if (selectedConfig.value?.frequency === 'custom') {
-    const customDiv = area.append('div').attr('class', 'mt-2')
-    customDiv.append('label').attr('class', 'text-xs text-gray-400').text('自定义评价次数：')
-    customDiv.append('input')
-      .attr('type', 'number').attr('min', '1').attr('max', '20')
-      .attr('class', 'ml-2 w-16 px-2 py-1 border border-brand-400/30 rounded-lg text-sm')
-      .property('value', selectedConfig.value?.customSessions || 3)
-      .on('change', (e) => {
-        const val = parseInt((e.target as HTMLInputElement).value) || 3
-        handleSetConfig({ customSessions: val })
-        render()
-      })
-  }
-
-  // 企业导师开关
-  const mentorRow = area.append('div').attr('class', 'flex items-center gap-3')
-  mentorRow.append('label').attr('class', 'text-sm font-medium text-gray-800').text('企业导师参与评价')
-  const toggle = mentorRow.append('input')
-    .attr('type', 'checkbox')
-    .attr('class', 'w-4 h-4 text-gray-600 border-brand-400/50 rounded focus:ring-brand-600')
-    .property('checked', selectedConfig.value?.hasMentor ?? false)
-    .on('change', (e) => {
-      handleSetConfig({ hasMentor: (e.target as HTMLInputElement).checked })
-      render()
-    })
-  mentorRow.append('label').attr('class', 'ml-2 text-sm text-gray-400').text('(企业导师可以对学员进行评价)')
-}
-
-// ===== 生命周期 =====
-function renderPage() {
-  const el = document.getElementById('teacher-course-detail-root')
-  if (el) render()
-}
-
-onMounted(renderPage)
-watch(activeTab, renderPage)
-watch(showSettings, renderPage)
 </script>
