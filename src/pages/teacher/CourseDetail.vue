@@ -77,9 +77,16 @@
 
         <!-- 教师可编辑：直接展示配置界面 -->
         <template v-if="!isReadOnly && !evalConfigLocked && !isMentor">
-          <div class="border-t border-gray-100 mt-3 pt-4 space-y-4">
-            <div>
-              <p class="text-sm font-medium text-gray-700 mb-2">评价模板</p>
+          <div class="border-t border-gray-100 mt-3 pt-4 space-y-3">
+            <!-- 模块一：评价模板 -->
+            <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                  <ClipboardCheck class="w-3.5 h-3.5" />
+                </span>
+                <p class="text-sm font-semibold text-gray-800">评价模板</p>
+                <span class="ml-auto text-[10px] text-gray-400">选择参与的评价维度组合</span>
+              </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <button v-for="tpl in EVAL_TEMPLATE_KEYS" :key="tpl"
                   @click="handleSetConfig({ template: tpl })"
@@ -93,8 +100,15 @@
               </div>
             </div>
 
-            <div>
-              <p class="text-sm font-medium text-gray-700 mb-2">评价频率</p>
+            <!-- 模块二：评价频率 -->
+            <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="w-6 h-6 rounded-lg bg-cyan-100 text-cyan-600 flex items-center justify-center flex-shrink-0">
+                  <RefreshCw class="w-3.5 h-3.5" />
+                </span>
+                <p class="text-sm font-semibold text-gray-800">评价频率</p>
+                <span class="ml-auto text-[10px] text-gray-400">设定评价轮次与次数</span>
+              </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <button v-for="freq in EVAL_FREQUENCY_KEYS" :key="freq"
                   @click="handleSetConfig({ frequency: freq })"
@@ -104,7 +118,7 @@
                   <span class="text-xs text-cyan-500 mt-0.5 block">共 {{ courseId ? store.getEvalSessions(courseId) : 0 }} 次评价</span>
                 </button>
               </div>
-              <div v-if="selectedConfig?.frequency === 'custom'" class="mt-2">
+              <div v-if="selectedConfig?.frequency === 'custom'" class="mt-3 pt-3 border-t border-gray-100">
                 <label class="text-xs text-gray-500">自定义评价次数：</label>
                 <input type="number" min="1" max="20"
                   :value="selectedConfig?.customSessions || 3"
@@ -113,17 +127,15 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-3">
-              <label class="text-sm font-medium text-gray-700">企业导师参与评价</label>
-              <button @click="handleSetConfig({ hasMentor: !selectedConfig?.hasMentor })"
-                :class="`relative w-10 h-5 rounded-full transition-colors ${selectedConfig?.hasMentor ? 'bg-emerald-400' : 'bg-gray-300'}`">
-                <span :class="`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${selectedConfig?.hasMentor ? 'left-5.5' : 'left-0.5'}`" />
-              </button>
-              <span class="text-xs text-gray-400">{{ selectedConfig?.hasMentor ? '已启用' : '已禁用' }}</span>
-            </div>
-
-            <div>
-              <p class="text-sm font-medium text-gray-700 mb-2">逾期未评处理规则</p>
+            <!-- 模块三：逾期处理规则 -->
+            <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle class="w-3.5 h-3.5" />
+                </span>
+                <p class="text-sm font-semibold text-gray-800">逾期未评处理规则</p>
+                <span class="ml-auto text-[10px] text-gray-400">学生逾期未评时的处理方式</span>
+              </div>
               <div class="flex gap-3">
                 <button v-for="rule in OVERDUE_RULE_KEYS" :key="rule"
                   @click="handleSetConfig({ overdueRule: rule })"

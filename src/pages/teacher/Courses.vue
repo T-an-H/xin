@@ -75,11 +75,11 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">课程进度</span>
-              <span class="text-sm font-semibold text-brand-600">{{ getCourseProgress(course.id) }}%</span>
+              <span class="text-sm font-semibold text-brand-600">{{ courseProgress(course.id) }}%</span>
             </div>
             <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
               <div class="h-full rounded-full bg-brand-400 transition-all duration-500"
-                :style="{ width: getCourseProgress(course.id) + '%' }">
+                :style="{ width: courseProgress(course.id) + '%' }">
               </div>
             </div>
           </div>
@@ -250,10 +250,16 @@
           </div>
 
           <template v-if="showSettings">
-            <div class="border-t border-gray-100 mt-3 pt-4 space-y-4">
-              <!-- 评价模板 -->
-              <div>
-                <p class="text-sm font-medium text-gray-700 mb-2">评价模板</p>
+            <div class="border-t border-gray-100 mt-3 pt-4 space-y-3">
+              <!-- 模块一：评价模板 -->
+              <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-4">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                    <ClipboardCheck class="w-3.5 h-3.5" />
+                  </span>
+                  <p class="text-sm font-semibold text-gray-800">评价模板</p>
+                  <span class="ml-auto text-[10px] text-gray-400">选择参与的评价维度组合</span>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <button
                     v-for="tpl in EVAL_TEMPLATE_KEYS" :key="tpl"
@@ -272,9 +278,15 @@
                 </div>
               </div>
 
-              <!-- 评价频率 -->
-              <div>
-                <p class="text-sm font-medium text-gray-700 mb-2">评价频率</p>
+              <!-- 模块二：评价频率 -->
+              <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-4">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="w-6 h-6 rounded-lg bg-cyan-100 text-cyan-600 flex items-center justify-center flex-shrink-0">
+                    <RefreshCw class="w-3.5 h-3.5" />
+                  </span>
+                  <p class="text-sm font-semibold text-gray-800">评价频率</p>
+                  <span class="ml-auto text-[10px] text-gray-400">设定评价轮次与次数</span>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <button
                     v-for="freq in EVAL_FREQUENCY_KEYS" :key="freq"
@@ -288,7 +300,7 @@
                     </span>
                   </button>
                 </div>
-                <div v-if="selectedConfig?.frequency === 'custom'" class="mt-2">
+                <div v-if="selectedConfig?.frequency === 'custom'" class="mt-3 pt-3 border-t border-gray-100">
                   <label class="text-xs text-gray-500">自定义评价次数：</label>
                   <input type="number" min="1" max="20"
                     :value="selectedConfig?.customSessions || 3"
@@ -297,24 +309,15 @@
                 </div>
               </div>
 
-              <!-- 企业导师参与 -->
-              <div class="flex items-center gap-3">
-                <label class="text-sm font-medium text-gray-700">企业导师参与评价</label>
-                <button
-                  @click="handleSetConfig({ hasMentor: !selectedConfig?.hasMentor })"
-                  :class="`relative w-10 h-5 rounded-full transition-colors ${selectedConfig?.hasMentor ? 'bg-emerald-400' : 'bg-gray-300'}`"
-                >
-                  <span :class="`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${selectedConfig?.hasMentor ? 'left-5.5' : 'left-0.5'}`" />
-                </button>
-                <span class="text-xs text-gray-400">
-                  {{ selectedConfig?.hasMentor ? '已启用' : '已禁用' }}——
-                  {{ selectedConfig?.hasMentor ? '学生端将显示企业导师评价卡片' : '学生端自动隐藏企业导师评价' }}
-                </span>
-              </div>
-
-              <!-- 逾期处理规则 -->
-              <div>
-                <p class="text-sm font-medium text-gray-700 mb-2">逾期未评处理规则</p>
+              <!-- 模块三：逾期处理规则 -->
+              <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-4">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle class="w-3.5 h-3.5" />
+                  </span>
+                  <p class="text-sm font-semibold text-gray-800">逾期未评处理规则</p>
+                  <span class="ml-auto text-[10px] text-gray-400">学生逾期未评时的处理方式</span>
+                </div>
                 <div class="flex gap-3">
                   <button
                     v-for="rule in OVERDUE_RULE_KEYS" :key="rule"
@@ -452,7 +455,7 @@ import {
 } from '@/types'
 import type { EvalTemplate, EvalType, Evaluation, EvalFrequency, OverdueRule, EvaluationConfig, Course } from '@/types'
 import { getNow } from '@/lib/date'
-import { fetchTeacherCourses } from '@/api'
+import { fetchTeacherCourses, fetchSchedules } from '@/api'
 
 
 const router = useRouter()
@@ -490,15 +493,59 @@ onMounted(async () => {
     }
   } catch (e) {
     console.error('加载课程失败:', e)
-  } finally {
-    loading.value = false
   }
+  // 同步排课数据（与系统端排课管理连通：排课中出现的课程即为我的课程）
+  try {
+    const sres = await fetchSchedules()
+    if (sres.success && sres.schedules) {
+      store.schedules = sres.schedules
+    }
+  } catch (e) {
+    console.error('加载排课失败:', e)
+  }
+  loading.value = false
 })
+
+/** 从排课记录推导当前教师讲授的课程（与系统端排课管理连通） */
+const teacherScheduleCourses = computed<any[]>(() => {
+  const teacher = store.currentUser || ''
+  const map = new Map<string, any>()
+  for (const s of store.schedules) {
+    if (s.teacher !== teacher) continue
+    const key = s.courseId || s.title || ''
+    if (!key || map.has(key)) continue
+    const course = store.courses.find((c: any) => c.id === key || c.title === s.title)
+    map.set(key, {
+      id: course?.id || key,
+      title: course?.title || s.title || '未命名课程',
+      description: course?.description || '',
+      categoryId: course?.categoryId || '',
+      departmentId: course?.departmentId || '',
+      teacher,
+      cover: course?.cover || '',
+      credits: course?.credits || 0,
+      duration: course?.duration || 0,
+      status: course?.status || 'active',
+      createdAt: course?.createdAt || s.startDate || '',
+    })
+  }
+  return Array.from(map.values())
+})
+
+/** 合并去重：排课推导课程 + 原有教师课程 */
+function mergeCourses(base: any[], extra: any[]): any[] {
+  const knownIds = new Set(base.map((c) => c.id))
+  const merged = [...base]
+  for (const c of extra) {
+    if (!knownIds.has(c.id)) merged.push(c)
+  }
+  return merged
+}
 
 const sortedAndFilteredCourses = computed(() => {
   let list: Course[]
   if (dbCourses.value.length > 0) {
-    list = dbCourses.value as any
+    list = mergeCourses(dbCourses.value, teacherScheduleCourses.value) as any
   } else if (loading.value) {
     return []
   } else if (isLeaderWithTeaching.value) {
@@ -507,7 +554,10 @@ const sortedAndFilteredCourses = computed(() => {
     const mentorCourseIds = store.getMentorCourseIds(store.currentUser || '')
     list = store.courses.filter((c) => mentorCourseIds.includes(c.id))
   } else {
-    list = store.courses.filter((c) => c.teacher === store.currentUser)
+    list = mergeCourses(
+      store.courses.filter((c) => c.teacher === store.currentUser),
+      teacherScheduleCourses.value
+    )
   }
   // 按名称搜索
   const q = searchQuery.value.trim().toLowerCase()
@@ -526,7 +576,10 @@ const myCourses = computed(() => {
   if (isLeaderWithTeaching.value) {
     return store.getLeaderCourses(store.currentUser || '')
   }
-  return store.courses.filter((c) => c.teacher === store.currentUser)
+  return mergeCourses(
+    store.courses.filter((c) => c.teacher === store.currentUser),
+    teacherScheduleCourses.value
+  )
 })
 
 /** 根据课程 ID 分配不同的蓝色渐变配色 */
@@ -809,6 +862,28 @@ function getCourseProgress(courseId: string): number {
   if (courseEnrollments.length === 0) return 0
   const avg = courseEnrollments.reduce((sum, e) => sum + e.progress, 0) / courseEnrollments.length
   return Math.round(avg)
+}
+
+/** 基于排课周期（开始/结束日期）计算课程进度；无周期数据返回 -1 */
+function getScheduleProgress(courseId: string): number {
+  const course = store.courses.find((c) => c.id === courseId)
+  const scheds = store.schedules.filter((s: any) =>
+    s.courseId === courseId || (course && s.title === course.title)
+  )
+  const withPeriod = scheds.filter((s: any) => s.periodStart && s.periodEnd)
+  if (withPeriod.length === 0) return -1
+  const start = new Date(withPeriod[0].periodStart)
+  const end = new Date(withPeriod[0].periodEnd)
+  const totalDays = (end.getTime() - start.getTime()) / 86400000 + 1
+  if (totalDays <= 0) return -1
+  const elapsedDays = (Date.now() - start.getTime()) / 86400000 + 1
+  return Math.max(0, Math.min(100, Math.round((elapsedDays / totalDays) * 100)))
+}
+
+/** 课程进度：优先按排课周期计算，未配置周期时回退到学员学习进度 */
+function courseProgress(courseId: string): number {
+  const sp = getScheduleProgress(courseId)
+  return sp >= 0 ? sp : getCourseProgress(courseId)
 }
 
 function goDetail(courseId: string) {

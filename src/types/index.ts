@@ -125,6 +125,12 @@ export interface Schedule {
   timeSlot: string;
   room: string;
   teacher: string;
+  /** 课程周期开始日期（用于计算课程进度） */
+  periodStart?: string;
+  /** 课程周期结束日期（用于计算课程进度） */
+  periodEnd?: string;
+  /** 总课时（用于计算课程进度） */
+  totalHours?: number;
 }
 
 export interface Enrollment {

@@ -56,10 +56,36 @@ const hasLeaderAccess = computed(() => {
   return store.currentRole === 'leader' || store.secondaryRoles.includes('leader')
 })
 
-const showExtraBadge = (item: { to: string; label: string }) => {
-  if (item.label !== '额外功能') return false
+/** 判断菜单项是否显示红点（红点产生的地方在菜单处同步展现） */
+const showBadge = (item: { to: string; label: string }) => {
   if (!store.currentUser) return false
-  return store.todos.some((t) => t.createdBy === store.currentUser && !t.completed)
+  const pending = store.todos.some((t) => t.createdBy === store.currentUser && !t.completed)
+  if (!pending) return false
+
+  // 额外功能：所有未完成的自动待办
+  if (item.label === '额外功能') return true
+
+  // 我的课程：按角色展示对应类型待办的红点
+  if (item.label === '我的课程') {
+    const role = store.currentRole
+    if (role === 'teacher' || role === 'mentor') {
+      return store.todos.some(
+        (t) =>
+          t.createdBy === store.currentUser &&
+          !t.completed &&
+          (t.title.startsWith('[评价]') || t.title.startsWith('[配置]'))
+      )
+    }
+    if (role === 'student') {
+      return store.todos.some(
+        (t) =>
+          t.createdBy === store.currentUser &&
+          !t.completed &&
+          (t.title.startsWith('[评价]') || t.title.startsWith('[AI分层]') || t.title.startsWith('[作业]'))
+      )
+    }
+  }
+  return false
 }
 
 // ===== D3 渲染 =====
@@ -89,7 +115,7 @@ function renderNavLink(
   const span = link.append('span').attr('class', 'relative')
     .text(item.label)
 
-  if (showExtraBadge(item)) {
+  if (showBadge(item)) {
     span.append('span')
       .attr('class', 'absolute -top-2 -right-3 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white/50')
   }

@@ -2,9 +2,19 @@
   <div class="space-y-6">
     <!-- ============ Level 0: 学院选择 ============ -->
     <template v-if="!currentDept">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">课程管理</h1>
-        <p class="text-gray-500 mt-1">请选择一个学院进入课程管理</p>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">课程管理</h1>
+          <p class="text-gray-500 mt-1">请选择一个学院进入课程管理</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button @click="triggerDeptImport" class="flex items-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-medium">
+            <Upload class="w-4 h-4" /> 导入Excel
+          </button>
+          <button @click="openDeptModal" class="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
+            <Plus class="w-4 h-4" /> 新增学院
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -25,6 +35,11 @@
             <ArrowRight class="w-5 h-5 text-gray-300 group-hover:text-brand-500 transition-colors flex-shrink-0" />
           </div>
         </div>
+      </div>
+
+      <!-- 学院导入结果提示 -->
+      <div v-if="deptImportMsg" :class="`text-sm p-3 rounded-lg ${deptImportMsg.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`">
+        {{ deptImportMsg.text }}
       </div>
     </template>
 
@@ -124,8 +139,6 @@
         <table class="w-full">
           <thead>
             <tr class="bg-gray-50 border-b border-gray-100">
-              <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">课程</th>
-              <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">教师</th>
               <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">教室</th>
               <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">周几</th>
               <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">时间段</th>
@@ -133,25 +146,52 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
-            <tr v-for="sch in courseSchedules" :key="sch.id" class="hover:bg-gray-50/50 transition-colors"
-              :class="isConflicting(sch) ? 'bg-red-50/50' : ''">
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                  <span class="font-medium text-gray-900 text-sm">{{ sch.title || selectedCourse.title }}</span>
-                  <span v-if="isConflicting(sch)" class="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-600 rounded font-medium">冲突</span>
-                </div>
-              </td>
-              <td class="px-4 py-3 text-sm text-gray-600">{{ sch.teacher }}</td>
-              <td class="px-4 py-3 text-sm text-gray-600">{{ sch.room }}</td>
-              <td class="px-4 py-3 text-sm text-gray-600">{{ getDayLabel(sch) }}</td>
-              <td class="px-4 py-3 text-sm text-gray-600">{{ sch.timeSlot }}</td>
-              <td class="px-4 py-3 text-right">
-                <button @click="openEdit(sch)" class="text-xs px-2.5 py-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors">编辑</button>
-                <button @click="confirmDelete(sch)" class="text-xs px-2.5 py-1.5 text-red-400 hover:bg-red-50 rounded transition-colors ml-1">删除</button>
-              </td>
-            </tr>
+            <template v-for="g in groupedSchedules" :key="g.teacher">
+              <!-- 教师分组标题 -->
+              <tr class="bg-gray-50/70">
+                <td colspan="4" class="px-4 py-2">
+                  <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+                    <User class="w-3.5 h-3.5 text-gray-400" />
+                    {{ g.teacher }}
+                    <span class="text-[10px] font-normal text-gray-400">{{ groupCount(g) }} 条 · {{ g.days.length }} 天</span>
+                  </span>
+                </td>
+              </tr>
+              <!-- 该教师按 天+教室 合并的排课（一行一个组合，时段内联操作） -->
+              <template v-for="day in g.days" :key="day.dayLabel + '|' + day.room">
+                <!-- 一天一教室合并行 -->
+                <tr class="hover:bg-gray-50/50 transition-colors" :class="dayHasConflict(day) ? 'bg-red-50/50' : ''">
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-gray-900 text-sm">{{ day.room }}</span>
+                      <span v-if="dayDupCount(day) > 0" class="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded font-medium">×{{ dayDupCount(day) }} 重复</span>
+                      <span v-if="dayHasConflict(day)" class="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-600 rounded font-medium">冲突</span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-600">{{ day.dayLabel }}</td>
+                  <td class="px-4 py-3">
+                    <template v-for="(e, i) in day.entries" :key="e.key">
+                      <span v-if="i > 0" class="text-gray-300 mx-1">，</span>
+                      <span class="inline-flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-xs"
+                        :class="isConflicting(e.sch) ? 'bg-red-50/60 border-red-200' : ''"
+                        :title="(e.sch as any).periodStart ? `周期 ${(e.sch as any).periodStart} ~ ${(e.sch as any).periodEnd} · ${(e.sch as any).totalHours || 0} 课时` : ''">
+                        <span class="text-gray-700">{{ e.sch.timeSlot }}</span>
+                        <span v-if="e.count > 1" class="text-amber-600 font-medium">×{{ e.count }}</span>
+                        <button @click="openEdit(e.sch)" class="text-blue-500 hover:text-blue-600" title="编辑">编辑</button>
+                        <button @click="confirmDelete(e.sch)" class="text-red-400 hover:text-red-500" title="删除">删除</button>
+                        <button v-if="e.count > 1" @click="dedupeSchedules(e.records)" class="text-amber-500 hover:text-amber-600" title="清理重复">清重</button>
+                      </span>
+                    </template>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <button v-if="dayDupCount(day) > 0" @click="dedupeDay(day)"
+                      class="text-xs px-2.5 py-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors">清理重复</button>
+                  </td>
+                </tr>
+              </template>
+            </template>
             <tr v-if="courseSchedules.length === 0">
-              <td colspan="6" class="text-center py-12 text-gray-400 text-sm">
+              <td colspan="4" class="text-center py-12 text-gray-400 text-sm">
                 <CalendarX class="w-8 h-8 mx-auto mb-2 text-gray-200" />
                 {{ searchText ? '没有匹配的排课记录' : '该课程暂无排课记录' }}
               </td>
@@ -192,6 +232,25 @@
             <div>
               <label class="block text-xs font-medium text-gray-500 mb-1.5">授课教师</label>
               <input v-model="form.teacher" type="text" placeholder="输入教师姓名" class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm" />
+            </div>
+
+            <!-- 课程周期（用于计算课程进度） -->
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1.5">课程周期（用于计算课程进度）</label>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-gray-400 mb-1">开始时间</label>
+                  <input v-model="form.periodStart" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-gray-400 mb-1">结束时间</label>
+                  <input v-model="form.periodEnd" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm" />
+                </div>
+                <div class="col-span-2">
+                  <label class="block text-[10px] text-gray-400 mb-1">总课时</label>
+                  <input v-model.number="form.totalHours" type="number" min="0" placeholder="如 48" class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm" />
+                </div>
+              </div>
             </div>
 
             <!-- 周课表选时间 -->
@@ -326,6 +385,41 @@
     <!-- 隐藏的课程导入文件选择器 -->
     <input ref="courseFileInput" type="file" accept=".xlsx,.xls" class="hidden" @change="handleCourseFileChange" />
 
+    <!-- 隐藏的学院导入文件选择器 -->
+    <input ref="deptFileInput" type="file" accept=".xlsx,.xls" class="hidden" @change="handleDeptFileChange" />
+
+    <!-- 新增学院弹窗 -->
+    <Teleport to="body">
+      <div v-if="showDeptModal" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="closeDeptModal" />
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">新增学院</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">学院名称</label>
+              <input v-model="deptForm.name" type="text" placeholder="如：经济管理学院" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">学院颜色</label>
+              <div class="flex gap-2 flex-wrap">
+                <button
+                  v-for="c in deptColors"
+                  :key="c"
+                  @click="deptForm.color = c"
+                  class="w-9 h-9 rounded-lg transition-transform hover:scale-110"
+                  :style="{ backgroundColor: c, outline: deptForm.color === c ? '2px solid #111827' : 'none', outlineOffset: '2px' }"
+                />
+              </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+              <button @click="handleSaveDept" :disabled="!deptForm.name.trim()" class="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">保存</button>
+              <button @click="closeDeptModal" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-medium transition-colors">取消</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- 新增课程弹窗 -->
     <Teleport to="body">
       <div v-if="showCourseModal" class="fixed inset-0 z-50 flex items-center justify-center">
@@ -355,7 +449,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { Plus, Search, CalendarX, AlertTriangle, Upload, RefreshCw, BookOpen, ArrowLeft, ArrowRight, X } from 'lucide-vue-next'
+import { Plus, Search, CalendarX, AlertTriangle, Upload, RefreshCw, BookOpen, ArrowLeft, ArrowRight, X, User } from 'lucide-vue-next'
 import type { Schedule, Course, Department } from '@/types'
 import { bulkImportSchedules, fetchSchedules, updateSchedule as apiUpdateSchedule, deleteSchedule as apiDeleteSchedule } from '@/api'
 import * as XLSX from 'xlsx'
@@ -374,6 +468,83 @@ function selectDepartment(dept: Department) {
 function getDeptCourseCount(deptId: string): number {
   const deptCategoryIds = new Set(store.getDepartmentCategories(deptId).map((c) => c.id))
   return store.courses.filter((c) => c.departmentId === deptId || deptCategoryIds.has(c.categoryId)).length
+}
+
+// ====== 新增学院 ======
+const showDeptModal = ref(false)
+const deptColors = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#db2777', '#0d9488', '#ea580c', '#4f46e5']
+const deptForm = ref({ name: '', color: deptColors[0] })
+
+function openDeptModal() {
+  deptForm.value = { name: '', color: deptColors[0] }
+  showDeptModal.value = true
+}
+
+function closeDeptModal() {
+  showDeptModal.value = false
+}
+
+function handleSaveDept() {
+  const name = deptForm.value.name.trim()
+  if (!name) return
+  if (store.departments.some((d) => d.name === name)) {
+    deptImportMsg.value = { success: false, text: '学院名称已存在，请更换名称' }
+    return
+  }
+  store.addDepartment({ id: `dept-${Date.now()}`, name, color: deptForm.value.color })
+  closeDeptModal()
+}
+
+// ====== Excel 导入学院 ======
+const deptFileInput = ref<HTMLInputElement>()
+const deptImportMsg = ref<{ success: boolean; text: string } | null>(null)
+
+function triggerDeptImport() {
+  deptFileInput.value?.click()
+}
+
+async function handleDeptFileChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  deptImportMsg.value = null
+
+  try {
+    const data = await file.arrayBuffer()
+    const workbook = XLSX.read(data, { type: 'array' })
+    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+    const rows: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+
+    if (rows.length === 0) {
+      deptImportMsg.value = { success: false, text: 'Excel 文件为空，请检查文件内容' }
+      return
+    }
+
+    const existing = new Set(store.departments.map((d) => d.name))
+    let added = 0
+    let skipped = 0
+
+    for (const row of rows) {
+      const name = String(row['学院名称'] || row['名称'] || row['name'] || '').trim()
+      if (!name || existing.has(name)) {
+        skipped++
+        continue
+      }
+      existing.add(name)
+      const color = String(row['颜色'] || row['color'] || '').trim() || deptColors[added % deptColors.length]
+      store.addDepartment({ id: `dept-${Date.now()}-${added}`, name, color })
+      added++
+    }
+
+    deptImportMsg.value = added
+      ? { success: true, text: `导入成功：新增 ${added} 个学院${skipped ? `，跳过 ${skipped} 个` : ''}` }
+      : { success: false, text: `未导入新学院${skipped ? `（${skipped} 个已存在或名称无效）` : ''}` }
+  } catch (err) {
+    deptImportMsg.value = { success: false, text: '导入失败，请检查 Excel 文件格式' }
+  }
+
+  // 重置文件输入，便于重复导入同一文件
+  ;(e.target as HTMLInputElement).value = ''
 }
 
 // ====== 学院课程（属于该学院或分类属于该学院的课程）======
@@ -590,6 +761,108 @@ const courseSchedules = computed(() => {
   return result
 })
 
+/** 周几排序顺序 */
+const dayOrder = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+
+/** 取时间段开始分钟数 */
+function timeStartMin(s: any): number {
+  const [h, m] = (s.timeSlot || '00:00-00:00').split('-')[0].split(':').map(Number)
+  return (h || 0) * 60 + (m || 0)
+}
+
+/** 排课记录按教师分组 → 组内按天合并 → 天内按时间段排序 */
+const groupedSchedules = computed(() => {
+  const map = new Map<string, any[]>()
+  for (const sch of courseSchedules.value) {
+    const teacher = (sch.teacher && sch.teacher.trim()) || '未指定教师'
+    if (!map.has(teacher)) map.set(teacher, [])
+    map.get(teacher)!.push(sch)
+  }
+  const groups = Array.from(map.entries()).map(([teacher, list]) => {
+    // 合并重复项（同课程 + 周几 + 时间段 + 教室 视为重复）
+    const merged = new Map<string, any[]>()
+    for (const sch of list) {
+      const key = `${sch.title || ''}|${getDayLabel(sch)}|${sch.timeSlot}|${sch.room}`
+      if (!merged.has(key)) merged.set(key, [])
+      merged.get(key)!.push(sch)
+    }
+    const entries = Array.from(merged.entries()).map(([key, records]) => {
+      records.sort((a, b) => timeStartMin(a) - timeStartMin(b))
+      return { key, records, count: records.length, sch: records[0] }
+    })
+    entries.sort((a, b) => {
+      const dayDiff = dayOrder.indexOf(getDayLabel(a.sch)) - dayOrder.indexOf(getDayLabel(b.sch))
+      if (dayDiff !== 0) return dayDiff
+      return timeStartMin(a.sch) - timeStartMin(b.sch)
+    })
+    // 按 天+教室 分组：仅同一教室、时间段不同的排课合并成一行
+    const dayMap = new Map<string, any[]>()
+    for (const e of entries) {
+      const d = getDayLabel(e.sch)
+      const room = e.sch.room || '未指定教室'
+      const key = `${d}|${room}`
+      if (!dayMap.has(key)) dayMap.set(key, [])
+      dayMap.get(key)!.push(e)
+    }
+    const days = Array.from(dayMap.entries()).map(([key, dayEntries]) => {
+      dayEntries.sort((a, b) => timeStartMin(a.sch) - timeStartMin(b.sch))
+      const [dayLabel, room] = key.split('|')
+      return { dayLabel, room, entries: dayEntries }
+    })
+    days.sort((a, b) => {
+      const dayDiff = dayOrder.indexOf(a.dayLabel) - dayOrder.indexOf(b.dayLabel)
+      if (dayDiff !== 0) return dayDiff
+      return (a.room || '').localeCompare(b.room || '', 'zh')
+    })
+    return { teacher, days }
+  })
+  groups.sort((a, b) => a.teacher.localeCompare(b.teacher, 'zh'))
+  return groups
+})
+
+/** 一天内是否存在冲突排课 */
+function dayHasConflict(day: any): boolean {
+  return day.entries.some((e: any) => isConflicting(e.sch))
+}
+
+/** 一天内的重复记录数（合并后多余的数量） */
+function dayDupCount(day: any): number {
+  return day.entries.reduce((sum: number, e: any) => sum + (e.count - 1), 0)
+}
+
+/** 教师组内课程节数 */
+function groupCount(g: any): number {
+  return g.days.reduce((s: number, d: any) => s + d.entries.length, 0)
+}
+
+/** 批量删除排课（不刷新） */
+async function deleteSchedules(records: any[]) {
+  for (const r of records) {
+    try {
+      await apiDeleteSchedule(r.id)
+    } catch (e) {
+      store.deleteSchedule(r.id)
+    }
+  }
+}
+
+/** 清理单组重复项：保留第一条，删除其余完全相同的记录 */
+async function dedupeSchedules(records: any[]) {
+  const extras = records.slice(1)
+  if (extras.length === 0) return
+  await deleteSchedules(extras)
+  loadSchedules()
+}
+
+/** 清理某一天内所有重复项 */
+async function dedupeDay(day: any) {
+  const extras: any[] = []
+  for (const e of day.entries) extras.push(...e.records.slice(1))
+  if (extras.length === 0) return
+  await deleteSchedules(extras)
+  loadSchedules()
+}
+
 // ====== 冲突检测 ======
 function timesOverlap(a: string, b: string): boolean {
   const [aStart, aEnd] = a.split('-')
@@ -735,6 +1008,9 @@ const showModal = ref(false)
 const editingSchedule = ref<Schedule | null>(null)
 const form = ref({
   teacher: '',
+  periodStart: '',
+  periodEnd: '',
+  totalHours: 0,
   startDate: '',
   startTime: '09:00',
   endTime: '11:00',
@@ -766,7 +1042,7 @@ const canSave = computed(() =>
 
 function openAdd() {
   editingSchedule.value = null
-  form.value = { teacher: '', startDate: '', startTime: '', endTime: '' }
+  form.value = { teacher: '', periodStart: '', periodEnd: '', totalHours: 0, startDate: '', startTime: '', endTime: '' }
   selectedSlots.value = []
   showModal.value = true
 }
@@ -775,6 +1051,9 @@ function openEdit(sch: Schedule) {
   editingSchedule.value = sch
   form.value = {
     teacher: sch.teacher,
+    periodStart: (sch as any).periodStart || '',
+    periodEnd: (sch as any).periodEnd || '',
+    totalHours: (sch as any).totalHours || 0,
     startDate: sch.startDate,
     startTime: sch.timeSlot.split('-')[0],
     endTime: sch.timeSlot.split('-')[1] || '11:00',
@@ -819,6 +1098,9 @@ function handleSave() {
       timeSlot: `${slot.start}-${slot.end}`,
       room: slot.room,
       teacher: form.value.teacher,
+      periodStart: form.value.periodStart,
+      periodEnd: form.value.periodEnd,
+      totalHours: Number(form.value.totalHours) || 0,
     }
     const id = editingSchedule.value.id
     apiUpdateSchedule(id, updated)
@@ -841,6 +1123,9 @@ function handleSave() {
     timeSlot: `${slot.start}-${slot.end}`,
     room: slot.room,
     teacher: form.value.teacher,
+    periodStart: form.value.periodStart,
+    periodEnd: form.value.periodEnd,
+    totalHours: Number(form.value.totalHours) || 0,
   }))
 
   // 发送到后端
@@ -864,6 +1149,9 @@ function handleSave() {
           timeSlot: s.timeSlot,
           room: s.room,
           teacher: s.teacher,
+          periodStart: s.periodStart,
+          periodEnd: s.periodEnd,
+          totalHours: s.totalHours,
         })
       })
       // 重新加载（从 store 取数据）
